@@ -28,59 +28,53 @@
   #pwInput{width:100%; font-size:22px; padding:12px 14px; border:2px solid var(--line);
            border-radius:10px; font-family:inherit; letter-spacing:.1em}
   #pwInput:focus{outline:none; border-color:var(--accent)}
+  .pwshow{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:15px; color:var(--dim); cursor:pointer; user-select:none}
+  .pwshow input{width:18px; height:18px; accent-color:var(--accent)}
   #btnLogin{width:100%; margin-top:14px; padding:13px; font-size:18px; font-weight:700;
             background:var(--accent); color:#fff; border:0; border-radius:10px}
   #btnLogin:disabled{opacity:.6}
   #loginMsg{min-height:26px; color:var(--danger); font-size:15px; margin-top:10px}
 
-  /* ───────── 카테고리 화면 ───────── */
-  #scrHome.on{display:grid; grid-template-columns:300px 1fr; height:100vh}
-  #homeSide{background:#efece6; border-right:1px solid var(--line); overflow-y:auto; padding:14px 0}
-  #homeSide h2{font-size:14.5px; margin:4px 18px 10px; color:var(--dim)}
-  #homeTotal{margin:0 18px 12px; font-size:14px; color:var(--dim); background:var(--card);
-             border:1px solid var(--line); border-radius:10px; padding:8px 12px; line-height:1.5}
-  #homeTotal.err{color:var(--danger); border-color:#e4c9c9}
-  .mainitem{display:block; width:100%; text-align:left; border:0; background:none;
-            padding:10px 18px; font-size:16px; color:var(--ink)}
-  .mainitem:hover{background:#e5e1d9}
-  .mainitem.active{background:var(--card); font-weight:700; box-shadow:inset 3px 0 0 var(--accent)}
-  .mainitem .mrow{display:flex; justify-content:space-between; gap:8px; align-items:baseline}
-  .mainitem .mcnt{font-size:12.5px; color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
-  .mainitem .mcnt.has{color:var(--accent); font-weight:700}
+  /* ───────── 본 화면: 분류 탭 + 마인드맵 동시 표시 ───────── */
+  #scrMain.on{display:grid; grid-template-columns:320px 1fr; height:100vh}
 
-  #homeMain{overflow-y:auto; padding:26px 34px 60px}
-  #homeMain .guide{background:var(--accent-soft); border:1px solid #cfe4d9; color:#194d37;
-                   border-radius:12px; padding:13px 18px; font-size:16.5px; margin-bottom:22px}
-  #homeMain h1{font-size:26px; margin:0 0 4px}
-  #homeMain .sub{color:var(--dim); font-size:15px; margin-bottom:18px}
-  #mainSelect{display:none; font-size:16px; padding:8px 10px; border-radius:9px;
-              border:1px solid var(--line); background:var(--card); max-width:55vw; font-family:inherit}
-  .catrow{display:flex; align-items:center; gap:12px; background:var(--card);
-          border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:10px}
-  .catrow .twisty{flex:0 0 30px; height:30px; border:1px solid var(--line); background:#f4f2ed;
-                  border-radius:8px; font-size:14px; color:var(--dim); display:grid; place-items:center}
-  .catrow .twisty.none{visibility:hidden}
-  .catrow .cname{font-size:18px; font-weight:600; flex:1 1 auto; word-break:keep-all}
-  .catrow .cbadge{font-size:14px; color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
-  .catrow .cbadge.has{color:var(--accent); font-weight:700}
-  .catrow .copen{flex:0 0 auto; border:2px solid var(--accent); color:var(--accent); background:var(--card);
-                 font-size:15.5px; font-weight:700; border-radius:9px; padding:7px 16px}
-  .catrow .copen:hover{background:var(--accent-soft)}
-  .catrow.d1{margin-left:42px} .catrow.d2{margin-left:84px} .catrow.d3{margin-left:126px}
-  .catrow.rootrow{border-color:#bcd8c9; background:#fbfdf9}
-  #homeTop{display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap}
-  #btnLogout{margin-left:auto; border:1px solid var(--line); background:var(--card);
-             border-radius:8px; padding:6px 12px; font-size:13.5px; color:var(--dim)}
+  #side{background:#efece6; border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0}
+  #sideHead{padding:14px 18px 8px; font-size:15px; font-weight:700; color:var(--dim);
+            display:flex; align-items:center; justify-content:space-between}
+  #btnSideClose{display:none; width:34px; height:34px; border:1px solid var(--line); background:var(--card);
+                border-radius:9px; font-size:18px; color:var(--dim); line-height:1}
+  #sideback{display:none}
+  #sideTotal{margin:0 14px 10px; font-size:13.5px; color:var(--dim); background:var(--card);
+             border:1px solid var(--line); border-radius:10px; padding:7px 11px; line-height:1.5}
+  #sideTotal.err{color:var(--danger); border-color:#e4c9c9}
+  #tree{flex:1 1 auto; overflow-y:auto; padding-bottom:10px}
+  #sideFoot{padding:10px 14px; border-top:1px solid var(--line)}
+  #btnLogout{width:100%; border:1px solid var(--line); background:var(--card);
+             border-radius:8px; padding:7px 12px; font-size:13.5px; color:var(--dim)}
 
-  /* ───────── 마인드맵 편집 화면 ───────── */
-  #scrEdit.on{display:flex; flex-direction:column; height:100vh}
+  .trow{display:flex; align-items:center; gap:6px; padding:8px 10px 8px 14px; cursor:pointer; font-size:15.5px}
+  .trow:hover{background:#e5e1d9}
+  .trow.active{background:var(--card); font-weight:700; box-shadow:inset 3px 0 0 var(--accent)}
+  .trow.haswithin{box-shadow:inset 3px 0 0 #a8cbba}
+  .trow .tw{flex:0 0 20px; text-align:center; color:var(--accent); font-size:13px}
+  .trow .tw.leaf{color:#c2beb4}
+  .trow .tname{flex:1 1 auto; word-break:keep-all; line-height:1.4}
+  .trow .tbadge{font-size:12px; color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
+  .trow .tbadge.has{color:var(--accent); font-weight:700}
+  .trow .topen{flex:0 0 auto; border:1.5px solid var(--accent); color:var(--accent); background:var(--card);
+               font-size:12.5px; font-weight:700; border-radius:7px; padding:2px 9px}
+  .trow .topen:hover{background:var(--accent-soft)}
+  .trow.d1{padding-left:32px} .trow.d2{padding-left:50px} .trow.d3{padding-left:68px}
+  .trow.d0{font-size:16.5px; font-weight:600}
+  .trow.d0 .tname{font-weight:600}
+
+  #work{display:flex; flex-direction:column; min-width:0; min-height:0; position:relative}
   #edTop{display:flex; align-items:center; gap:12px; padding:10px 18px; background:rgba(246,245,242,.97);
          border-bottom:1px solid var(--line); flex-wrap:wrap; z-index:5}
+  #btnMenu{display:none; border:1px solid var(--line); background:var(--card); border-radius:9px;
+           padding:8px 12px; font-size:15px}
   #edTop .crumb{font-weight:700; font-size:17px; word-break:keep-all}
   #edTop .cnt{font-size:14.5px; color:var(--dim); font-variant-numeric:tabular-nums}
-  .ghost{border:1px solid var(--line); background:var(--card); border-radius:9px;
-         padding:8px 14px; font-size:15px}
-  .ghost:hover{border-color:#c6c2b8}
   #saveState{margin-left:auto; font-size:14.5px; color:var(--dim); text-align:right; min-width:130px}
   #saveState.on{color:var(--accent)}
   #saveState.bad{color:var(--danger); font-weight:700}
@@ -96,6 +90,15 @@
   #world{position:absolute; left:0; top:0; transform-origin:0 0}
   #wires{position:absolute; left:0; top:0; overflow:visible; pointer-events:none}
   #wires path{fill:none; stroke:var(--wire); stroke-width:2}
+
+  /* 시작 안내 — 문서를 열기 전 */
+  #welcome{position:absolute; inset:0; display:grid; place-items:center; z-index:4;
+           background:var(--bg); padding:20px}
+  #welcome .wcard{background:var(--card); border:1px solid var(--line); border-radius:16px;
+                  padding:34px 40px; width:min(560px, 92vw); box-shadow:0 8px 30px rgba(0,0,0,.06)}
+  #welcome h2{font-size:22px; margin:0 0 12px}
+  #welcome p{font-size:16.5px; color:var(--dim); margin:0 0 10px; word-break:keep-all}
+  #welcome b{color:var(--accent)}
 
   .node{position:absolute; background:var(--card); border:2px solid var(--line); border-radius:12px;
         padding:10px 14px 12px; width:260px; font-size:16.5px; line-height:1.55;
@@ -160,10 +163,16 @@
   #modal .myes{background:var(--danger); color:#fff; border:0}
   #modal .mno{background:var(--card); border:2px solid var(--line)}
 
+  .mobileonly{display:none}
   @media (max-width:900px){
-    #scrHome.on{grid-template-columns:1fr}
-    #homeSide{display:none}
-    #mainSelect{display:inline-block}
+    #scrMain.on{grid-template-columns:1fr}
+    #side{display:none}
+    #side.open{display:flex; position:fixed; inset:0 auto 0 0; width:min(320px, 85vw); z-index:30;
+               box-shadow:0 0 40px rgba(0,0,0,.3)}
+    #sideback.on{display:block; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:29}
+    #btnSideClose{display:grid; place-items:center}
+    #btnMenu{display:inline-block}
+    .mobileonly{display:block}
   }
 </style>
 </head>
@@ -175,57 +184,58 @@
     <h1>알옥션 질문·답변 마인드맵</h1>
     <p>비밀번호를 넣으시면 시작됩니다. 비밀번호는 담당자에게 받으세요.</p>
     <input id="pwInput" type="password" autocomplete="current-password" placeholder="비밀번호">
+    <label class="pwshow"><input type="checkbox" id="pwShow"> 비밀번호 보이기</label>
     <button id="btnLogin">들어가기</button>
     <div id="loginMsg"></div>
   </div>
 </div>
 
-<!-- ───────── 2. 카테고리 고르기 ───────── -->
-<div class="scr" id="scrHome">
-  <aside id="homeSide">
-    <h2>큰 분류</h2>
-    <div id="homeTotal">불러오는 중…</div>
-    <div id="mainlist"></div>
+<!-- ───────── 2. 본 화면: 분류 탭(항상 표시) + 마인드맵 ───────── -->
+<div class="scr" id="scrMain">
+  <div id="sideback"></div>
+  <aside id="side">
+    <div id="sideHead">알옥션 카테고리 <button id="btnSideClose" title="닫기">×</button></div>
+    <div id="sideTotal">불러오는 중…</div>
+    <div id="tree"></div>
+    <div id="sideFoot"><button id="btnLogout">비밀번호 다시 넣기</button></div>
   </aside>
-  <div id="homeMain">
-    <div id="homeTop">
-      <h1 id="homeTitle"></h1>
-      <select id="mainSelect" title="큰 분류 고르기"></select>
-      <button id="btnLogout">비밀번호 다시 넣기</button>
-    </div>
-    <div class="guide">카테고리를 고르시고 → <b>손님이 물어볼 질문</b>을 달고 → <b>답</b>을 달고 →
-      그 답을 들은 손님이 <b>또 물어볼 질문</b>을 계속 달아 주세요.
-      상자의 <b>확인</b> 단추를 누르시면 저절로 저장됩니다.</div>
-    <div class="sub" id="homeSub"></div>
-    <div id="catlist"></div>
-  </div>
-</div>
 
-<!-- ───────── 3. 마인드맵 ───────── -->
-<div class="scr" id="scrEdit">
-  <div id="edTop">
-    <button class="ghost" id="btnBack">← 목록으로</button>
-    <span class="crumb" id="crumb"></span>
-    <span class="cnt" id="cnt"></span>
-    <span id="saveState">&nbsp;</span>
-  </div>
-  <div id="alarm"></div>
-  <div id="canvas">
-    <div id="world">
-      <svg id="wires"></svg>
-      <div id="nodes"></div>
-      <div id="toolbar"></div>
+  <div id="work">
+    <div id="edTop">
+      <button id="btnMenu">≡ 분류</button>
+      <span class="crumb" id="crumb"></span>
+      <span class="cnt" id="cnt"></span>
+      <span id="saveState">&nbsp;</span>
     </div>
-    <div id="coach" style="display:none"></div>
-    <div id="zoomctl">
-      <button id="btnZin" title="크게">＋</button>
-      <button id="btnZout" title="작게">－</button>
-      <button id="btnFit" class="fit" title="전체 보기">전체</button>
-    </div>
-    <div id="lockbox">
-      <div class="lockcard">
-        <div id="lockmsg"></div>
-        <button id="btnRetryLoad">다시 시도</button>
+    <div id="alarm"></div>
+    <div id="canvas">
+      <div id="world">
+        <svg id="wires"></svg>
+        <div id="nodes"></div>
+        <div id="toolbar"></div>
+      </div>
+      <div id="coach" style="display:none"></div>
+      <div id="zoomctl">
+        <button id="btnZin" title="크게">＋</button>
+        <button id="btnZout" title="작게">－</button>
+        <button id="btnFit" class="fit" title="전체 보기">전체</button>
+      </div>
+      <div id="lockbox">
+        <div class="lockcard">
+          <div id="lockmsg"></div>
+          <button id="btnRetryLoad">다시 시도</button>
+        </div>
+      </div>
+      <div id="welcome">
+        <div class="wcard">
+          <h2>왼쪽에서 카테고리를 골라 주세요</h2>
+          <p>큰 분류를 누르면 세부 분류가 펼쳐지고, 세부 분류를 누르면 여기에 마인드맵이 열립니다.</p>
+          <p class="mobileonly">화면이 좁을 때는 위의 <b>≡ 분류</b> 단추를 눌러 목록을 여세요.</p>
+          <p>카테고리 상자를 누르고 <b>＋ 질문 달기</b> → 질문에 <b>＋ 답변 달기</b> →
+             답변에 <b>＋ 추가 질문 달기</b> … 순서로 이어 붙이시면 됩니다.</p>
+          <p>상자만 먼저 여러 개 만들어 두고 글은 나중에 채우셔도 됩니다.
+             적으시는 대로 저절로 깃허브에 저장됩니다.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -282,8 +292,10 @@ const S = {
   summary: {},          // {cate:{n,q,a,u}}
   listState: "loading", // loading | ok | fail
   listRetry: null,
-  mainSel: null,        // 홈에서 고른 큰 분류 no
-  open: new Set(),      // 홈 트리 펼침 상태
+  open: new Set(),      // 분류 탭 펼침 상태
+  navSeq: 0,            // 카테고리 이동 세대 — 나중 클릭이 항상 이긴다
+  lastList: 0,
+  saveBlocked: false,   // 401·400처럼 재시도해도 소용없는 실패 뒤 자동 재저장 중단
   // 편집 중 문서
   cate: null, doc: null, locked: false,
   sel: null, editing: null, editingIsNew: false, editingTa: null,
@@ -333,6 +345,11 @@ function show(id){
 const pwInput = document.getElementById("pwInput");
 const btnLogin = document.getElementById("btnLogin");
 
+document.getElementById("pwShow").addEventListener("change", e => {
+  pwInput.type = e.target.checked ? "text" : "password";
+  pwInput.focus();
+});
+
 async function tryLogin(){
   const pw = pwInput.value.trim();
   if (!pw) { pwInput.focus(); return; }
@@ -343,7 +360,7 @@ async function tryLogin(){
     await api({ op: "auth" });
     localStorage.setItem(LS_PW, pw);
     document.getElementById("loginMsg").textContent = "";
-    enterHome();
+    enterMain();
   }catch(e){
     document.getElementById("loginMsg").textContent =
       e.auth ? "비밀번호가 맞지 않습니다. 다시 확인해 주세요." : "연결이 안 됩니다: " + e.message;
@@ -359,20 +376,19 @@ document.getElementById("btnLogout").addEventListener("click", () => {
 });
 
 /* =========================================================
-   4) 카테고리 화면
+   4) 분류 탭 (아코디언 — 마인드맵과 항상 동시 표시)
    ========================================================= */
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 function badgeOf(no){
-  if (S.listState === "loading") return { text: "…", has: false };
-  if (S.listState === "fail") return { text: "확인 안 됨", has: false };
+  if (S.listState !== "ok") return { text: S.listState === "fail" ? "?" : "…", has: false };
   const s = S.summary[no];
   const q = s ? (+s.q || 0) : 0, a = s ? (+s.a || 0) : 0;
-  if (!q && !a) return { text: "아직 없음", has: false };
-  return { text: "질문 " + q + " · 답변 " + a, has: true };
+  if (!q && !a) return { text: "", has: false };
+  return { text: q + "·" + a, has: true };
 }
 
-/* 큰 분류 배지 = 그 아래 전체 합 */
+/* 분류 묶음 배지 = 그 아래 전체 합 */
 function subtreeSum(c){
   let q = 0, a = 0;
   const walk = x => {
@@ -389,49 +405,53 @@ async function refreshList(){
     const r = await api({ op: "list" });
     S.summary = r.files || {};
     S.listState = "ok";
+    S.lastList = Date.now();
   }catch(e){
     if (e.auth){ show("scrLogin"); return; }
     S.listState = "fail";
     clearTimeout(S.listRetry);
     S.listRetry = setTimeout(() => {
-      if (document.getElementById("scrHome").classList.contains("on")){
-        refreshList().then(renderHome);
+      if (document.getElementById("scrMain").classList.contains("on")){
+        refreshList().then(renderBadges);
       }
     }, 10000);
   }
 }
 
-async function enterHome(){
-  show("scrHome");
-  if (!S.mainSel) S.mainSel = CATS.length ? CATS[0].no : null;
+async function enterMain(){
+  show("scrMain");
   if (S.listState !== "ok") S.listState = "loading";
-  renderHome();
+  renderTree();
+  /* 재로그인 직전에 저장 못 한 것이 있으면 이어서 저장 */
+  if (S.doc && S.dirty){
+    S.saveBlocked = false;
+    setAlarm(false);
+    setSave("저장 중…");
+    doSave();
+  }
   await refreshList();
-  renderHome();
+  renderTree();
 }
 
-function renderHome(){
-  const main = document.getElementById("mainlist");
-  main.innerHTML = CATS.map(c => {
+/* 행 배지 — 자식 있는 분류는 아래 전체 합 */
+function rowBadge(c){
+  if ((c.children || []).length){
     const t = subtreeSum(c);
-    const has = t.q + t.a > 0;
-    return '<button class="mainitem' + (c.no === S.mainSel ? " active" : "") + '" data-no="' + c.no + '">' +
-      '<span class="mrow"><span>' + esc(c.name) + '</span>' +
-      '<span class="mcnt' + (has ? " has" : "") + '">' + (has ? t.q + "·" + t.a : "") + '</span></span></button>';
-  }).join("");
-  main.querySelectorAll(".mainitem").forEach(el => el.addEventListener("click", () => {
-    S.mainSel = +el.dataset.no; renderHome();
-  }));
+    if (t.q + t.a > 0) return { text: t.q + "·" + t.a, has: true };
+  }
+  return badgeOf(c.no);
+}
 
-  /* 좁은 화면용 큰 분류 드롭다운 (사이드바가 숨겨지는 900px 이하) */
-  const selEl = document.getElementById("mainSelect");
-  selEl.innerHTML = CATS.map(c =>
-    '<option value="' + c.no + '"' + (c.no === S.mainSel ? " selected" : "") + '>' + esc(c.name) + '</option>').join("");
+function containsCate(c, no){
+  if (c.no === no) return true;
+  return (c.children || []).some(k => containsCate(k, no));
+}
 
-  const total = document.getElementById("homeTotal");
+function renderTotal(){
+  const total = document.getElementById("sideTotal");
   if (S.listState === "fail"){
     total.className = "err";
-    total.textContent = "목록을 못 불러왔습니다 — 인터넷을 확인해 주세요 (자동으로 다시 시도합니다)";
+    total.textContent = "진행 상황을 못 불러왔습니다 — 인터넷 확인 (자동 재시도 중)";
   }else if (S.listState === "loading"){
     total.className = "";
     total.textContent = "불러오는 중…";
@@ -444,51 +464,89 @@ function renderHome(){
       if (q + a > 0){ tq += q; ta += a; tc++; }
     }
     total.innerHTML = tc
-      ? "지금까지 <b>" + tc + "곳</b>에 적으셨습니다<br>질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>"
-      : "아직 적으신 곳이 없습니다";
+      ? "적은 카테고리 <b>" + tc + "곳</b> · 질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>"
+      : "아직 적으신 곳이 없습니다 — 아래에서 골라 시작해 주세요";
   }
-
-  const cur = CAT_BY_NO.get(S.mainSel);
-  if (!cur) return;
-  document.getElementById("homeTitle").textContent = cur.name;
-  document.getElementById("homeSub").textContent =
-    (cur.children && cur.children.length)
-      ? "세부 카테고리 " + cur.children.length + "개 — 열기를 누르시면 그 카테고리의 마인드맵이 열립니다."
-      : "세부 카테고리가 없는 분류입니다. 아래 줄에서 바로 여시면 됩니다.";
-
-  const rows = [];
-  rows.push(rowHtml(cur, 0, true, badgeOf(cur.no)));
-  const emit = (c, d) => {
-    rows.push(rowHtml(c, d, false, badgeOf(c.no)));
-    if (S.open.has(c.no)) (c.children || []).forEach(k => emit(k, d + 1));
-  };
-  (cur.children || []).forEach(c => emit(c, 1));
-
-  const list = document.getElementById("catlist");
-  list.innerHTML = rows.join("");
-  list.querySelectorAll(".twisty:not(.none)").forEach(el => el.addEventListener("click", () => {
-    const no = +el.dataset.no;
-    if (S.open.has(no)) S.open.delete(no); else S.open.add(no);
-    renderHome();
-  }));
-  list.querySelectorAll(".copen").forEach(el => el.addEventListener("click", () => openMap(+el.dataset.no)));
 }
 
-document.getElementById("mainSelect").addEventListener("change", e => {
-  S.mainSel = +e.target.value;
-  renderHome();
+function renderTree(){
+  const rows = [];
+  const emit = (c, d) => {
+    const kids = (c.children || []).length;
+    const isOpen = S.open.has(c.no);
+    const b = rowBadge(c);
+    /* 접힌 가지 안에 지금 열린 문서가 있으면 옅은 표시로 위치를 잃지 않게 */
+    const within = kids && !isOpen && S.cate !== null && S.cate !== c.no && containsCate(c, S.cate);
+    rows.push(
+      '<div class="trow d' + Math.min(d, 3) + (S.cate === c.no ? " active" : "") + (within ? " haswithin" : "") + '" data-no="' + c.no + '" data-kids="' + kids + '">' +
+        '<span class="tw' + (kids ? "" : " leaf") + '">' + (kids ? (isOpen ? "▾" : "▸") : "·") + '</span>' +
+        '<span class="tname">' + esc(c.name) + '</span>' +
+        '<span class="tbadge' + (b.has ? " has" : "") + '">' + b.text + '</span>' +
+        (kids ? '<button class="topen" data-no="' + c.no + '">열기</button>' : '') +
+      '</div>');
+    if (kids && isOpen) c.children.forEach(k => emit(k, d + 1));
+  };
+  CATS.forEach(c => emit(c, 0));
+  document.getElementById("tree").innerHTML = rows.join("");
+  renderTotal();
+}
+
+/* 배지·합계만 갱신 — 트리를 통째로 다시 만들지 않아 클릭 도중에도 안전 */
+function renderBadges(){
+  document.querySelectorAll("#tree .trow").forEach(row => {
+    const c = CAT_BY_NO.get(+row.dataset.no);
+    if (!c) return;
+    const b = rowBadge(c);
+    const el = row.querySelector(".tbadge");
+    if (el){ el.textContent = b.text; el.className = "tbadge" + (b.has ? " has" : ""); }
+  });
+  renderTotal();
+}
+
+/* 트리 클릭 — 위임 리스너 하나만 등록 (행이 다시 그려져도 클릭이 안 죽는다) */
+document.getElementById("tree").addEventListener("click", e => {
+  const openBtn = e.target.closest(".topen");
+  if (openBtn){ switchTo(+openBtn.dataset.no); return; }
+  const row = e.target.closest(".trow");
+  if (!row) return;
+  const no = +row.dataset.no;
+  if (+row.dataset.kids > 0){
+    /* 묶음 분류: 누르면 아코디언 펼침/접기 (마인드맵은 [열기]로) */
+    if (S.open.has(no)) S.open.delete(no); else S.open.add(no);
+    renderTree();
+  }else{
+    switchTo(no);
+  }
 });
 
-function rowHtml(c, depth, isRoot, b){
-  const kids = (c.children || []).length;
-  return '<div class="catrow d' + Math.min(depth, 3) + (isRoot ? " rootrow" : "") + '">' +
-    '<button class="twisty' + (kids && !isRoot ? "" : " none") + '" data-no="' + c.no + '">' +
-      (S.open.has(c.no) ? "▾" : "▸") + '</button>' +
-    '<span class="cname">' + esc(isRoot ? c.name + " (전체)" : c.name) +
-      (kids && !isRoot ? ' <span style="color:var(--dim);font-size:13px;font-weight:400">하위 ' + kids + '</span>' : "") + '</span>' +
-    '<span class="cbadge' + (b.has ? " has" : "") + '">' + b.text + '</span>' +
-    '<button class="copen" data-no="' + c.no + '">열기 →</button></div>';
+function setSideOpen(on){
+  document.getElementById("side").classList.toggle("open", on);
+  document.getElementById("sideback").classList.toggle("on", on);
 }
+document.getElementById("btnMenu").addEventListener("click", () => {
+  setSideOpen(!document.getElementById("side").classList.contains("open"));
+});
+document.getElementById("btnSideClose").addEventListener("click", () => setSideOpen(false));
+document.getElementById("sideback").addEventListener("click", () => setSideOpen(false));
+
+/* 카테고리 이동 — 적던 글은 확정하고, 진행 중 저장은 끝까지 기다린 뒤 이동.
+   기다리는 사이 다른 곳을 또 누르면 나중 클릭이 이긴다(navSeq). */
+async function switchTo(no){
+  const my = ++S.navSeq;
+  if (S.cate === no && S.doc && !S.dirty && !S.locked){ closeSideOnMobile(); return; }
+  if (S.editing !== null && S.editingTa) editCommit(S.editingTa.value);
+  if (S.saving && S.savePromise){ try{ await S.savePromise; }catch(e){} }
+  if (my !== S.navSeq) return;
+  if (S.dirty){ clearTimeout(S.saveTimer); S.saveTimer = null; await doSave(); }
+  if (my !== S.navSeq) return;
+  if (S.dirty){
+    openModal("아직 저장되지 않았습니다.\n지금 이동해도 적으신 것은 이 컴퓨터에 남아 있고, 다음에 이 카테고리를 열면 이어서 저장됩니다.", "그래도 이동", () => openMap(no));
+    return;
+  }
+  openMap(no);
+}
+
+function closeSideOnMobile(){ setSideOpen(false); }
 
 /* =========================================================
    5) 문서 (마인드맵 데이터)
@@ -586,6 +644,7 @@ function setAlarm(on, msg){
 function markDirty(){
   if (!S.doc || S.locked) return;
   S.dirty = true;
+  S.saveBlocked = false;
   backupWrite(true);
   setSave("저장 중…");
   clearTimeout(S.saveTimer);
@@ -593,32 +652,25 @@ function markDirty(){
   updateCnt();
 }
 
-/* 서버로 보낼 사본 — 편집 중인 새 상자와 빈 유령 상자는 올리지 않는다 */
 function savePayload(){
-  const now = Date.now();
-  const nodes = {};
-  for (const [id, n] of Object.entries(S.doc.nodes)){
-    if (id === S.editing && S.editingIsNew) continue;          // 아직 만드는 중
-    if (n.x === "" && n.d !== 1) nodes[id] = Object.assign({}, n, { d: 1, u: now });  // 빈 유령 정리
-    else nodes[id] = n;
-  }
-  return { cate: S.doc.cate, name: S.doc.name, path: S.doc.path, nodes };
+  return { cate: S.doc.cate, name: S.doc.name, path: S.doc.path, nodes: S.doc.nodes };
 }
 
 function doSave(){
   if (!S.dirty || S.saving || !S.doc || S.locked) return Promise.resolve();
   const reqCate = S.cate;
   S.saving = true;
-  clearTimeout(S.retryTimer);
+  clearTimeout(S.retryTimer); S.retryTimer = null;
   S.dirty = false;   // 저장 도중의 새 수정은 markDirty 가 다시 켠다
   const run = (async () => {
     try{
       const r = await api({ op: "save", cate: reqCate, doc: savePayload() });
-      if (S.cate !== reqCate || !S.doc) return;   // 그 사이 다른 화면으로 이동 — 서버 저장은 이미 완료
+      if (S.cate !== reqCate || !S.doc) return;   // 그 사이 다른 카테고리로 이동 — 서버 저장은 이미 완료
       adopt(r.doc);
       backupWrite(S.dirty);   // 저장 중 새 수정이 있었으면 '저장 안 됨' 표시 유지
       const c = countDoc();
       S.summary[reqCate] = { n: S.doc.name, q: c.q, a: c.a, u: Date.now() };
+      renderBadges();
       if (S.dirty){
         setSave("저장 중…");   // 남은 수정이 있으니 완료 표시는 아직
       }else{
@@ -629,20 +681,27 @@ function doSave(){
       if (S.cate !== reqCate || !S.doc) return;   // 백업(pending)이 남아 있어 다음에 복구된다
       S.dirty = true;
       if (e.auth){
+        S.saveBlocked = true;   // 재로그인 성공(enterMain) 때 이어서 저장한다
         setSave("비밀번호가 바뀌었습니다", "bad");
+        setAlarm(false);
         show("scrLogin");
       }else if (e.status === 400){
         /* 형식·용량 문제 — 재시도해도 소용없다 */
+        S.saveBlocked = true;
         setSave("저장 불가", "bad");
         setAlarm(true, "이 문서가 너무 커졌거나 형식 문제가 있습니다. 담당자에게 알려 주세요. 적으신 것은 이 컴퓨터에 남아 있습니다.");
       }else{
         setSave("저장 실패 — 다시 시도합니다", "bad");
         setAlarm(true, e.config ? e.message : "");
-        S.retryTimer = setTimeout(doSave, e.status === 429 ? 60000 : 20000);
+        S.retryTimer = setTimeout(() => { S.retryTimer = null; doSave(); }, e.status === 429 ? 60000 : 20000);
       }
     }finally{
       S.saving = false;
       S.savePromise = null;
+      /* 저장 비행 중에 들어온 수정이 타이머 없이 방치되지 않게 잇는다 (다른 카테고리로 옮겨간 경우 포함) */
+      if (S.dirty && !S.saveTimer && !S.retryTimer && !S.saveBlocked && S.doc && !S.locked){
+        S.saveTimer = setTimeout(() => { S.saveTimer = null; doSave(); }, 1000);
+      }
     }
   })();
   S.savePromise = run;
@@ -663,17 +722,21 @@ window.addEventListener("beforeunload", e => {
   if (S.dirty || S.editing !== null){ e.preventDefault(); e.returnValue = ""; }
 });
 
-/* 창에 다시 돌아오면 다른 사람이 저장한 것을 조용히 받아온다 */
-window.addEventListener("focus", async () => {
-  if (!S.doc || S.dirty || S.saving || S.locked || S.editing !== null) return;
-  if (Date.now() - S.lastLoad < 30000) return;
-  const reqCate = S.cate;
-  try{
-    const r = await api({ op: "load", cate: reqCate });
-    if (S.cate !== reqCate || !S.doc) return;
-    S.lastLoad = Date.now();
-    if (r.doc) adopt(r.doc);
-  }catch(e){}
+/* 창에 다시 돌아오면 다른 사람이 저장한 것(문서·배지)을 조용히 받아온다 */
+window.addEventListener("focus", () => {
+  if (!document.getElementById("scrMain").classList.contains("on")) return;
+  if (Date.now() - S.lastList > 30000) refreshList().then(renderBadges);
+  (async () => {
+    if (!S.doc || S.dirty || S.saving || S.locked || S.editing !== null) return;
+    if (Date.now() - S.lastLoad < 30000) return;
+    const reqCate = S.cate;
+    try{
+      const r = await api({ op: "load", cate: reqCate });
+      if (S.cate !== reqCate || !S.doc) return;
+      S.lastLoad = Date.now();
+      if (r.doc) adopt(r.doc);
+    }catch(e){}
+  })();
 });
 
 /* =========================================================
@@ -691,17 +754,24 @@ document.getElementById("btnRetryLoad").addEventListener("click", () => { if (S.
 async function openMap(no){
   const c = CAT_BY_NO.get(no);
   if (!c) return;
+  const my = ++S.navSeq;
   S.cate = no;
   S.doc = { cate: no, name: c.name, path: catPath(c), nodes: Object.create(null) };
   S.sel = null; S.editing = null; S.editingIsNew = false; S.editingTa = null;
-  S.dirty = false; S.pendingAdopt = null; S.locked = false;
+  S.dirty = false; S.pendingAdopt = null;
+  S.locked = true;   // 로드가 끝날 때까지 캔버스 조작 금지 — 옛 화면 잔상 클릭이 새 문서를 오염시키지 않게
   clearTimeout(S.saveTimer); S.saveTimer = null;
-  clearTimeout(S.retryTimer);
-  show("scrEdit");
+  clearTimeout(S.retryTimer); S.retryTimer = null;
+  for (let x = c.parent; x; x = x.parent) S.open.add(x.no);   // 왼쪽 탭에서 위치가 보이게 펼침
+  document.getElementById("welcome").style.display = "none";
   document.getElementById("crumb").textContent = catPath(c);
+  closeSideOnMobile();
+  renderTree();
   setSave("불러오는 중…");
   setAlarm(false);
   lockBox(false);
+  layout();          // 이전 카테고리 상자·툴바를 즉시 지운다
+  updateCnt();
 
   let serverDoc = null, loadFailed = false, failMsg = "";
   try{
@@ -713,7 +783,7 @@ async function openMap(no){
     loadFailed = true;
     failMsg = e.config ? e.message : "";
   }
-  if (S.cate !== no || !S.doc) return;   // 로드 중 다른 곳으로 이동함
+  if (S.navSeq !== my || S.cate !== no || !S.doc) return;   // 로드 중 다른 곳으로 이동함
 
   if (loadFailed){
     /* 서버 것을 못 읽었는데 편집을 열면 '다 지워졌다'로 오인하고 빈 문서를 만들 위험 — 잠근다 */
@@ -725,6 +795,7 @@ async function openMap(no){
     return;
   }
 
+  S.locked = false;
   if (serverDoc && serverDoc.nodes) S.doc.nodes = mergeNodes(serverDoc.nodes, {});
 
   /* 지난번 저장 실패분·적다 만 글이 이 컴퓨터에 남아 있으면 합친다 */
@@ -743,20 +814,6 @@ async function openMap(no){
   fitView();
   updateCnt();
 }
-
-document.getElementById("btnBack").addEventListener("click", async () => {
-  if (S.editing !== null && S.editingTa) editCommit(S.editingTa.value);   // 적던 글은 자동으로 확정
-  if (S.saving && S.savePromise){ try{ await S.savePromise; }catch(e){} } // 진행 중 저장은 끝까지 기다림
-  if (S.dirty){ clearTimeout(S.saveTimer); S.saveTimer = null; await doSave(); }
-  if (S.dirty){
-    openModal("아직 저장되지 않았습니다.\n인터넷 연결을 확인해 주세요. 지금 나가셔도 적으신 것은 이 컴퓨터에 남아 있고, 다음에 이 카테고리를 열면 이어서 저장됩니다.", "그래도 나가기", () => {
-      S.doc = null; S.cate = null; enterHome();
-    });
-    return;
-  }
-  S.doc = null; S.cate = null;
-  enterHome();
-});
 
 function updateCnt(){
   if (!S.doc){ return; }
@@ -884,7 +941,7 @@ function nodeEl(id, n){
     const ta = document.createElement("textarea");
     ta.maxLength = 2000;
     ta.value = n.x;
-    ta.placeholder = n.t === "q" ? "손님이 물어볼 질문을 적어 주세요" : "그 질문에 드릴 답을 적어 주세요";
+    ta.placeholder = (n.t === "q" ? "손님이 물어볼 질문" : "그 질문에 드릴 답") + " — 나중에 채우셔도 됩니다";
     const btns = document.createElement("div");
     btns.className = "editbtns";
     btns.innerHTML = '<button class="ok">확인</button><button class="no">취소</button>';
@@ -911,14 +968,16 @@ function nodeEl(id, n){
     el.innerHTML = '<span class="ntag">카테고리</span>' + esc(S.doc.name);
   }else{
     el.innerHTML = '<span class="ntag">' + (n.t === "q" ? "질문" : "답변") + '</span>' +
-      (n.x ? esc(n.x) : '<span class="empty">(아직 안 적음)</span>');
+      (n.x ? esc(n.x) : '<span class="empty">(아직 안 적음 — 눌러서 채우세요)</span>');
   }
 
   el.addEventListener("pointerdown", ev => ev.stopPropagation());
   el.addEventListener("click", ev => {
     ev.stopPropagation();
     if (S.locked) return;
-    if (S.editing !== null) return;   // 편집 중엔 다른 상자 선택 안 됨
+    if (S.editing === id) return;
+    /* 다른 상자를 적던 중이면 그 글을 확정하고 이 상자로 넘어온다 — 빈 상자 여러 개 만들기 가능 */
+    if (S.editing !== null && S.editingTa) editCommit(S.editingTa.value);
     select(id);
   });
   el.addEventListener("dblclick", ev => {
@@ -965,6 +1024,8 @@ document.getElementById("toolbar").addEventListener("pointerdown", ev => ev.stop
 
 function addChild(pid, t){
   if (S.locked || !S.doc) return;
+  /* 이전 화면 잔상에서 온 클릭 방어 — 부모가 이 문서에 실제로 있어야 한다 */
+  if (pid !== "" && (!S.doc.nodes[pid] || S.doc.nodes[pid].d === 1)) return;
   if (Object.keys(S.doc.nodes).length >= 4500){
     openModal("이 카테고리에 담을 수 있는 양이 거의 다 찼습니다.\n담당자에게 알려 주세요.", "확인", () => {});
     return;
@@ -972,11 +1033,14 @@ function addChild(pid, t){
   const id = newId();
   S.doc.nodes[id] = { p: pid, t, x: "", u: Date.now(), o: Date.now() };
   S.sel = id;
+  markDirty();               // 빈 상자도 그대로 저장된다 — 글은 나중에 채워도 됨
   editStart(id, true);
   ensureVisible(id);
 }
 
 function editStart(id, isNew){
+  if (S.locked || !S.doc) return;
+  if (id === "" || !S.doc.nodes[id] || S.doc.nodes[id].d === 1) return;
   S.editing = id; S.editingIsNew = !!isNew;
   layout();
   ensureVisible(id);
@@ -988,18 +1052,13 @@ function editCommit(text){
   const n = S.doc.nodes[id];
   const t = text.replace(/\s+$/, "");
   try{ localStorage.removeItem(draftKey(id)); }catch(e){}
-  S.editing = null; S.editingTa = null;
-  if (!t.trim()){
-    if (S.editingIsNew){
-      delete S.doc.nodes[id];          // 만들다 만 빈 상자는 흔적 없이 제거
-      if (S.sel === id) S.sel = n ? n.p : null;
-    }
-    /* 기존 상자를 빈 칸으로 확정한 경우는 바꾸지 않는다(잘못 지운 글 보호) */
-  }else if (n && t !== n.x){
+  S.editing = null; S.editingTa = null; S.editingIsNew = false;
+  /* 빈 채로 확인해도 상자는 남는다(나중에 채우면 됨).
+     기존 글을 빈 칸으로 지워 확정한 경우는 원래 글을 지킨다(실수 방지). */
+  if (n && t.trim() && t !== n.x){
     n.x = t; n.u = Date.now();
     markDirty();
   }
-  S.editingIsNew = false;
   if (S.pendingAdopt){ const p = S.pendingAdopt; S.pendingAdopt = null; adopt(p); }
   layout();
 }
@@ -1018,13 +1077,13 @@ function requestCancel(){
 function editCancel(){
   const id = S.editing;
   if (id !== null){ try{ localStorage.removeItem(draftKey(id)); }catch(e){} }
-  S.editing = null; S.editingTa = null;
-  if (S.editingIsNew && id !== null){
+  const wasNew = S.editingIsNew;
+  S.editing = null; S.editingTa = null; S.editingIsNew = false;
+  if (wasNew && id !== null){
+    /* 취소한 새 상자는 지운 것으로 저장 — 이미 서버에 올라갔어도 병합에서 살아나지 않게 */
     const n = S.doc.nodes[id];
-    delete S.doc.nodes[id];
-    if (S.sel === id) S.sel = n ? n.p : null;
+    if (n){ n.d = 1; n.u = Date.now(); if (S.sel === id) S.sel = n.p; markDirty(); }
   }
-  S.editingIsNew = false;
   if (S.pendingAdopt){ const p = S.pendingAdopt; S.pendingAdopt = null; adopt(p); }
   layout();
 }
@@ -1035,7 +1094,7 @@ function delAsk(id){
   let cnt = 0;
   const walk = pid => { for (const { id: k } of liveChildren(pid)){ cnt++; walk(k); } };
   walk(id);
-  const label = n.x ? "「" + (n.x.length > 40 ? n.x.slice(0, 40) + "…" : n.x) + "」" : "이 " + (n.t === "q" ? "질문" : "답변");
+  const label = n.x ? "「" + (n.x.length > 40 ? n.x.slice(0, 40) + "…" : n.x) + "」" : "이 빈 " + (n.t === "q" ? "질문" : "답변") + " 상자";
   openModal(label + " 을(를) 지웁니다." + (cnt ? "\n아래에 달린 " + cnt + "개도 함께 지워집니다." : ""), "지우기", () => {
     const now = Date.now();
     const kill = tid => {
@@ -1128,9 +1187,15 @@ canvas.addEventListener("pointerup", endPointer);
 canvas.addEventListener("pointercancel", endPointer);
 canvas.addEventListener("click", e => {
   if (e.target === canvas || e.target === world){
-    if (S.editing === null && !S.locked){ S.sel = null; layout(); }
+    if (S.locked) return;
+    if (S.editing !== null && S.editingTa){ editCommit(S.editingTa.value); return; }  // 바깥 클릭 = 확정
+    S.sel = null; layout();
   }
 });
+
+/* 확대 단추·잠금 카드가 캔버스의 포인터 잡기에 먹히지 않게 전파를 끊는다 */
+document.getElementById("zoomctl").addEventListener("pointerdown", ev => ev.stopPropagation());
+document.getElementById("lockbox").addEventListener("pointerdown", ev => ev.stopPropagation());
 
 function zoomAt(cx, cy, factor){
   const nz = Math.min(1.6, Math.max(0.25, S.zoom * factor));
@@ -1194,12 +1259,13 @@ function ensureVisible(id){
 /* 키보드 — 편집 중이 아닐 때만 */
 document.addEventListener("keydown", e => {
   if (e.isComposing || e.keyCode === 229) return;
-  if (!document.getElementById("scrEdit").classList.contains("on")) return;
+  if (!document.getElementById("scrMain").classList.contains("on")) return;
   if (S.editing !== null) return;
   if (document.getElementById("modal").classList.contains("on")){
     if (e.key === "Escape") document.getElementById("modalNo").click();
     return;
   }
+  if (!S.doc) return;
   if (e.key === "Escape"){ S.sel = null; layout(); }
   if (S.sel === null || S.sel === "" || S.locked) return;
   if (e.key === "Delete"){ e.preventDefault(); delAsk(S.sel); }
@@ -1210,7 +1276,7 @@ document.addEventListener("keydown", e => {
    11) 시작
    ========================================================= */
 (function boot(){
-  if (S.pw) enterHome();
+  if (S.pw) enterMain();
   else { show("scrLogin"); setTimeout(() => pwInput.focus(), 100); }
 })();
 </script>
