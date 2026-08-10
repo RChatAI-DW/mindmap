@@ -46,6 +46,9 @@
   #sideTotal{margin:14px 14px 10px; font-size:13.5px; color:var(--dim); background:var(--card);
              border:1px solid var(--line); border-radius:10px; padding:7px 11px; line-height:1.5}
   #sideTotal.err{color:var(--danger); border-color:#e4c9c9}
+  #sideTotal.click{cursor:pointer}
+  #sideTotal.click:hover{border-color:#b9c6e8}
+  #sideTotal .findhint{display:block; font-size:12px; color:var(--accent); margin-top:3px}
   #tree{flex:1 1 auto; overflow-y:auto; padding-bottom:10px}
   #sideFoot{padding:10px 14px; border-top:1px solid var(--line)}
   #btnLogout{width:100%; border:1px solid var(--line); background:var(--card);
@@ -262,7 +265,9 @@
 const FN_URL = "https://wjlzfknaezwwyusdrdtt.supabase.co/functions/v1/mindmap";
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHpma25hZXp3d3l1c2RyZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MjAwODEsImV4cCI6MjEwMTM5NjA4MX0.q8g2wFBP_ideMcGgtgKeFwwxBdIG7ajpcv6RJxJbO9s";
 
-const CATS = (window.RA_CATEGORIES && window.RA_CATEGORIES.tree) || [];
+/* 판매 행사·중복 분류는 질문 작업 대상이 아니다 — 트리에서 뺀다 (대표님 지시 2026-08-10) */
+const HIDE_CATES = new Set([151, 409, 385]);   // 반값할인상품, 당일배송 유니트, 브랜드별
+const CATS = ((window.RA_CATEGORIES && window.RA_CATEGORIES.tree) || []).filter(c => !HIDE_CATES.has(c.no));
 
 /* 카테고리 색인: no → {no, name, children, parent} */
 const CAT_BY_NO = new Map();
@@ -456,18 +461,37 @@ function renderTotal(){
     total.className = "";
     total.textContent = "불러오는 중…";
   }else{
-    total.className = "";
     let tq = 0, ta = 0, tc = 0;
     for (const k of Object.keys(S.summary)){
+      if (!CAT_BY_NO.has(+k)) continue;   // 트리에서 뺀 분류·정리된 문서는 세지 않는다
       const s = S.summary[k];
       const q = +s.q || 0, a = +s.a || 0;
       if (q + a > 0){ tq += q; ta += a; tc++; }
     }
+    total.className = tc ? "click" : "";
     total.innerHTML = tc
-      ? "적은 카테고리 <b>" + tc + "곳</b> · 질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>"
+      ? "적은 카테고리 <b>" + tc + "곳</b> · 질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>" +
+        '<span class="findhint">▸ 누르면 적은 곳이 펼쳐집니다</span>'
       : "아직 적으신 곳이 없습니다 — 아래에서 골라 시작해 주세요";
   }
 }
+
+/* 진행 요약 클릭 — 내용이 있는 분류들의 조상을 펼쳐 위치를 보여준다 */
+document.getElementById("sideTotal").addEventListener("click", () => {
+  let first = null;
+  for (const k of Object.keys(S.summary)){
+    const c = CAT_BY_NO.get(+k);
+    if (!c) continue;
+    const s = S.summary[k];
+    if (((+s.q || 0) + (+s.a || 0)) === 0) continue;
+    if (first === null) first = +k;
+    for (let x = c.parent; x; x = x.parent) S.open.add(x.no);
+  }
+  if (first === null) return;
+  renderTree();
+  const row = document.querySelector('#tree .trow[data-no="' + first + '"]');
+  if (row) row.scrollIntoView({ block: "center" });
+});
 
 function renderTree(){
   const rows = [];
