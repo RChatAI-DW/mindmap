@@ -39,6 +39,7 @@
   #homeSide h2{font-size:14.5px; margin:4px 18px 10px; color:var(--dim)}
   #homeTotal{margin:0 18px 12px; font-size:14px; color:var(--dim); background:var(--card);
              border:1px solid var(--line); border-radius:10px; padding:8px 12px; line-height:1.5}
+  #homeTotal.err{color:var(--danger); border-color:#e4c9c9}
   .mainitem{display:block; width:100%; text-align:left; border:0; background:none;
             padding:10px 18px; font-size:16px; color:var(--ink)}
   .mainitem:hover{background:#e5e1d9}
@@ -52,6 +53,8 @@
                    border-radius:12px; padding:13px 18px; font-size:16.5px; margin-bottom:22px}
   #homeMain h1{font-size:26px; margin:0 0 4px}
   #homeMain .sub{color:var(--dim); font-size:15px; margin-bottom:18px}
+  #mainSelect{display:none; font-size:16px; padding:8px 10px; border-radius:9px;
+              border:1px solid var(--line); background:var(--card); max-width:55vw; font-family:inherit}
   .catrow{display:flex; align-items:center; gap:12px; background:var(--card);
           border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:10px}
   .catrow .twisty{flex:0 0 30px; height:30px; border:1px solid var(--line); background:#f4f2ed;
@@ -65,7 +68,7 @@
   .catrow .copen:hover{background:var(--accent-soft)}
   .catrow.d1{margin-left:42px} .catrow.d2{margin-left:84px} .catrow.d3{margin-left:126px}
   .catrow.rootrow{border-color:#bcd8c9; background:#fbfdf9}
-  #homeTop{display:flex; align-items:center; gap:14px; margin-bottom:16px}
+  #homeTop{display:flex; align-items:center; gap:14px; margin-bottom:16px; flex-wrap:wrap}
   #btnLogout{margin-left:auto; border:1px solid var(--line); background:var(--card);
              border-radius:8px; padding:6px 12px; font-size:13.5px; color:var(--dim)}
 
@@ -85,7 +88,7 @@
   #alarm{display:none; padding:12px 20px; background:var(--danger); color:#fff; font-size:16px}
   #alarm b{color:#ffe8a3}
 
-  #canvas{position:relative; flex:1 1 auto; overflow:hidden; cursor:grab;
+  #canvas{position:relative; flex:1 1 auto; overflow:hidden; cursor:grab; touch-action:none;
           background:
             radial-gradient(circle, #e7e4dc 1.2px, transparent 1.3px) 0 0/26px 26px,
             var(--bg)}
@@ -135,12 +138,23 @@
                   border:1px solid var(--line); background:var(--card); box-shadow:0 2px 8px rgba(0,0,0,.08)}
   #zoomctl button.fit{font-size:13px}
 
+  /* 불러오기 실패 잠금 */
+  #lockbox{position:absolute; inset:0; display:none; place-items:center; z-index:6;
+           background:rgba(246,245,242,.85)}
+  #lockbox.on{display:grid}
+  #lockbox .lockcard{background:var(--card); border:1px solid var(--line); border-radius:16px;
+                     padding:30px 36px; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,.12);
+                     width:min(420px, 90vw)}
+  #lockbox .lockcard div{font-size:17px; line-height:1.7; margin-bottom:18px; word-break:keep-all}
+  #btnRetryLoad{padding:12px 30px; font-size:17px; font-weight:700; border-radius:10px;
+                background:var(--accent); color:#fff; border:0}
+
   /* ───────── 확인 모달 ───────── */
   #modal{position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; place-items:center; z-index:50}
   #modal.on{display:grid}
   #modal .mbox{background:var(--card); border-radius:16px; padding:30px 34px; width:min(460px, 92vw);
                box-shadow:0 16px 60px rgba(0,0,0,.25)}
-  #modal .mtext{font-size:18px; line-height:1.7; margin-bottom:22px; word-break:keep-all}
+  #modal .mtext{font-size:18px; line-height:1.7; margin-bottom:22px; word-break:keep-all; white-space:pre-line}
   #modal .mbtns{display:flex; gap:10px}
   #modal .mbtns button{flex:1; padding:13px; font-size:17px; font-weight:700; border-radius:10px}
   #modal .myes{background:var(--danger); color:#fff; border:0}
@@ -149,6 +163,7 @@
   @media (max-width:900px){
     #scrHome.on{grid-template-columns:1fr}
     #homeSide{display:none}
+    #mainSelect{display:inline-block}
   }
 </style>
 </head>
@@ -175,10 +190,12 @@
   <div id="homeMain">
     <div id="homeTop">
       <h1 id="homeTitle"></h1>
+      <select id="mainSelect" title="큰 분류 고르기"></select>
       <button id="btnLogout">비밀번호 다시 넣기</button>
     </div>
     <div class="guide">카테고리를 고르시고 → <b>손님이 물어볼 질문</b>을 달고 → <b>답</b>을 달고 →
-      그 답을 들은 손님이 <b>또 물어볼 질문</b>을 계속 달아 주세요. 적으시는 대로 저절로 저장됩니다.</div>
+      그 답을 들은 손님이 <b>또 물어볼 질문</b>을 계속 달아 주세요.
+      상자의 <b>확인</b> 단추를 누르시면 저절로 저장됩니다.</div>
     <div class="sub" id="homeSub"></div>
     <div id="catlist"></div>
   </div>
@@ -192,8 +209,7 @@
     <span class="cnt" id="cnt"></span>
     <span id="saveState">&nbsp;</span>
   </div>
-  <div id="alarm"><b>저장이 안 되고 있습니다.</b> 인터넷 연결을 확인해 주세요.
-    적으신 내용은 이 컴퓨터에 남아 있으니 <b>이 창은 닫지 마세요.</b> 잠시 뒤 다시 저장을 시도합니다.</div>
+  <div id="alarm"></div>
   <div id="canvas">
     <div id="world">
       <svg id="wires"></svg>
@@ -206,10 +222,16 @@
       <button id="btnZout" title="작게">－</button>
       <button id="btnFit" class="fit" title="전체 보기">전체</button>
     </div>
+    <div id="lockbox">
+      <div class="lockcard">
+        <div id="lockmsg"></div>
+        <button id="btnRetryLoad">다시 시도</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ───────── 지우기 확인 ───────── -->
+<!-- ───────── 확인 모달 ───────── -->
 <div id="modal">
   <div class="mbox">
     <div class="mtext" id="modalText"></div>
@@ -253,16 +275,19 @@ function catPath(c){
    ========================================================= */
 const LS_PW = "ra-mindmap-pw";
 const LS_BACKUP = "ra-mindmap-backup-";   // + cate
+const LS_DRAFT = "ra-mindmap-draft-";     // + cate + "-" + 노드id — 적는 중인 글의 실시간 사본
 
 const S = {
   pw: localStorage.getItem(LS_PW) || "",
   summary: {},          // {cate:{n,q,a,u}}
+  listState: "loading", // loading | ok | fail
+  listRetry: null,
   mainSel: null,        // 홈에서 고른 큰 분류 no
   open: new Set(),      // 홈 트리 펼침 상태
   // 편집 중 문서
-  cate: null, doc: null,
-  sel: null, editing: null, editingIsNew: false,
-  dirty: false, saving: false, saveTimer: null, retryTimer: null,
+  cate: null, doc: null, locked: false,
+  sel: null, editing: null, editingIsNew: false, editingTa: null,
+  dirty: false, saving: false, savePromise: null, saveTimer: null, retryTimer: null,
   pendingAdopt: null, lastLoad: 0,
   // 캔버스
   zoom: 1, panX: 60, panY: 60,
@@ -280,8 +305,18 @@ async function api(body){
     signal: AbortSignal.timeout(30000),
   });
   const j = await res.json().catch(() => ({}));
-  if (res.status === 401){ const e = new Error("비밀번호가 맞지 않습니다"); e.auth = true; throw e; }
-  if (!res.ok) throw new Error(j.error || ("오류 " + res.status));
+  if (res.status === 401){
+    /* 함수의 비밀번호 401은 {error}를 담고, 게이트웨이(연결 설정) 401은 형식이 다르다 */
+    const e = new Error(j.error || "프로그램 연결 설정 문제 — 담당자에게 알려 주세요");
+    if (j.error) e.auth = true; else e.config = true;
+    e.status = 401;
+    throw e;
+  }
+  if (!res.ok){
+    const e = new Error(j.error || ("오류 " + res.status));
+    e.status = res.status;
+    throw e;
+  }
   return j;
 }
 
@@ -316,7 +351,7 @@ async function tryLogin(){
   btnLogin.disabled = false;
 }
 btnLogin.addEventListener("click", tryLogin);
-pwInput.addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+pwInput.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) tryLogin(); });
 
 document.getElementById("btnLogout").addEventListener("click", () => {
   localStorage.removeItem(LS_PW); S.pw = "";
@@ -326,12 +361,15 @@ document.getElementById("btnLogout").addEventListener("click", () => {
 /* =========================================================
    4) 카테고리 화면
    ========================================================= */
-function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 function badgeOf(no){
+  if (S.listState === "loading") return { text: "…", has: false };
+  if (S.listState === "fail") return { text: "확인 안 됨", has: false };
   const s = S.summary[no];
-  if (!s || (!s.q && !s.a)) return { text: "아직 없음", has: false };
-  return { text: "질문 " + s.q + " · 답변 " + s.a, has: true };
+  const q = s ? (+s.q || 0) : 0, a = s ? (+s.a || 0) : 0;
+  if (!q && !a) return { text: "아직 없음", has: false };
+  return { text: "질문 " + q + " · 답변 " + a, has: true };
 }
 
 /* 큰 분류 배지 = 그 아래 전체 합 */
@@ -339,23 +377,36 @@ function subtreeSum(c){
   let q = 0, a = 0;
   const walk = x => {
     const s = S.summary[x.no];
-    if (s){ q += s.q || 0; a += s.a || 0; }
+    if (s){ q += +s.q || 0; a += +s.a || 0; }
     (x.children || []).forEach(walk);
   };
   walk(c);
   return { q, a };
 }
 
-async function enterHome(){
-  show("scrHome");
-  if (!S.mainSel) S.mainSel = CATS.length ? CATS[0].no : null;
-  renderHome();
+async function refreshList(){
   try{
     const r = await api({ op: "list" });
     S.summary = r.files || {};
+    S.listState = "ok";
   }catch(e){
     if (e.auth){ show("scrLogin"); return; }
+    S.listState = "fail";
+    clearTimeout(S.listRetry);
+    S.listRetry = setTimeout(() => {
+      if (document.getElementById("scrHome").classList.contains("on")){
+        refreshList().then(renderHome);
+      }
+    }, 10000);
   }
+}
+
+async function enterHome(){
+  show("scrHome");
+  if (!S.mainSel) S.mainSel = CATS.length ? CATS[0].no : null;
+  if (S.listState !== "ok") S.listState = "loading";
+  renderHome();
+  await refreshList();
   renderHome();
 }
 
@@ -372,14 +423,30 @@ function renderHome(){
     S.mainSel = +el.dataset.no; renderHome();
   }));
 
-  let tq = 0, ta = 0, tc = 0;
-  for (const k of Object.keys(S.summary)){
-    const s = S.summary[k];
-    if ((s.q || 0) + (s.a || 0) > 0){ tq += s.q || 0; ta += s.a || 0; tc++; }
+  /* 좁은 화면용 큰 분류 드롭다운 (사이드바가 숨겨지는 900px 이하) */
+  const selEl = document.getElementById("mainSelect");
+  selEl.innerHTML = CATS.map(c =>
+    '<option value="' + c.no + '"' + (c.no === S.mainSel ? " selected" : "") + '>' + esc(c.name) + '</option>').join("");
+
+  const total = document.getElementById("homeTotal");
+  if (S.listState === "fail"){
+    total.className = "err";
+    total.textContent = "목록을 못 불러왔습니다 — 인터넷을 확인해 주세요 (자동으로 다시 시도합니다)";
+  }else if (S.listState === "loading"){
+    total.className = "";
+    total.textContent = "불러오는 중…";
+  }else{
+    total.className = "";
+    let tq = 0, ta = 0, tc = 0;
+    for (const k of Object.keys(S.summary)){
+      const s = S.summary[k];
+      const q = +s.q || 0, a = +s.a || 0;
+      if (q + a > 0){ tq += q; ta += a; tc++; }
+    }
+    total.innerHTML = tc
+      ? "지금까지 <b>" + tc + "곳</b>에 적으셨습니다<br>질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>"
+      : "아직 적으신 곳이 없습니다";
   }
-  document.getElementById("homeTotal").innerHTML =
-    tc ? "지금까지 <b>" + tc + "곳</b>에 적으셨습니다<br>질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>"
-       : "아직 적으신 곳이 없습니다";
 
   const cur = CAT_BY_NO.get(S.mainSel);
   if (!cur) return;
@@ -390,8 +457,7 @@ function renderHome(){
       : "세부 카테고리가 없는 분류입니다. 아래 줄에서 바로 여시면 됩니다.";
 
   const rows = [];
-  const b0 = badgeOf(cur.no);
-  rows.push(rowHtml(cur, 0, true, b0));
+  rows.push(rowHtml(cur, 0, true, badgeOf(cur.no)));
   const emit = (c, d) => {
     rows.push(rowHtml(c, d, false, badgeOf(c.no)));
     if (S.open.has(c.no)) (c.children || []).forEach(k => emit(k, d + 1));
@@ -408,6 +474,11 @@ function renderHome(){
   list.querySelectorAll(".copen").forEach(el => el.addEventListener("click", () => openMap(+el.dataset.no)));
 }
 
+document.getElementById("mainSelect").addEventListener("change", e => {
+  S.mainSel = +e.target.value;
+  renderHome();
+});
+
 function rowHtml(c, depth, isRoot, b){
   const kids = (c.children || []).length;
   return '<div class="catrow d' + Math.min(depth, 3) + (isRoot ? " rootrow" : "") + '">' +
@@ -423,6 +494,7 @@ function rowHtml(c, depth, isRoot, b){
    5) 문서 (마인드맵 데이터)
    ========================================================= */
 function newId(){ return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
+function draftKey(id){ return LS_DRAFT + S.cate + "-" + id; }
 
 function liveChildren(pid){
   const out = [];
@@ -445,8 +517,10 @@ function countDoc(){
   return { q, a };
 }
 
+/* 병합 — id 합집합, 같은 id는 u 큰 쪽 승. __proto__류 setter 사고를 막게 널 프로토타입 맵 사용 */
 function mergeNodes(server, client){
-  const out = Object.assign({}, server);
+  const out = Object.create(null);
+  for (const [id, n] of Object.entries(server)) out[id] = n;
   for (const [id, n] of Object.entries(client)){
     const cur = out[id];
     if (!cur || (n.u || 0) >= (cur.u || 0)) out[id] = n;
@@ -468,71 +542,135 @@ function backupTake(cate){
   }catch(e){ return null; }
 }
 
+/* 적는 중이던 글(미확정)의 실시간 사본 복구 — 창이 꺼져도 글이 살아남는다 */
+function restoreDrafts(){
+  const prefix = LS_DRAFT + S.cate + "-";
+  let changed = false;
+  for (let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith(prefix)) continue;
+    let d = null;
+    try{ d = JSON.parse(localStorage.getItem(k)); }catch(e){}
+    localStorage.removeItem(k);
+    if (!d || !(d.x || "").trim()) continue;
+    const id = k.slice(prefix.length);
+    const n = S.doc.nodes[id];
+    if (!n){
+      S.doc.nodes[id] = { p: typeof d.p === "string" ? d.p : "", t: d.ty === "a" ? "a" : "q",
+                          x: d.x, u: d.t || Date.now(), o: d.t || Date.now() };
+      changed = true;
+    }else if (n.d !== 1 && (d.t || 0) > (n.u || 0) && d.x !== n.x){
+      n.x = d.x; n.u = d.t;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 /* =========================================================
    6) 저장 (자동)
    ========================================================= */
+const ALARM_DEFAULT = "<b>저장이 안 되고 있습니다.</b> 인터넷 연결을 확인해 주세요. " +
+  "적으신 내용은 이 컴퓨터에 남아 있으니 <b>이 창은 닫지 마세요.</b> 잠시 뒤 다시 저장을 시도합니다.";
+
 function setSave(t, cls){
   const el = document.getElementById("saveState");
   el.textContent = t; el.className = cls || "";
 }
-function setAlarm(on){ document.getElementById("alarm").style.display = on ? "block" : "none"; }
+function setAlarm(on, msg){
+  const el = document.getElementById("alarm");
+  el.style.display = on ? "block" : "none";
+  if (on) el.innerHTML = msg ? "<b>저장이 안 됩니다.</b> " + esc(msg) : ALARM_DEFAULT;
+}
 
 function markDirty(){
+  if (!S.doc || S.locked) return;
   S.dirty = true;
   backupWrite(true);
   setSave("저장 중…");
   clearTimeout(S.saveTimer);
-  S.saveTimer = setTimeout(doSave, 2500);
+  S.saveTimer = setTimeout(() => { S.saveTimer = null; doSave(); }, 2500);
   updateCnt();
 }
 
-async function doSave(){
-  if (!S.dirty || S.saving || !S.doc) return;
+/* 서버로 보낼 사본 — 편집 중인 새 상자와 빈 유령 상자는 올리지 않는다 */
+function savePayload(){
+  const now = Date.now();
+  const nodes = {};
+  for (const [id, n] of Object.entries(S.doc.nodes)){
+    if (id === S.editing && S.editingIsNew) continue;          // 아직 만드는 중
+    if (n.x === "" && n.d !== 1) nodes[id] = Object.assign({}, n, { d: 1, u: now });  // 빈 유령 정리
+    else nodes[id] = n;
+  }
+  return { cate: S.doc.cate, name: S.doc.name, path: S.doc.path, nodes };
+}
+
+function doSave(){
+  if (!S.dirty || S.saving || !S.doc || S.locked) return Promise.resolve();
+  const reqCate = S.cate;
   S.saving = true;
   clearTimeout(S.retryTimer);
-  try{
-    S.dirty = false;   // 저장 도중의 새 수정은 다시 dirty 로 표시됨
-    const r = await api({ op: "save", cate: S.cate, doc: S.doc });
-    adopt(r.doc);
-    backupWrite(false);
-    const c = countDoc();
-    S.summary[S.cate] = { n: S.doc.name, q: c.q, a: c.a, u: Date.now() };
-    setSave("깃허브 저장됨 ✓ " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }), "on");
-    setAlarm(false);
-  }catch(e){
-    S.dirty = true;
-    if (e.auth){
-      setSave("비밀번호가 바뀌었습니다", "bad");
-      show("scrLogin");
-    }else{
-      setSave("저장 실패 — 다시 시도합니다", "bad");
-      setAlarm(true);
-      S.retryTimer = setTimeout(doSave, 20000);
+  S.dirty = false;   // 저장 도중의 새 수정은 markDirty 가 다시 켠다
+  const run = (async () => {
+    try{
+      const r = await api({ op: "save", cate: reqCate, doc: savePayload() });
+      if (S.cate !== reqCate || !S.doc) return;   // 그 사이 다른 화면으로 이동 — 서버 저장은 이미 완료
+      adopt(r.doc);
+      backupWrite(S.dirty);   // 저장 중 새 수정이 있었으면 '저장 안 됨' 표시 유지
+      const c = countDoc();
+      S.summary[reqCate] = { n: S.doc.name, q: c.q, a: c.a, u: Date.now() };
+      if (S.dirty){
+        setSave("저장 중…");   // 남은 수정이 있으니 완료 표시는 아직
+      }else{
+        setSave("깃허브 저장됨 ✓ " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }), "on");
+        setAlarm(false);
+      }
+    }catch(e){
+      if (S.cate !== reqCate || !S.doc) return;   // 백업(pending)이 남아 있어 다음에 복구된다
+      S.dirty = true;
+      if (e.auth){
+        setSave("비밀번호가 바뀌었습니다", "bad");
+        show("scrLogin");
+      }else if (e.status === 400){
+        /* 형식·용량 문제 — 재시도해도 소용없다 */
+        setSave("저장 불가", "bad");
+        setAlarm(true, "이 문서가 너무 커졌거나 형식 문제가 있습니다. 담당자에게 알려 주세요. 적으신 것은 이 컴퓨터에 남아 있습니다.");
+      }else{
+        setSave("저장 실패 — 다시 시도합니다", "bad");
+        setAlarm(true, e.config ? e.message : "");
+        S.retryTimer = setTimeout(doSave, e.status === 429 ? 60000 : 20000);
+      }
+    }finally{
+      S.saving = false;
+      S.savePromise = null;
     }
-  }
-  S.saving = false;
-  if (S.dirty && !S.saveTimer) markDirty();
+  })();
+  S.savePromise = run;
+  return run;
 }
 
 /* 서버 병합본 받아들이기 — 편집 중이면 편집이 끝난 뒤에 */
 function adopt(serverDoc){
   if (!serverDoc || !S.doc) return;
-  if (S.editing){ S.pendingAdopt = serverDoc; return; }
+  if (S.editing !== null){ S.pendingAdopt = serverDoc; return; }
   S.doc.nodes = mergeNodes(serverDoc.nodes || {}, S.doc.nodes);
   if (S.sel && (!S.doc.nodes[S.sel] || S.doc.nodes[S.sel].d === 1)) S.sel = null;
   layout();
+  updateCnt();
 }
 
 window.addEventListener("beforeunload", e => {
-  if (S.dirty){ e.preventDefault(); e.returnValue = ""; }
+  if (S.dirty || S.editing !== null){ e.preventDefault(); e.returnValue = ""; }
 });
 
 /* 창에 다시 돌아오면 다른 사람이 저장한 것을 조용히 받아온다 */
 window.addEventListener("focus", async () => {
-  if (!S.doc || S.dirty || S.saving) return;
+  if (!S.doc || S.dirty || S.saving || S.locked || S.editing !== null) return;
   if (Date.now() - S.lastLoad < 30000) return;
+  const reqCate = S.cate;
   try{
-    const r = await api({ op: "load", cate: S.cate });
+    const r = await api({ op: "load", cate: reqCate });
+    if (S.cate !== reqCate || !S.doc) return;
     S.lastLoad = Date.now();
     if (r.doc) adopt(r.doc);
   }catch(e){}
@@ -541,21 +679,31 @@ window.addEventListener("focus", async () => {
 /* =========================================================
    7) 마인드맵 열기
    ========================================================= */
+function lockBox(on, msg){
+  document.getElementById("lockbox").classList.toggle("on", !!on);
+  if (on){
+    document.getElementById("lockmsg").innerHTML =
+      esc(msg || "기존 내용을 불러오지 못했습니다.") + "<br>인터넷을 확인하신 뒤 다시 시도해 주세요.";
+  }
+}
+document.getElementById("btnRetryLoad").addEventListener("click", () => { if (S.cate) openMap(S.cate); });
+
 async function openMap(no){
   const c = CAT_BY_NO.get(no);
   if (!c) return;
   S.cate = no;
-  S.doc = { cate: no, name: c.name, path: catPath(c), nodes: {} };
-  S.sel = null; S.editing = null; S.dirty = false; S.pendingAdopt = null;
+  S.doc = { cate: no, name: c.name, path: catPath(c), nodes: Object.create(null) };
+  S.sel = null; S.editing = null; S.editingIsNew = false; S.editingTa = null;
+  S.dirty = false; S.pendingAdopt = null; S.locked = false;
   clearTimeout(S.saveTimer); S.saveTimer = null;
   clearTimeout(S.retryTimer);
   show("scrEdit");
   document.getElementById("crumb").textContent = catPath(c);
   setSave("불러오는 중…");
   setAlarm(false);
+  lockBox(false);
 
-  let serverDoc = null;
-  let loadFailed = false;
+  let serverDoc = null, loadFailed = false, failMsg = "";
   try{
     const r = await api({ op: "load", cate: no });
     serverDoc = r.doc;
@@ -563,20 +711,32 @@ async function openMap(no){
   }catch(e){
     if (e.auth){ show("scrLogin"); return; }
     loadFailed = true;
+    failMsg = e.config ? e.message : "";
   }
-  if (serverDoc && serverDoc.nodes) S.doc.nodes = serverDoc.nodes;
+  if (S.cate !== no || !S.doc) return;   // 로드 중 다른 곳으로 이동함
 
-  /* 지난번 저장 실패분이 이 컴퓨터에 남아 있으면 합친다 */
+  if (loadFailed){
+    /* 서버 것을 못 읽었는데 편집을 열면 '다 지워졌다'로 오인하고 빈 문서를 만들 위험 — 잠근다 */
+    S.locked = true;
+    setSave("불러오기 실패", "bad");
+    lockBox(true, failMsg);
+    layout();
+    updateCnt();
+    return;
+  }
+
+  if (serverDoc && serverDoc.nodes) S.doc.nodes = mergeNodes(serverDoc.nodes, {});
+
+  /* 지난번 저장 실패분·적다 만 글이 이 컴퓨터에 남아 있으면 합친다 */
+  let dirtyStart = false;
   const bk = backupTake(no);
   if (bk && bk.pending && bk.nodes){
     S.doc.nodes = mergeNodes(S.doc.nodes, bk.nodes);
-    markDirty();
-  }else if (loadFailed){
-    setSave("불러오기 실패 — 인터넷을 확인해 주세요", "bad");
-    setAlarm(true);
-  }else{
-    setSave(" ");
+    dirtyStart = true;
   }
+  if (restoreDrafts()) dirtyStart = true;
+  if (dirtyStart) markDirty();
+  else setSave(" ");
 
   S.zoom = 1;
   layout();
@@ -585,19 +745,21 @@ async function openMap(no){
 }
 
 document.getElementById("btnBack").addEventListener("click", async () => {
+  if (S.editing !== null && S.editingTa) editCommit(S.editingTa.value);   // 적던 글은 자동으로 확정
+  if (S.saving && S.savePromise){ try{ await S.savePromise; }catch(e){} } // 진행 중 저장은 끝까지 기다림
   if (S.dirty){ clearTimeout(S.saveTimer); S.saveTimer = null; await doSave(); }
   if (S.dirty){
-    openModal("아직 저장되지 않았습니다.\n인터넷 연결을 확인해 주세요. 그래도 나가시면 마지막 몇 글자가 깃허브에 안 올라갔을 수 있습니다(이 컴퓨터에는 남습니다).", "그래도 나가기", () => {
-      S.doc = null; enterHome();
+    openModal("아직 저장되지 않았습니다.\n인터넷 연결을 확인해 주세요. 지금 나가셔도 적으신 것은 이 컴퓨터에 남아 있고, 다음에 이 카테고리를 열면 이어서 저장됩니다.", "그래도 나가기", () => {
+      S.doc = null; S.cate = null; enterHome();
     });
     return;
   }
-  S.doc = null;
+  S.doc = null; S.cate = null;
   enterHome();
 });
 
 function updateCnt(){
-  if (!S.doc) return;
+  if (!S.doc){ return; }
   const c = countDoc();
   document.getElementById("cnt").textContent = "질문 " + c.q + " · 답변 " + c.a;
 }
@@ -613,7 +775,7 @@ function layout(){
   const wires = document.getElementById("wires");
 
   /* 1차: DOM 생성(위치 없이) → 높이 측정 */
-  const items = [];   // {id, el, depth, children:[...]}
+  const items = [];
   const build = (pid, depth) => {
     const out = [];
     for (const { id, n } of liveChildren(pid)){
@@ -636,7 +798,7 @@ function layout(){
   for (const it of items) it.h = it.el.offsetHeight;
 
   /* 2차: 아래에서 위로 y 계산 (자식 묶음 가운데에 부모) */
-  function place(it, y){                       // → 차지한 높이
+  function place(it, y){
     if (!it.children.length){
       it.y = y;
       return it.h;
@@ -660,7 +822,7 @@ function layout(){
     rootLast = t.y + Math.min(t.h, 60) / 2;
     ry += used + GAPY;
   }
-  const rootY = tops.length ? (rootFirst + rootLast) / 2 - Math.min(rootH, 60) / 2 : 0;
+  const rootY = tops.length ? Math.max(0, (rootFirst + rootLast) / 2 - Math.min(rootH, 60) / 2) : 0;
 
   /* x = 깊이 누적 (루트 폭과 일반 폭이 달라서) */
   const xAt = d => (d === 0) ? 0 : NW_ROOT + GAPX + (d - 1) * (NW + GAPX);
@@ -675,7 +837,6 @@ function layout(){
   /* 선 긋기 */
   let maxX = NW_ROOT, maxY = Math.max(rootY + rootH, ry);
   let d = "";
-  const anchor = (x, y, h, right) => [x + (right ? (y === rootY && x === 0 ? NW_ROOT : NW) : 0), 0];
   const pathTo = (px, py, ph, pw, it) => {
     const x1 = px + pw, y1 = py + Math.min(ph, 60) / 2;
     const x2 = it.x, y2 = it.y + Math.min(it.h, 60) / 2;
@@ -696,10 +857,12 @@ function layout(){
 
   /* 코치 문구 */
   const coach = document.getElementById("coach");
-  if (!tops.length){
+  if (S.locked){
+    coach.style.display = "none";
+  }else if (!tops.length){
     coach.textContent = "초록 상자(카테고리)를 누르고 [＋ 질문 달기]를 눌러 시작해 주세요";
     coach.style.display = "block";
-  }else if (S.sel === null && !S.editing){
+  }else if (S.sel === null && S.editing === null){
     coach.textContent = "상자를 누르면 달기·고치기·지우기 단추가 나옵니다";
     coach.style.display = "block";
   }else{
@@ -727,14 +890,22 @@ function nodeEl(id, n){
     btns.innerHTML = '<button class="ok">확인</button><button class="no">취소</button>';
     el.appendChild(ta); el.appendChild(btns);
     btns.querySelector(".ok").addEventListener("click", ev => { ev.stopPropagation(); editCommit(ta.value); });
-    btns.querySelector(".no").addEventListener("click", ev => { ev.stopPropagation(); editCancel(); });
+    btns.querySelector(".no").addEventListener("click", ev => { ev.stopPropagation(); requestCancel(); });
     ta.addEventListener("keydown", ev => {
       ev.stopPropagation();
+      if (ev.isComposing || ev.keyCode === 229) return;   // 한글 조합 중 Enter/Esc 오작동 방지
       if (ev.key === "Enter" && !ev.shiftKey){ ev.preventDefault(); editCommit(ta.value); }
-      if (ev.key === "Escape") editCancel();
+      if (ev.key === "Escape") requestCancel();
     });
-    ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; });
+    ta.addEventListener("input", () => {
+      ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px";
+      /* 적는 글자를 실시간으로 이 컴퓨터에 남긴다 — 창이 꺼져도 살아남게 */
+      try{
+        localStorage.setItem(draftKey(id), JSON.stringify({ t: Date.now(), x: ta.value, p: n.p, ty: n.t }));
+      }catch(e){}
+    });
     ta.addEventListener("pointerdown", ev => ev.stopPropagation());
+    S.editingTa = ta;
     setTimeout(() => { ta.focus(); ta.style.height = ta.scrollHeight + "px"; }, 0);
   }else if (isRoot){
     el.innerHTML = '<span class="ntag">카테고리</span>' + esc(S.doc.name);
@@ -746,13 +917,13 @@ function nodeEl(id, n){
   el.addEventListener("pointerdown", ev => ev.stopPropagation());
   el.addEventListener("click", ev => {
     ev.stopPropagation();
-    if (S.editing !== null && S.editing !== id) return;   // 편집 중엔 다른 상자 선택 안 됨
-    if (S.editing === id) return;
+    if (S.locked) return;
+    if (S.editing !== null) return;   // 편집 중엔 다른 상자 선택 안 됨
     select(id);
   });
   el.addEventListener("dblclick", ev => {
     ev.stopPropagation();
-    if (!isRoot && S.editing === null) editStart(id, false);
+    if (!isRoot && !S.locked && S.editing === null) editStart(id, false);
   });
   return el;
 }
@@ -767,7 +938,7 @@ function select(id){
 
 function positionToolbar(){
   const tb = document.getElementById("toolbar");
-  if (S.sel === null || S.editing !== null || !S.doc){ tb.style.display = "none"; return; }
+  if (S.locked || S.sel === null || S.editing !== null || !S.doc){ tb.style.display = "none"; return; }
   const el = document.querySelector('.node[data-id="' + S.sel + '"]');
   if (!el){ tb.style.display = "none"; return; }
 
@@ -789,10 +960,15 @@ function positionToolbar(){
     else if (act === "edit") editStart(S.sel, false);
     else if (act === "del") delAsk(S.sel);
   }));
-  tb.addEventListener("pointerdown", ev => ev.stopPropagation());
 }
+document.getElementById("toolbar").addEventListener("pointerdown", ev => ev.stopPropagation());
 
 function addChild(pid, t){
+  if (S.locked || !S.doc) return;
+  if (Object.keys(S.doc.nodes).length >= 4500){
+    openModal("이 카테고리에 담을 수 있는 양이 거의 다 찼습니다.\n담당자에게 알려 주세요.", "확인", () => {});
+    return;
+  }
   const id = newId();
   S.doc.nodes[id] = { p: pid, t, x: "", u: Date.now(), o: Date.now() };
   S.sel = id;
@@ -811,11 +987,15 @@ function editCommit(text){
   if (id === null) return;
   const n = S.doc.nodes[id];
   const t = text.replace(/\s+$/, "");
-  S.editing = null;
-  if (!t.trim() && S.editingIsNew){
-    delete S.doc.nodes[id];          // 새로 만들다 만 빈 상자는 흔적 없이 제거
-    if (S.sel === id) S.sel = n.p;
-  }else if (t !== n.x){
+  try{ localStorage.removeItem(draftKey(id)); }catch(e){}
+  S.editing = null; S.editingTa = null;
+  if (!t.trim()){
+    if (S.editingIsNew){
+      delete S.doc.nodes[id];          // 만들다 만 빈 상자는 흔적 없이 제거
+      if (S.sel === id) S.sel = n ? n.p : null;
+    }
+    /* 기존 상자를 빈 칸으로 확정한 경우는 바꾸지 않는다(잘못 지운 글 보호) */
+  }else if (n && t !== n.x){
     n.x = t; n.u = Date.now();
     markDirty();
   }
@@ -824,9 +1004,21 @@ function editCommit(text){
   layout();
 }
 
+/* 취소 — 적은 내용이 있으면 한 번 물어보고 버린다 (Esc 실수 방지) */
+function requestCancel(){
+  const id = S.editing;
+  if (id === null) return;
+  const n = S.doc.nodes[id];
+  const val = S.editingTa ? S.editingTa.value : "";
+  const changed = S.editingIsNew ? val.trim().length > 0 : (n && val !== n.x);
+  if (changed) openModal("적으시던 내용을 버릴까요?", "버리기", editCancel);
+  else editCancel();
+}
+
 function editCancel(){
   const id = S.editing;
-  S.editing = null;
+  if (id !== null){ try{ localStorage.removeItem(draftKey(id)); }catch(e){} }
+  S.editing = null; S.editingTa = null;
   if (S.editingIsNew && id !== null){
     const n = S.doc.nodes[id];
     delete S.doc.nodes[id];
@@ -878,7 +1070,7 @@ document.getElementById("modalYes").addEventListener("click", () => {
 });
 
 /* =========================================================
-   10) 캔버스 이동·확대
+   10) 캔버스 이동·확대 (마우스·트랙패드·터치)
    ========================================================= */
 const canvas = document.getElementById("canvas");
 const world = document.getElementById("world");
@@ -887,23 +1079,56 @@ function applyTransform(){
   world.style.transform = "translate(" + S.panX + "px," + S.panY + "px) scale(" + S.zoom + ")";
 }
 
+const pointers = new Map();   // pointerId → {x, y}
 let panning = null;
+let pinchLast = null;
+
+function pinchInfo(){
+  const pts = [...pointers.values()];
+  const dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y;
+  return { d: Math.hypot(dx, dy) || 1, cx: (pts[0].x + pts[1].x) / 2, cy: (pts[0].y + pts[1].y) / 2 };
+}
+
 canvas.addEventListener("pointerdown", e => {
-  panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY };
-  canvas.classList.add("panning");
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   canvas.setPointerCapture(e.pointerId);
+  if (pointers.size === 2){
+    panning = null;
+    pinchLast = pinchInfo();
+    canvas.classList.remove("panning");
+  }else if (pointers.size === 1){
+    panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY };
+    canvas.classList.add("panning");
+  }
 });
 canvas.addEventListener("pointermove", e => {
-  if (!panning) return;
-  S.panX = panning.px + (e.clientX - panning.x);
-  S.panY = panning.py + (e.clientY - panning.y);
-  applyTransform();
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2){
+    const i = pinchInfo();
+    if (pinchLast){
+      zoomAt(i.cx, i.cy, i.d / pinchLast.d);
+      S.panX += i.cx - pinchLast.cx;
+      S.panY += i.cy - pinchLast.cy;
+      applyTransform();
+    }
+    pinchLast = i;
+  }else if (panning){
+    S.panX = panning.px + (e.clientX - panning.x);
+    S.panY = panning.py + (e.clientY - panning.y);
+    applyTransform();
+  }
 });
-canvas.addEventListener("pointerup", () => { panning = null; canvas.classList.remove("panning"); });
-canvas.addEventListener("pointercancel", () => { panning = null; canvas.classList.remove("panning"); });
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinchLast = null;
+  if (pointers.size === 0){ panning = null; canvas.classList.remove("panning"); }
+}
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
 canvas.addEventListener("click", e => {
   if (e.target === canvas || e.target === world){
-    if (S.editing === null){ S.sel = null; layout(); }
+    if (S.editing === null && !S.locked){ S.sel = null; layout(); }
   }
 });
 
@@ -968,6 +1193,7 @@ function ensureVisible(id){
 
 /* 키보드 — 편집 중이 아닐 때만 */
 document.addEventListener("keydown", e => {
+  if (e.isComposing || e.keyCode === 229) return;
   if (!document.getElementById("scrEdit").classList.contains("on")) return;
   if (S.editing !== null) return;
   if (document.getElementById("modal").classList.contains("on")){
@@ -975,7 +1201,7 @@ document.addEventListener("keydown", e => {
     return;
   }
   if (e.key === "Escape"){ S.sel = null; layout(); }
-  if (S.sel === null || S.sel === "") return;
+  if (S.sel === null || S.sel === "" || S.locked) return;
   if (e.key === "Delete"){ e.preventDefault(); delAsk(S.sel); }
   if (e.key === "F2"){ e.preventDefault(); editStart(S.sel, false); }
 });
