@@ -43,12 +43,10 @@
   #btnSideClose{display:none; width:34px; height:34px; border:1px solid var(--line); background:var(--card);
                 border-radius:9px; font-size:18px; color:var(--dim); line-height:1}
   #sideback{display:none}
-  #sideTotal{margin:14px 14px 10px; font-size:13.5px; color:var(--dim); background:var(--card);
+  /* 진행 요약 카드는 없앰(대표님 지시 2026-08-10) — 목록을 못 읽었을 때만 알림 띠로 나타난다 */
+  #sideTotal{display:none; margin:14px 14px 10px; font-size:13.5px; background:var(--card);
              border:1px solid var(--line); border-radius:10px; padding:7px 11px; line-height:1.5}
-  #sideTotal.err{color:var(--danger); border-color:#e4c9c9}
-  #sideTotal.click{cursor:pointer}
-  #sideTotal.click:hover{border-color:#b9c6e8}
-  #sideTotal .findhint{display:block; font-size:12px; color:var(--accent); margin-top:3px}
+  #sideTotal.err{display:block; color:var(--danger); border-color:#e4c9c9}
   #tree{flex:1 1 auto; overflow-y:auto; padding-bottom:10px}
   #sideFoot{padding:10px 14px; border-top:1px solid var(--line)}
   #btnLogout{width:100%; border:1px solid var(--line); background:var(--card);
@@ -198,7 +196,7 @@
   <div id="sideback"></div>
   <aside id="side">
     <div id="sideHead"><button id="btnSideClose" title="닫기">×</button></div>
-    <div id="sideTotal">불러오는 중…</div>
+    <div id="sideTotal"></div>
     <div id="tree"></div>
     <div id="sideFoot"><button id="btnLogout">로그아웃</button></div>
   </aside>
@@ -390,7 +388,7 @@ function badgeOf(no){
   const s = S.summary[no];
   const q = s ? (+s.q || 0) : 0, a = s ? (+s.a || 0) : 0;
   if (!q && !a) return { text: "", has: false };
-  return { text: q + "·" + a, has: true };
+  return { text: "질문 " + q + " · 답변 " + a, has: true };
 }
 
 /* 분류 묶음 배지 = 그 아래 전체 합 */
@@ -442,7 +440,7 @@ async function enterMain(){
 function rowBadge(c){
   if ((c.children || []).length){
     const t = subtreeSum(c);
-    if (t.q + t.a > 0) return { text: t.q + "·" + t.a, has: true };
+    if (t.q + t.a > 0) return { text: "질문 " + t.q + " · 답변 " + t.a, has: true };
   }
   return badgeOf(c.no);
 }
@@ -457,41 +455,11 @@ function renderTotal(){
   if (S.listState === "fail"){
     total.className = "err";
     total.textContent = "진행 상황을 못 불러왔습니다 — 인터넷 확인 (자동 재시도 중)";
-  }else if (S.listState === "loading"){
-    total.className = "";
-    total.textContent = "불러오는 중…";
   }else{
-    let tq = 0, ta = 0, tc = 0;
-    for (const k of Object.keys(S.summary)){
-      if (!CAT_BY_NO.has(+k)) continue;   // 트리에서 뺀 분류·정리된 문서는 세지 않는다
-      const s = S.summary[k];
-      const q = +s.q || 0, a = +s.a || 0;
-      if (q + a > 0){ tq += q; ta += a; tc++; }
-    }
-    total.className = tc ? "click" : "";
-    total.innerHTML = tc
-      ? "적은 카테고리 <b>" + tc + "곳</b> · 질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>" +
-        '<span class="findhint">▸ 누르면 적은 곳이 펼쳐집니다</span>'
-      : "아직 적으신 곳이 없습니다 — 아래에서 골라 시작해 주세요";
+    total.className = "";
+    total.textContent = "";
   }
 }
-
-/* 진행 요약 클릭 — 내용이 있는 분류들의 조상을 펼쳐 위치를 보여준다 */
-document.getElementById("sideTotal").addEventListener("click", () => {
-  let first = null;
-  for (const k of Object.keys(S.summary)){
-    const c = CAT_BY_NO.get(+k);
-    if (!c) continue;
-    const s = S.summary[k];
-    if (((+s.q || 0) + (+s.a || 0)) === 0) continue;
-    if (first === null) first = +k;
-    for (let x = c.parent; x; x = x.parent) S.open.add(x.no);
-  }
-  if (first === null) return;
-  renderTree();
-  const row = document.querySelector('#tree .trow[data-no="' + first + '"]');
-  if (row) row.scrollIntoView({ block: "center" });
-});
 
 function renderTree(){
   const rows = [];
@@ -960,7 +928,7 @@ function nodeEl(id, n){
     const ta = document.createElement("textarea");
     ta.maxLength = 2000;
     ta.value = n.x;
-    ta.placeholder = (n.t === "q" ? "손님이 물어볼 질문" : "그 질문에 드릴 답") + " — 나중에 채우셔도 됩니다";
+    ta.placeholder = n.t === "q" ? "손님이 물어볼 질문" : "그 질문에 드릴 답";
     const btns = document.createElement("div");
     btns.className = "editbtns";
     btns.innerHTML = '<button class="ok">확인</button><button class="no">취소</button>';
