@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#f6f5f2; --card:#ffffff; --ink:#1b1b1a; --dim:#6b6a66; --line:#e0ded8;
-    --accent:#1c6b4a; --accent-soft:#e7f2ec; --warn:#8a5a12; --warn-soft:#fdf3e0;
+    --accent:#1c449c; --accent-soft:#e8eefb; --warn:#e05a17; --warn-soft:#fdeee4;
     --danger:#8c2f2f; --danger-soft:#f9ecec; --wire:#c9c4b8;
   }
   *{box-sizing:border-box}
@@ -39,12 +39,11 @@
   #scrMain.on{display:grid; grid-template-columns:320px 1fr; height:100vh}
 
   #side{background:#efece6; border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0}
-  #sideHead{padding:14px 18px 8px; font-size:15px; font-weight:700; color:var(--dim);
-            display:flex; align-items:center; justify-content:space-between}
+  #sideHead{display:none; padding:10px 14px 0; justify-content:flex-end}
   #btnSideClose{display:none; width:34px; height:34px; border:1px solid var(--line); background:var(--card);
                 border-radius:9px; font-size:18px; color:var(--dim); line-height:1}
   #sideback{display:none}
-  #sideTotal{margin:0 14px 10px; font-size:13.5px; color:var(--dim); background:var(--card);
+  #sideTotal{margin:14px 14px 10px; font-size:13.5px; color:var(--dim); background:var(--card);
              border:1px solid var(--line); border-radius:10px; padding:7px 11px; line-height:1.5}
   #sideTotal.err{color:var(--danger); border-color:#e4c9c9}
   #tree{flex:1 1 auto; overflow-y:auto; padding-bottom:10px}
@@ -55,7 +54,7 @@
   .trow{display:flex; align-items:center; gap:6px; padding:8px 10px 8px 14px; cursor:pointer; font-size:15.5px}
   .trow:hover{background:#e5e1d9}
   .trow.active{background:var(--card); font-weight:700; box-shadow:inset 3px 0 0 var(--accent)}
-  .trow.haswithin{box-shadow:inset 3px 0 0 #a8cbba}
+  .trow.haswithin{box-shadow:inset 3px 0 0 #aabede}
   .trow .tw{flex:0 0 20px; text-align:center; color:var(--accent); font-size:13px}
   .trow .tw.leaf{color:#c2beb4}
   .trow .tname{flex:1 1 auto; word-break:keep-all; line-height:1.4}
@@ -107,13 +106,13 @@
   .node .ntag{display:block; font-size:12px; font-weight:700; margin-bottom:4px; letter-spacing:.03em}
   .node.q{border-left:6px solid var(--accent)}
   .node.q .ntag{color:var(--accent)}
-  .node.a{border-left:6px solid var(--warn); background:#fffcf4}
+  .node.a{border-left:6px solid var(--warn); background:#fffaf5}
   .node.a .ntag{color:var(--warn)}
   .node.rootnode{background:var(--accent); border-color:var(--accent); color:#fff;
                  width:280px; font-size:18.5px; font-weight:700; padding:16px 18px}
-  .node.rootnode .ntag{color:#cfe8dc}
+  .node.rootnode .ntag{color:#ccd9f3}
   .node.sel{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft), 0 2px 8px rgba(0,0,0,.08)}
-  .node.rootnode.sel{box-shadow:0 0 0 4px #b9d8c9, 0 2px 8px rgba(0,0,0,.12)}
+  .node.rootnode.sel{box-shadow:0 0 0 4px #b6c6ea, 0 2px 8px rgba(0,0,0,.12)}
   .node .empty{color:#b4b1a9; font-style:normal}
 
   .node textarea{width:100%; min-height:64px; font-family:inherit; font-size:16.5px; line-height:1.55;
@@ -170,6 +169,7 @@
     #side.open{display:flex; position:fixed; inset:0 auto 0 0; width:min(320px, 85vw); z-index:30;
                box-shadow:0 0 40px rgba(0,0,0,.3)}
     #sideback.on{display:block; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:29}
+    #sideHead{display:flex}
     #btnSideClose{display:grid; place-items:center}
     #btnMenu{display:inline-block}
     .mobileonly{display:block}
@@ -194,10 +194,10 @@
 <div class="scr" id="scrMain">
   <div id="sideback"></div>
   <aside id="side">
-    <div id="sideHead">알옥션 카테고리 <button id="btnSideClose" title="닫기">×</button></div>
+    <div id="sideHead"><button id="btnSideClose" title="닫기">×</button></div>
     <div id="sideTotal">불러오는 중…</div>
     <div id="tree"></div>
-    <div id="sideFoot"><button id="btnLogout">비밀번호 다시 넣기</button></div>
+    <div id="sideFoot"><button id="btnLogout">로그아웃</button></div>
   </aside>
 
   <div id="work">
@@ -482,7 +482,7 @@ function renderTree(){
         '<span class="tw' + (kids ? "" : " leaf") + '">' + (kids ? (isOpen ? "▾" : "▸") : "·") + '</span>' +
         '<span class="tname">' + esc(c.name) + '</span>' +
         '<span class="tbadge' + (b.has ? " has" : "") + '">' + b.text + '</span>' +
-        (kids ? '<button class="topen" data-no="' + c.no + '">열기</button>' : '') +
+        (kids && d > 0 ? '<button class="topen" data-no="' + c.no + '">열기</button>' : '') +
       '</div>');
     if (kids && isOpen) c.children.forEach(k => emit(k, d + 1));
   };
@@ -912,15 +912,10 @@ function layout(){
   wires.setAttribute("height", maxY + 40);
   wires.innerHTML = d ? '<path d="' + d + '"/>' : "";
 
-  /* 코치 문구 */
+  /* 코치 문구 — 빈 문서에서만 */
   const coach = document.getElementById("coach");
-  if (S.locked){
-    coach.style.display = "none";
-  }else if (!tops.length){
-    coach.textContent = "초록 상자(카테고리)를 누르고 [＋ 질문 달기]를 눌러 시작해 주세요";
-    coach.style.display = "block";
-  }else if (S.sel === null && S.editing === null){
-    coach.textContent = "상자를 누르면 달기·고치기·지우기 단추가 나옵니다";
+  if (!S.locked && !tops.length){
+    coach.textContent = "카테고리 상자를 누르고 [＋ 질문 달기]를 눌러 시작해 주세요";
     coach.style.display = "block";
   }else{
     coach.style.display = "none";
@@ -1148,15 +1143,19 @@ function pinchInfo(){
   return { d: Math.hypot(dx, dy) || 1, cx: (pts[0].x + pts[1].x) / 2, cy: (pts[0].y + pts[1].y) / 2 };
 }
 
+let lastPanMoved = 0;   // 드래그 직후 따라오는 click 을 무시하기 위한 이동량 기록
+
 canvas.addEventListener("pointerdown", e => {
+  if (e.pointerType === "mouse" && e.button !== 0) return;   // 왼쪽 버튼만
+  if (e.pointerType !== "touch") pointers.clear();           // 마우스·펜은 동시 1개 — 잔존 항목이 핀치로 오인되지 않게
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  canvas.setPointerCapture(e.pointerId);
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
   if (pointers.size === 2){
     panning = null;
     pinchLast = pinchInfo();
     canvas.classList.remove("panning");
   }else if (pointers.size === 1){
-    panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY };
+    panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY, moved: 0 };
     canvas.classList.add("panning");
   }
 });
@@ -1173,6 +1172,8 @@ canvas.addEventListener("pointermove", e => {
     }
     pinchLast = i;
   }else if (panning){
+    panning.moved = Math.max(panning.moved,
+      Math.abs(e.clientX - panning.x) + Math.abs(e.clientY - panning.y));
     S.panX = panning.px + (e.clientX - panning.x);
     S.panY = panning.py + (e.clientY - panning.y);
     applyTransform();
@@ -1181,13 +1182,20 @@ canvas.addEventListener("pointermove", e => {
 function endPointer(e){
   pointers.delete(e.pointerId);
   if (pointers.size < 2) pinchLast = null;
-  if (pointers.size === 0){ panning = null; canvas.classList.remove("panning"); }
+  if (pointers.size === 0){
+    if (panning) lastPanMoved = panning.moved;
+    panning = null;
+    canvas.classList.remove("panning");
+  }
 }
 canvas.addEventListener("pointerup", endPointer);
 canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("lostpointercapture", endPointer);
 canvas.addEventListener("click", e => {
   if (e.target === canvas || e.target === world){
-    if (S.locked) return;
+    const dragged = lastPanMoved > 6;
+    lastPanMoved = 0;
+    if (dragged || S.locked) return;    // 드래그 끝에 오는 클릭은 선택 해제가 아니다
     if (S.editing !== null && S.editingTa){ editCommit(S.editingTa.value); return; }  // 바깥 클릭 = 확정
     S.sel = null; layout();
   }
