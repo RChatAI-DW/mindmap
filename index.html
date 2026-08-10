@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알옥션 질문·답변 마인드맵</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --card:#ffffff; --ink:#1b1b1a; --dim:#6b6a66; --line:#e0ded8;
+    --accent:#1c6b4a; --accent-soft:#e7f2ec; --warn:#8a5a12; --warn-soft:#fdf3e0;
+    --danger:#8c2f2f; --danger-soft:#f9ecec; --wire:#c9c4b8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{background:var(--bg); color:var(--ink);
+       font-family:"Malgun Gothic","맑은 고딕",system-ui,-apple-system,sans-serif;
+       font-size:18px; line-height:1.6; overflow:hidden}
+  button{font-family:inherit; cursor:pointer}
+  .scr{display:none; height:100vh}
+  .scr.on{display:block}
+
+  /* ───────── 비밀번호 화면 ───────── */
+  #scrLogin.on{display:grid; place-items:center}
+  .logincard{background:var(--card); border:1px solid var(--line); border-radius:18px;
+             padding:44px 48px; width:min(440px, 92vw); box-shadow:0 10px 40px rgba(0,0,0,.06)}
+  .logincard h1{font-size:24px; margin:0 0 6px}
+  .logincard p{color:var(--dim); font-size:15.5px; margin:0 0 24px}
+  #pwInput{width:100%; font-size:22px; padding:12px 14px; border:2px solid var(--line);
+           border-radius:10px; font-family:inherit; letter-spacing:.1em}
+  #pwInput:focus{outline:none; border-color:var(--accent)}
+  #btnLogin{width:100%; margin-top:14px; padding:13px; font-size:18px; font-weight:700;
+            background:var(--accent); color:#fff; border:0; border-radius:10px}
+  #btnLogin:disabled{opacity:.6}
+  #loginMsg{min-height:26px; color:var(--danger); font-size:15px; margin-top:10px}
+
+  /* ───────── 카테고리 화면 ───────── */
+  #scrHome.on{display:grid; grid-template-columns:300px 1fr; height:100vh}
+  #homeSide{background:#efece6; border-right:1px solid var(--line); overflow-y:auto; padding:14px 0}
+  #homeSide h2{font-size:14.5px; margin:4px 18px 10px; color:var(--dim)}
+  #homeTotal{margin:0 18px 12px; font-size:14px; color:var(--dim); background:var(--card);
+             border:1px solid var(--line); border-radius:10px; padding:8px 12px; line-height:1.5}
+  .mainitem{display:block; width:100%; text-align:left; border:0; background:none;
+            padding:10px 18px; font-size:16px; color:var(--ink)}
+  .mainitem:hover{background:#e5e1d9}
+  .mainitem.active{background:var(--card); font-weight:700; box-shadow:inset 3px 0 0 var(--accent)}
+  .mainitem .mrow{display:flex; justify-content:space-between; gap:8px; align-items:baseline}
+  .mainitem .mcnt{font-size:12.5px; color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
+  .mainitem .mcnt.has{color:var(--accent); font-weight:700}
+
+  #homeMain{overflow-y:auto; padding:26px 34px 60px}
+  #homeMain .guide{background:var(--accent-soft); border:1px solid #cfe4d9; color:#194d37;
+                   border-radius:12px; padding:13px 18px; font-size:16.5px; margin-bottom:22px}
+  #homeMain h1{font-size:26px; margin:0 0 4px}
+  #homeMain .sub{color:var(--dim); font-size:15px; margin-bottom:18px}
+  .catrow{display:flex; align-items:center; gap:12px; background:var(--card);
+          border:1px solid var(--line); border-radius:12px; padding:12px 16px; margin-bottom:10px}
+  .catrow .twisty{flex:0 0 30px; height:30px; border:1px solid var(--line); background:#f4f2ed;
+                  border-radius:8px; font-size:14px; color:var(--dim); display:grid; place-items:center}
+  .catrow .twisty.none{visibility:hidden}
+  .catrow .cname{font-size:18px; font-weight:600; flex:1 1 auto; word-break:keep-all}
+  .catrow .cbadge{font-size:14px; color:var(--dim); white-space:nowrap; font-variant-numeric:tabular-nums}
+  .catrow .cbadge.has{color:var(--accent); font-weight:700}
+  .catrow .copen{flex:0 0 auto; border:2px solid var(--accent); color:var(--accent); background:var(--card);
+                 font-size:15.5px; font-weight:700; border-radius:9px; padding:7px 16px}
+  .catrow .copen:hover{background:var(--accent-soft)}
+  .catrow.d1{margin-left:42px} .catrow.d2{margin-left:84px} .catrow.d3{margin-left:126px}
+  .catrow.rootrow{border-color:#bcd8c9; background:#fbfdf9}
+  #homeTop{display:flex; align-items:center; gap:14px; margin-bottom:16px}
+  #btnLogout{margin-left:auto; border:1px solid var(--line); background:var(--card);
+             border-radius:8px; padding:6px 12px; font-size:13.5px; color:var(--dim)}
+
+  /* ───────── 마인드맵 편집 화면 ───────── */
+  #scrEdit.on{display:flex; flex-direction:column; height:100vh}
+  #edTop{display:flex; align-items:center; gap:12px; padding:10px 18px; background:rgba(246,245,242,.97);
+         border-bottom:1px solid var(--line); flex-wrap:wrap; z-index:5}
+  #edTop .crumb{font-weight:700; font-size:17px; word-break:keep-all}
+  #edTop .cnt{font-size:14.5px; color:var(--dim); font-variant-numeric:tabular-nums}
+  .ghost{border:1px solid var(--line); background:var(--card); border-radius:9px;
+         padding:8px 14px; font-size:15px}
+  .ghost:hover{border-color:#c6c2b8}
+  #saveState{margin-left:auto; font-size:14.5px; color:var(--dim); text-align:right; min-width:130px}
+  #saveState.on{color:var(--accent)}
+  #saveState.bad{color:var(--danger); font-weight:700}
+
+  #alarm{display:none; padding:12px 20px; background:var(--danger); color:#fff; font-size:16px}
+  #alarm b{color:#ffe8a3}
+
+  #canvas{position:relative; flex:1 1 auto; overflow:hidden; cursor:grab;
+          background:
+            radial-gradient(circle, #e7e4dc 1.2px, transparent 1.3px) 0 0/26px 26px,
+            var(--bg)}
+  #canvas.panning{cursor:grabbing}
+  #world{position:absolute; left:0; top:0; transform-origin:0 0}
+  #wires{position:absolute; left:0; top:0; overflow:visible; pointer-events:none}
+  #wires path{fill:none; stroke:var(--wire); stroke-width:2}
+
+  .node{position:absolute; background:var(--card); border:2px solid var(--line); border-radius:12px;
+        padding:10px 14px 12px; width:260px; font-size:16.5px; line-height:1.55;
+        word-break:break-word; white-space:pre-wrap; user-select:none; box-shadow:0 2px 6px rgba(0,0,0,.04)}
+  .node:hover{border-color:#c9c4b8}
+  .node .ntag{display:block; font-size:12px; font-weight:700; margin-bottom:4px; letter-spacing:.03em}
+  .node.q{border-left:6px solid var(--accent)}
+  .node.q .ntag{color:var(--accent)}
+  .node.a{border-left:6px solid var(--warn); background:#fffcf4}
+  .node.a .ntag{color:var(--warn)}
+  .node.rootnode{background:var(--accent); border-color:var(--accent); color:#fff;
+                 width:280px; font-size:18.5px; font-weight:700; padding:16px 18px}
+  .node.rootnode .ntag{color:#cfe8dc}
+  .node.sel{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft), 0 2px 8px rgba(0,0,0,.08)}
+  .node.rootnode.sel{box-shadow:0 0 0 4px #b9d8c9, 0 2px 8px rgba(0,0,0,.12)}
+  .node .empty{color:#b4b1a9; font-style:normal}
+
+  .node textarea{width:100%; min-height:64px; font-family:inherit; font-size:16.5px; line-height:1.55;
+                 border:1px solid var(--line); border-radius:8px; padding:8px 10px; resize:none; color:var(--ink)}
+  .node textarea:focus{outline:2px solid var(--accent)}
+  .editbtns{display:flex; gap:8px; margin-top:8px}
+  .editbtns button{flex:1; padding:9px; font-size:15.5px; font-weight:700; border-radius:8px}
+  .editbtns .ok{background:var(--accent); color:#fff; border:0}
+  .editbtns .no{background:var(--card); border:1px solid var(--line); color:var(--dim)}
+
+  #toolbar{position:absolute; display:none; gap:8px; z-index:3}
+  #toolbar button{padding:10px 15px; font-size:15.5px; font-weight:700; border-radius:10px;
+                  border:2px solid var(--accent); background:var(--card); color:var(--accent);
+                  box-shadow:0 3px 10px rgba(0,0,0,.10); white-space:nowrap}
+  #toolbar button:hover{background:var(--accent-soft)}
+  #toolbar button.del{border-color:#d9b8b8; color:var(--danger)}
+  #toolbar button.del:hover{background:var(--danger-soft)}
+
+  #coach{position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+         background:rgba(27,27,26,.85); color:#fff; font-size:15.5px; border-radius:999px;
+         padding:10px 22px; pointer-events:none; white-space:nowrap; z-index:4}
+
+  #zoomctl{position:absolute; right:18px; bottom:18px; display:flex; flex-direction:column; gap:8px; z-index:4}
+  #zoomctl button{width:46px; height:46px; font-size:20px; font-weight:700; border-radius:12px;
+                  border:1px solid var(--line); background:var(--card); box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  #zoomctl button.fit{font-size:13px}
+
+  /* ───────── 확인 모달 ───────── */
+  #modal{position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; place-items:center; z-index:50}
+  #modal.on{display:grid}
+  #modal .mbox{background:var(--card); border-radius:16px; padding:30px 34px; width:min(460px, 92vw);
+               box-shadow:0 16px 60px rgba(0,0,0,.25)}
+  #modal .mtext{font-size:18px; line-height:1.7; margin-bottom:22px; word-break:keep-all}
+  #modal .mbtns{display:flex; gap:10px}
+  #modal .mbtns button{flex:1; padding:13px; font-size:17px; font-weight:700; border-radius:10px}
+  #modal .myes{background:var(--danger); color:#fff; border:0}
+  #modal .mno{background:var(--card); border:2px solid var(--line)}
+
+  @media (max-width:900px){
+    #scrHome.on{grid-template-columns:1fr}
+    #homeSide{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ───────── 1. 비밀번호 ───────── -->
+<div class="scr" id="scrLogin">
+  <div class="logincard">
+    <h1>알옥션 질문·답변 마인드맵</h1>
+    <p>비밀번호를 넣으시면 시작됩니다. 비밀번호는 담당자에게 받으세요.</p>
+    <input id="pwInput" type="password" autocomplete="current-password" placeholder="비밀번호">
+    <button id="btnLogin">들어가기</button>
+    <div id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- ───────── 2. 카테고리 고르기 ───────── -->
+<div class="scr" id="scrHome">
+  <aside id="homeSide">
+    <h2>큰 분류</h2>
+    <div id="homeTotal">불러오는 중…</div>
+    <div id="mainlist"></div>
+  </aside>
+  <div id="homeMain">
+    <div id="homeTop">
+      <h1 id="homeTitle"></h1>
+      <button id="btnLogout">비밀번호 다시 넣기</button>
+    </div>
+    <div class="guide">카테고리를 고르시고 → <b>손님이 물어볼 질문</b>을 달고 → <b>답</b>을 달고 →
+      그 답을 들은 손님이 <b>또 물어볼 질문</b>을 계속 달아 주세요. 적으시는 대로 저절로 저장됩니다.</div>
+    <div class="sub" id="homeSub"></div>
+    <div id="catlist"></div>
+  </div>
+</div>
+
+<!-- ───────── 3. 마인드맵 ───────── -->
+<div class="scr" id="scrEdit">
+  <div id="edTop">
+    <button class="ghost" id="btnBack">← 목록으로</button>
+    <span class="crumb" id="crumb"></span>
+    <span class="cnt" id="cnt"></span>
+    <span id="saveState">&nbsp;</span>
+  </div>
+  <div id="alarm"><b>저장이 안 되고 있습니다.</b> 인터넷 연결을 확인해 주세요.
+    적으신 내용은 이 컴퓨터에 남아 있으니 <b>이 창은 닫지 마세요.</b> 잠시 뒤 다시 저장을 시도합니다.</div>
+  <div id="canvas">
+    <div id="world">
+      <svg id="wires"></svg>
+      <div id="nodes"></div>
+      <div id="toolbar"></div>
+    </div>
+    <div id="coach" style="display:none"></div>
+    <div id="zoomctl">
+      <button id="btnZin" title="크게">＋</button>
+      <button id="btnZout" title="작게">－</button>
+      <button id="btnFit" class="fit" title="전체 보기">전체</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 지우기 확인 ───────── -->
+<div id="modal">
+  <div class="mbox">
+    <div class="mtext" id="modalText"></div>
+    <div class="mbtns">
+      <button class="mno" id="modalNo">그만두기</button>
+      <button class="myes" id="modalYes">지우기</button>
+    </div>
+  </div>
+</div>
+
+<script src="categories.js"></script>
+<script>
+"use strict";
+
+/* =========================================================
+   0) 연결 정보 — build.mjs 가 채웁니다
+   ========================================================= */
+const FN_URL = "https://wjlzfknaezwwyusdrdtt.supabase.co/functions/v1/mindmap";
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHpma25hZXp3d3l1c2RyZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MjAwODEsImV4cCI6MjEwMTM5NjA4MX0.q8g2wFBP_ideMcGgtgKeFwwxBdIG7ajpcv6RJxJbO9s";
+
+const CATS = (window.RA_CATEGORIES && window.RA_CATEGORIES.tree) || [];
+
+/* 카테고리 색인: no → {no, name, children, parent} */
+const CAT_BY_NO = new Map();
+(function index(list, parent){
+  for (const c of list){
+    CAT_BY_NO.set(c.no, c);
+    c.parent = parent;
+    index(c.children || [], c);
+  }
+})(CATS, null);
+
+function catPath(c){
+  const parts = [];
+  for (let x = c; x; x = x.parent) parts.unshift(x.name);
+  return parts.join(" > ");
+}
+
+/* =========================================================
+   1) 공통 상태 · 서버 호출
+   ========================================================= */
+const LS_PW = "ra-mindmap-pw";
+const LS_BACKUP = "ra-mindmap-backup-";   // + cate
+
+const S = {
+  pw: localStorage.getItem(LS_PW) || "",
+  summary: {},          // {cate:{n,q,a,u}}
+  mainSel: null,        // 홈에서 고른 큰 분류 no
+  open: new Set(),      // 홈 트리 펼침 상태
+  // 편집 중 문서
+  cate: null, doc: null,
+  sel: null, editing: null, editingIsNew: false,
+  dirty: false, saving: false, saveTimer: null, retryTimer: null,
+  pendingAdopt: null, lastLoad: 0,
+  // 캔버스
+  zoom: 1, panX: 60, panY: 60,
+};
+
+async function api(body){
+  const res = await fetch(FN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": ANON,
+      "Authorization": "Bearer " + ANON,
+    },
+    body: JSON.stringify(Object.assign({ pw: S.pw }, body)),
+    signal: AbortSignal.timeout(30000),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (res.status === 401){ const e = new Error("비밀번호가 맞지 않습니다"); e.auth = true; throw e; }
+  if (!res.ok) throw new Error(j.error || ("오류 " + res.status));
+  return j;
+}
+
+/* =========================================================
+   2) 화면 전환
+   ========================================================= */
+function show(id){
+  document.querySelectorAll(".scr").forEach(s => s.classList.toggle("on", s.id === id));
+}
+
+/* =========================================================
+   3) 비밀번호 화면
+   ========================================================= */
+const pwInput = document.getElementById("pwInput");
+const btnLogin = document.getElementById("btnLogin");
+
+async function tryLogin(){
+  const pw = pwInput.value.trim();
+  if (!pw) { pwInput.focus(); return; }
+  btnLogin.disabled = true;
+  document.getElementById("loginMsg").textContent = "확인하는 중…";
+  try{
+    S.pw = pw;
+    await api({ op: "auth" });
+    localStorage.setItem(LS_PW, pw);
+    document.getElementById("loginMsg").textContent = "";
+    enterHome();
+  }catch(e){
+    document.getElementById("loginMsg").textContent =
+      e.auth ? "비밀번호가 맞지 않습니다. 다시 확인해 주세요." : "연결이 안 됩니다: " + e.message;
+  }
+  btnLogin.disabled = false;
+}
+btnLogin.addEventListener("click", tryLogin);
+pwInput.addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+
+document.getElementById("btnLogout").addEventListener("click", () => {
+  localStorage.removeItem(LS_PW); S.pw = "";
+  pwInput.value = ""; show("scrLogin"); pwInput.focus();
+});
+
+/* =========================================================
+   4) 카테고리 화면
+   ========================================================= */
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function badgeOf(no){
+  const s = S.summary[no];
+  if (!s || (!s.q && !s.a)) return { text: "아직 없음", has: false };
+  return { text: "질문 " + s.q + " · 답변 " + s.a, has: true };
+}
+
+/* 큰 분류 배지 = 그 아래 전체 합 */
+function subtreeSum(c){
+  let q = 0, a = 0;
+  const walk = x => {
+    const s = S.summary[x.no];
+    if (s){ q += s.q || 0; a += s.a || 0; }
+    (x.children || []).forEach(walk);
+  };
+  walk(c);
+  return { q, a };
+}
+
+async function enterHome(){
+  show("scrHome");
+  if (!S.mainSel) S.mainSel = CATS.length ? CATS[0].no : null;
+  renderHome();
+  try{
+    const r = await api({ op: "list" });
+    S.summary = r.files || {};
+  }catch(e){
+    if (e.auth){ show("scrLogin"); return; }
+  }
+  renderHome();
+}
+
+function renderHome(){
+  const main = document.getElementById("mainlist");
+  main.innerHTML = CATS.map(c => {
+    const t = subtreeSum(c);
+    const has = t.q + t.a > 0;
+    return '<button class="mainitem' + (c.no === S.mainSel ? " active" : "") + '" data-no="' + c.no + '">' +
+      '<span class="mrow"><span>' + esc(c.name) + '</span>' +
+      '<span class="mcnt' + (has ? " has" : "") + '">' + (has ? t.q + "·" + t.a : "") + '</span></span></button>';
+  }).join("");
+  main.querySelectorAll(".mainitem").forEach(el => el.addEventListener("click", () => {
+    S.mainSel = +el.dataset.no; renderHome();
+  }));
+
+  let tq = 0, ta = 0, tc = 0;
+  for (const k of Object.keys(S.summary)){
+    const s = S.summary[k];
+    if ((s.q || 0) + (s.a || 0) > 0){ tq += s.q || 0; ta += s.a || 0; tc++; }
+  }
+  document.getElementById("homeTotal").innerHTML =
+    tc ? "지금까지 <b>" + tc + "곳</b>에 적으셨습니다<br>질문 <b>" + tq + "</b> · 답변 <b>" + ta + "</b>"
+       : "아직 적으신 곳이 없습니다";
+
+  const cur = CAT_BY_NO.get(S.mainSel);
+  if (!cur) return;
+  document.getElementById("homeTitle").textContent = cur.name;
+  document.getElementById("homeSub").textContent =
+    (cur.children && cur.children.length)
+      ? "세부 카테고리 " + cur.children.length + "개 — 열기를 누르시면 그 카테고리의 마인드맵이 열립니다."
+      : "세부 카테고리가 없는 분류입니다. 아래 줄에서 바로 여시면 됩니다.";
+
+  const rows = [];
+  const b0 = badgeOf(cur.no);
+  rows.push(rowHtml(cur, 0, true, b0));
+  const emit = (c, d) => {
+    rows.push(rowHtml(c, d, false, badgeOf(c.no)));
+    if (S.open.has(c.no)) (c.children || []).forEach(k => emit(k, d + 1));
+  };
+  (cur.children || []).forEach(c => emit(c, 1));
+
+  const list = document.getElementById("catlist");
+  list.innerHTML = rows.join("");
+  list.querySelectorAll(".twisty:not(.none)").forEach(el => el.addEventListener("click", () => {
+    const no = +el.dataset.no;
+    if (S.open.has(no)) S.open.delete(no); else S.open.add(no);
+    renderHome();
+  }));
+  list.querySelectorAll(".copen").forEach(el => el.addEventListener("click", () => openMap(+el.dataset.no)));
+}
+
+function rowHtml(c, depth, isRoot, b){
+  const kids = (c.children || []).length;
+  return '<div class="catrow d' + Math.min(depth, 3) + (isRoot ? " rootrow" : "") + '">' +
+    '<button class="twisty' + (kids && !isRoot ? "" : " none") + '" data-no="' + c.no + '">' +
+      (S.open.has(c.no) ? "▾" : "▸") + '</button>' +
+    '<span class="cname">' + esc(isRoot ? c.name + " (전체)" : c.name) +
+      (kids && !isRoot ? ' <span style="color:var(--dim);font-size:13px;font-weight:400">하위 ' + kids + '</span>' : "") + '</span>' +
+    '<span class="cbadge' + (b.has ? " has" : "") + '">' + b.text + '</span>' +
+    '<button class="copen" data-no="' + c.no + '">열기 →</button></div>';
+}
+
+/* =========================================================
+   5) 문서 (마인드맵 데이터)
+   ========================================================= */
+function newId(){ return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7); }
+
+function liveChildren(pid){
+  const out = [];
+  for (const [id, n] of Object.entries(S.doc.nodes)){
+    if (n.p === pid && n.d !== 1) out.push({ id, n });
+  }
+  out.sort((x, y) => (x.n.o || 0) - (y.n.o || 0) || (x.id < y.id ? -1 : 1));
+  return out;
+}
+
+function countDoc(){
+  let q = 0, a = 0;
+  const walk = pid => {
+    for (const { id, n } of liveChildren(pid)){
+      if (n.t === "q") q++; else a++;
+      walk(id);
+    }
+  };
+  walk("");
+  return { q, a };
+}
+
+function mergeNodes(server, client){
+  const out = Object.assign({}, server);
+  for (const [id, n] of Object.entries(client)){
+    const cur = out[id];
+    if (!cur || (n.u || 0) >= (cur.u || 0)) out[id] = n;
+  }
+  return out;
+}
+
+/* localStorage 백업 — 저장 실패해도 이 컴퓨터에는 남습니다 */
+function backupWrite(pending){
+  try{
+    localStorage.setItem(LS_BACKUP + S.cate,
+      JSON.stringify({ t: Date.now(), pending: pending ? 1 : 0, nodes: S.doc.nodes }));
+  }catch(e){}
+}
+function backupTake(cate){
+  try{
+    const raw = localStorage.getItem(LS_BACKUP + cate);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+/* =========================================================
+   6) 저장 (자동)
+   ========================================================= */
+function setSave(t, cls){
+  const el = document.getElementById("saveState");
+  el.textContent = t; el.className = cls || "";
+}
+function setAlarm(on){ document.getElementById("alarm").style.display = on ? "block" : "none"; }
+
+function markDirty(){
+  S.dirty = true;
+  backupWrite(true);
+  setSave("저장 중…");
+  clearTimeout(S.saveTimer);
+  S.saveTimer = setTimeout(doSave, 2500);
+  updateCnt();
+}
+
+async function doSave(){
+  if (!S.dirty || S.saving || !S.doc) return;
+  S.saving = true;
+  clearTimeout(S.retryTimer);
+  try{
+    S.dirty = false;   // 저장 도중의 새 수정은 다시 dirty 로 표시됨
+    const r = await api({ op: "save", cate: S.cate, doc: S.doc });
+    adopt(r.doc);
+    backupWrite(false);
+    const c = countDoc();
+    S.summary[S.cate] = { n: S.doc.name, q: c.q, a: c.a, u: Date.now() };
+    setSave("깃허브 저장됨 ✓ " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }), "on");
+    setAlarm(false);
+  }catch(e){
+    S.dirty = true;
+    if (e.auth){
+      setSave("비밀번호가 바뀌었습니다", "bad");
+      show("scrLogin");
+    }else{
+      setSave("저장 실패 — 다시 시도합니다", "bad");
+      setAlarm(true);
+      S.retryTimer = setTimeout(doSave, 20000);
+    }
+  }
+  S.saving = false;
+  if (S.dirty && !S.saveTimer) markDirty();
+}
+
+/* 서버 병합본 받아들이기 — 편집 중이면 편집이 끝난 뒤에 */
+function adopt(serverDoc){
+  if (!serverDoc || !S.doc) return;
+  if (S.editing){ S.pendingAdopt = serverDoc; return; }
+  S.doc.nodes = mergeNodes(serverDoc.nodes || {}, S.doc.nodes);
+  if (S.sel && (!S.doc.nodes[S.sel] || S.doc.nodes[S.sel].d === 1)) S.sel = null;
+  layout();
+}
+
+window.addEventListener("beforeunload", e => {
+  if (S.dirty){ e.preventDefault(); e.returnValue = ""; }
+});
+
+/* 창에 다시 돌아오면 다른 사람이 저장한 것을 조용히 받아온다 */
+window.addEventListener("focus", async () => {
+  if (!S.doc || S.dirty || S.saving) return;
+  if (Date.now() - S.lastLoad < 30000) return;
+  try{
+    const r = await api({ op: "load", cate: S.cate });
+    S.lastLoad = Date.now();
+    if (r.doc) adopt(r.doc);
+  }catch(e){}
+});
+
+/* =========================================================
+   7) 마인드맵 열기
+   ========================================================= */
+async function openMap(no){
+  const c = CAT_BY_NO.get(no);
+  if (!c) return;
+  S.cate = no;
+  S.doc = { cate: no, name: c.name, path: catPath(c), nodes: {} };
+  S.sel = null; S.editing = null; S.dirty = false; S.pendingAdopt = null;
+  clearTimeout(S.saveTimer); S.saveTimer = null;
+  clearTimeout(S.retryTimer);
+  show("scrEdit");
+  document.getElementById("crumb").textContent = catPath(c);
+  setSave("불러오는 중…");
+  setAlarm(false);
+
+  let serverDoc = null;
+  let loadFailed = false;
+  try{
+    const r = await api({ op: "load", cate: no });
+    serverDoc = r.doc;
+    S.lastLoad = Date.now();
+  }catch(e){
+    if (e.auth){ show("scrLogin"); return; }
+    loadFailed = true;
+  }
+  if (serverDoc && serverDoc.nodes) S.doc.nodes = serverDoc.nodes;
+
+  /* 지난번 저장 실패분이 이 컴퓨터에 남아 있으면 합친다 */
+  const bk = backupTake(no);
+  if (bk && bk.pending && bk.nodes){
+    S.doc.nodes = mergeNodes(S.doc.nodes, bk.nodes);
+    markDirty();
+  }else if (loadFailed){
+    setSave("불러오기 실패 — 인터넷을 확인해 주세요", "bad");
+    setAlarm(true);
+  }else{
+    setSave(" ");
+  }
+
+  S.zoom = 1;
+  layout();
+  fitView();
+  updateCnt();
+}
+
+document.getElementById("btnBack").addEventListener("click", async () => {
+  if (S.dirty){ clearTimeout(S.saveTimer); S.saveTimer = null; await doSave(); }
+  if (S.dirty){
+    openModal("아직 저장되지 않았습니다.\n인터넷 연결을 확인해 주세요. 그래도 나가시면 마지막 몇 글자가 깃허브에 안 올라갔을 수 있습니다(이 컴퓨터에는 남습니다).", "그래도 나가기", () => {
+      S.doc = null; enterHome();
+    });
+    return;
+  }
+  S.doc = null;
+  enterHome();
+});
+
+function updateCnt(){
+  if (!S.doc) return;
+  const c = countDoc();
+  document.getElementById("cnt").textContent = "질문 " + c.q + " · 답변 " + c.a;
+}
+
+/* =========================================================
+   8) 배치(레이아웃)와 그리기
+   ========================================================= */
+const NW = 260, NW_ROOT = 280, GAPX = 90, GAPY = 20;
+
+function layout(){
+  if (!S.doc) return;
+  const nodesEl = document.getElementById("nodes");
+  const wires = document.getElementById("wires");
+
+  /* 1차: DOM 생성(위치 없이) → 높이 측정 */
+  const items = [];   // {id, el, depth, children:[...]}
+  const build = (pid, depth) => {
+    const out = [];
+    for (const { id, n } of liveChildren(pid)){
+      const el = nodeEl(id, n);
+      const it = { id, n, el, depth, children: null, h: 0, y: 0, x: 0 };
+      it.children = build(id, depth + 1);
+      items.push(it);
+      out.push(it);
+    }
+    return out;
+  };
+
+  nodesEl.innerHTML = "";
+  const rootEl = nodeEl("", null);
+  nodesEl.appendChild(rootEl);
+  const tops = build("", 1);
+  for (const it of items) nodesEl.appendChild(it.el);
+
+  const rootH = rootEl.offsetHeight;
+  for (const it of items) it.h = it.el.offsetHeight;
+
+  /* 2차: 아래에서 위로 y 계산 (자식 묶음 가운데에 부모) */
+  function place(it, y){                       // → 차지한 높이
+    if (!it.children.length){
+      it.y = y;
+      return it.h;
+    }
+    let cy = y, first = null, last = null;
+    for (const k of it.children){
+      const used = place(k, cy);
+      if (first === null) first = k.y + Math.min(k.h, 60) / 2;
+      last = k.y + Math.min(k.h, 60) / 2;
+      cy += used + GAPY;
+    }
+    const span = cy - GAPY - y;
+    it.y = (first + last) / 2 - Math.min(it.h, 60) / 2;
+    if (it.y < y) it.y = y;
+    return Math.max(span, it.y + it.h - y);
+  }
+  let ry = 0, rootFirst = null, rootLast = null;
+  for (const t of tops){
+    const used = place(t, ry);
+    if (rootFirst === null) rootFirst = t.y + Math.min(t.h, 60) / 2;
+    rootLast = t.y + Math.min(t.h, 60) / 2;
+    ry += used + GAPY;
+  }
+  const rootY = tops.length ? (rootFirst + rootLast) / 2 - Math.min(rootH, 60) / 2 : 0;
+
+  /* x = 깊이 누적 (루트 폭과 일반 폭이 달라서) */
+  const xAt = d => (d === 0) ? 0 : NW_ROOT + GAPX + (d - 1) * (NW + GAPX);
+  rootEl.style.left = "0px";
+  rootEl.style.top = rootY + "px";
+  for (const it of items){
+    it.x = xAt(it.depth);
+    it.el.style.left = it.x + "px";
+    it.el.style.top = it.y + "px";
+  }
+
+  /* 선 긋기 */
+  let maxX = NW_ROOT, maxY = Math.max(rootY + rootH, ry);
+  let d = "";
+  const anchor = (x, y, h, right) => [x + (right ? (y === rootY && x === 0 ? NW_ROOT : NW) : 0), 0];
+  const pathTo = (px, py, ph, pw, it) => {
+    const x1 = px + pw, y1 = py + Math.min(ph, 60) / 2;
+    const x2 = it.x, y2 = it.y + Math.min(it.h, 60) / 2;
+    const mx = (x1 + x2) / 2;
+    return "M" + x1 + " " + y1 + " C" + mx + " " + y1 + " " + mx + " " + y2 + " " + x2 + " " + y2;
+  };
+  const byId = new Map(items.map(it => [it.id, it]));
+  for (const it of items){
+    const parent = it.n.p === "" ? null : byId.get(it.n.p);
+    if (parent) d += pathTo(parent.x, parent.y, parent.h, NW, it);
+    else d += pathTo(0, rootY, rootH, NW_ROOT, it);
+    maxX = Math.max(maxX, it.x + NW);
+    maxY = Math.max(maxY, it.y + it.h);
+  }
+  wires.setAttribute("width", maxX + 40);
+  wires.setAttribute("height", maxY + 40);
+  wires.innerHTML = d ? '<path d="' + d + '"/>' : "";
+
+  /* 코치 문구 */
+  const coach = document.getElementById("coach");
+  if (!tops.length){
+    coach.textContent = "초록 상자(카테고리)를 누르고 [＋ 질문 달기]를 눌러 시작해 주세요";
+    coach.style.display = "block";
+  }else if (S.sel === null && !S.editing){
+    coach.textContent = "상자를 누르면 달기·고치기·지우기 단추가 나옵니다";
+    coach.style.display = "block";
+  }else{
+    coach.style.display = "none";
+  }
+
+  applyTransform();
+  positionToolbar();
+}
+
+function nodeEl(id, n){
+  const el = document.createElement("div");
+  const isRoot = id === "";
+  el.className = "node " + (isRoot ? "rootnode" : n.t) + ((S.sel === id) ? " sel" : "");
+  el.dataset.id = id;
+
+  if (S.editing === id && !isRoot){
+    el.innerHTML = '<span class="ntag">' + (n.t === "q" ? "질문" : "답변") + '</span>';
+    const ta = document.createElement("textarea");
+    ta.maxLength = 2000;
+    ta.value = n.x;
+    ta.placeholder = n.t === "q" ? "손님이 물어볼 질문을 적어 주세요" : "그 질문에 드릴 답을 적어 주세요";
+    const btns = document.createElement("div");
+    btns.className = "editbtns";
+    btns.innerHTML = '<button class="ok">확인</button><button class="no">취소</button>';
+    el.appendChild(ta); el.appendChild(btns);
+    btns.querySelector(".ok").addEventListener("click", ev => { ev.stopPropagation(); editCommit(ta.value); });
+    btns.querySelector(".no").addEventListener("click", ev => { ev.stopPropagation(); editCancel(); });
+    ta.addEventListener("keydown", ev => {
+      ev.stopPropagation();
+      if (ev.key === "Enter" && !ev.shiftKey){ ev.preventDefault(); editCommit(ta.value); }
+      if (ev.key === "Escape") editCancel();
+    });
+    ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; });
+    ta.addEventListener("pointerdown", ev => ev.stopPropagation());
+    setTimeout(() => { ta.focus(); ta.style.height = ta.scrollHeight + "px"; }, 0);
+  }else if (isRoot){
+    el.innerHTML = '<span class="ntag">카테고리</span>' + esc(S.doc.name);
+  }else{
+    el.innerHTML = '<span class="ntag">' + (n.t === "q" ? "질문" : "답변") + '</span>' +
+      (n.x ? esc(n.x) : '<span class="empty">(아직 안 적음)</span>');
+  }
+
+  el.addEventListener("pointerdown", ev => ev.stopPropagation());
+  el.addEventListener("click", ev => {
+    ev.stopPropagation();
+    if (S.editing !== null && S.editing !== id) return;   // 편집 중엔 다른 상자 선택 안 됨
+    if (S.editing === id) return;
+    select(id);
+  });
+  el.addEventListener("dblclick", ev => {
+    ev.stopPropagation();
+    if (!isRoot && S.editing === null) editStart(id, false);
+  });
+  return el;
+}
+
+/* =========================================================
+   9) 선택 · 도구 단추
+   ========================================================= */
+function select(id){
+  S.sel = id;
+  layout();
+}
+
+function positionToolbar(){
+  const tb = document.getElementById("toolbar");
+  if (S.sel === null || S.editing !== null || !S.doc){ tb.style.display = "none"; return; }
+  const el = document.querySelector('.node[data-id="' + S.sel + '"]');
+  if (!el){ tb.style.display = "none"; return; }
+
+  const isRoot = S.sel === "";
+  const n = isRoot ? null : S.doc.nodes[S.sel];
+  let h = "";
+  if (isRoot) h = '<button data-act="addq">＋ 질문 달기</button>';
+  else if (n.t === "q") h = '<button data-act="adda">＋ 답변 달기</button><button data-act="edit">고치기</button><button class="del" data-act="del">지우기</button>';
+  else h = '<button data-act="addq">＋ 추가 질문 달기</button><button data-act="edit">고치기</button><button class="del" data-act="del">지우기</button>';
+  tb.innerHTML = h;
+  tb.style.display = "flex";
+  tb.style.left = el.offsetLeft + "px";
+  tb.style.top = (el.offsetTop + el.offsetHeight + 10) + "px";
+  tb.querySelectorAll("button").forEach(b => b.addEventListener("click", ev => {
+    ev.stopPropagation();
+    const act = b.dataset.act;
+    if (act === "addq") addChild(S.sel, "q");
+    else if (act === "adda") addChild(S.sel, "a");
+    else if (act === "edit") editStart(S.sel, false);
+    else if (act === "del") delAsk(S.sel);
+  }));
+  tb.addEventListener("pointerdown", ev => ev.stopPropagation());
+}
+
+function addChild(pid, t){
+  const id = newId();
+  S.doc.nodes[id] = { p: pid, t, x: "", u: Date.now(), o: Date.now() };
+  S.sel = id;
+  editStart(id, true);
+  ensureVisible(id);
+}
+
+function editStart(id, isNew){
+  S.editing = id; S.editingIsNew = !!isNew;
+  layout();
+  ensureVisible(id);
+}
+
+function editCommit(text){
+  const id = S.editing;
+  if (id === null) return;
+  const n = S.doc.nodes[id];
+  const t = text.replace(/\s+$/, "");
+  S.editing = null;
+  if (!t.trim() && S.editingIsNew){
+    delete S.doc.nodes[id];          // 새로 만들다 만 빈 상자는 흔적 없이 제거
+    if (S.sel === id) S.sel = n.p;
+  }else if (t !== n.x){
+    n.x = t; n.u = Date.now();
+    markDirty();
+  }
+  S.editingIsNew = false;
+  if (S.pendingAdopt){ const p = S.pendingAdopt; S.pendingAdopt = null; adopt(p); }
+  layout();
+}
+
+function editCancel(){
+  const id = S.editing;
+  S.editing = null;
+  if (S.editingIsNew && id !== null){
+    const n = S.doc.nodes[id];
+    delete S.doc.nodes[id];
+    if (S.sel === id) S.sel = n ? n.p : null;
+  }
+  S.editingIsNew = false;
+  if (S.pendingAdopt){ const p = S.pendingAdopt; S.pendingAdopt = null; adopt(p); }
+  layout();
+}
+
+function delAsk(id){
+  const n = S.doc.nodes[id];
+  if (!n) return;
+  let cnt = 0;
+  const walk = pid => { for (const { id: k } of liveChildren(pid)){ cnt++; walk(k); } };
+  walk(id);
+  const label = n.x ? "「" + (n.x.length > 40 ? n.x.slice(0, 40) + "…" : n.x) + "」" : "이 " + (n.t === "q" ? "질문" : "답변");
+  openModal(label + " 을(를) 지웁니다." + (cnt ? "\n아래에 달린 " + cnt + "개도 함께 지워집니다." : ""), "지우기", () => {
+    const now = Date.now();
+    const kill = tid => {
+      const x = S.doc.nodes[tid];
+      if (x){ x.d = 1; x.u = now; }
+      for (const [kid, kn] of Object.entries(S.doc.nodes)){
+        if (kn.p === tid && kn.d !== 1) kill(kid);
+      }
+    };
+    kill(id);
+    S.sel = n.p;
+    markDirty();
+    layout();
+  });
+}
+
+/* 확인 모달 */
+let modalCb = null;
+function openModal(text, yesLabel, cb){
+  document.getElementById("modalText").textContent = text;
+  document.getElementById("modalYes").textContent = yesLabel;
+  modalCb = cb;
+  document.getElementById("modal").classList.add("on");
+}
+document.getElementById("modalNo").addEventListener("click", () => {
+  document.getElementById("modal").classList.remove("on"); modalCb = null;
+});
+document.getElementById("modalYes").addEventListener("click", () => {
+  document.getElementById("modal").classList.remove("on");
+  const cb = modalCb; modalCb = null;
+  if (cb) cb();
+});
+
+/* =========================================================
+   10) 캔버스 이동·확대
+   ========================================================= */
+const canvas = document.getElementById("canvas");
+const world = document.getElementById("world");
+
+function applyTransform(){
+  world.style.transform = "translate(" + S.panX + "px," + S.panY + "px) scale(" + S.zoom + ")";
+}
+
+let panning = null;
+canvas.addEventListener("pointerdown", e => {
+  panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY };
+  canvas.classList.add("panning");
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove", e => {
+  if (!panning) return;
+  S.panX = panning.px + (e.clientX - panning.x);
+  S.panY = panning.py + (e.clientY - panning.y);
+  applyTransform();
+});
+canvas.addEventListener("pointerup", () => { panning = null; canvas.classList.remove("panning"); });
+canvas.addEventListener("pointercancel", () => { panning = null; canvas.classList.remove("panning"); });
+canvas.addEventListener("click", e => {
+  if (e.target === canvas || e.target === world){
+    if (S.editing === null){ S.sel = null; layout(); }
+  }
+});
+
+function zoomAt(cx, cy, factor){
+  const nz = Math.min(1.6, Math.max(0.25, S.zoom * factor));
+  const r = canvas.getBoundingClientRect();
+  const x = cx - r.left, y = cy - r.top;
+  S.panX = x - (x - S.panX) * (nz / S.zoom);
+  S.panY = y - (y - S.panY) * (nz / S.zoom);
+  S.zoom = nz;
+  applyTransform();
+}
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  if (e.ctrlKey){ zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1 / 1.12); }
+  else { S.panX -= e.deltaX; S.panY -= e.deltaY; applyTransform(); }
+}, { passive: false });
+
+document.getElementById("btnZin").addEventListener("click", () => {
+  const r = canvas.getBoundingClientRect();
+  zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25);
+});
+document.getElementById("btnZout").addEventListener("click", () => {
+  const r = canvas.getBoundingClientRect();
+  zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1 / 1.25);
+});
+document.getElementById("btnFit").addEventListener("click", fitView);
+
+function contentBounds(){
+  const nodes = document.querySelectorAll("#nodes .node");
+  let mx = 0, my = 0;
+  nodes.forEach(el => {
+    mx = Math.max(mx, el.offsetLeft + el.offsetWidth);
+    my = Math.max(my, el.offsetTop + el.offsetHeight);
+  });
+  return { w: mx, h: my };
+}
+
+function fitView(){
+  const b = contentBounds();
+  const r = canvas.getBoundingClientRect();
+  if (!b.w || !r.width) return;
+  const z = Math.min(1.3, Math.max(0.25, Math.min((r.width - 80) / b.w, (r.height - 80) / b.h)));
+  S.zoom = z;
+  S.panX = Math.max(40, (r.width - b.w * z) / 2);
+  S.panY = Math.max(40, (r.height - b.h * z) / 2);
+  applyTransform();
+}
+
+function ensureVisible(id){
+  const el = document.querySelector('.node[data-id="' + id + '"]');
+  if (!el) return;
+  const r = canvas.getBoundingClientRect();
+  const x = el.offsetLeft * S.zoom + S.panX, y = el.offsetTop * S.zoom + S.panY;
+  const w = el.offsetWidth * S.zoom, h = el.offsetHeight * S.zoom;
+  if (x < 20) S.panX += 20 - x;
+  if (y < 20) S.panY += 20 - y;
+  if (x + w > r.width - 20) S.panX -= (x + w) - (r.width - 20);
+  if (y + h > r.height - 120) S.panY -= (y + h) - (r.height - 120);
+  applyTransform();
+}
+
+/* 키보드 — 편집 중이 아닐 때만 */
+document.addEventListener("keydown", e => {
+  if (!document.getElementById("scrEdit").classList.contains("on")) return;
+  if (S.editing !== null) return;
+  if (document.getElementById("modal").classList.contains("on")){
+    if (e.key === "Escape") document.getElementById("modalNo").click();
+    return;
+  }
+  if (e.key === "Escape"){ S.sel = null; layout(); }
+  if (S.sel === null || S.sel === "") return;
+  if (e.key === "Delete"){ e.preventDefault(); delAsk(S.sel); }
+  if (e.key === "F2"){ e.preventDefault(); editStart(S.sel, false); }
+});
+
+/* =========================================================
+   11) 시작
+   ========================================================= */
+(function boot(){
+  if (S.pw) enterHome();
+  else { show("scrLogin"); setTimeout(() => pwInput.focus(), 100); }
+})();
+</script>
+</body>
+</html>
