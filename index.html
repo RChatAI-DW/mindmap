@@ -265,7 +265,15 @@ const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 
 /* 판매 행사·중복 분류는 질문 작업 대상이 아니다 — 트리에서 뺀다 (대표님 지시 2026-08-10) */
 const HIDE_CATES = new Set([151, 409, 385]);   // 반값할인상품, 당일배송 유니트, 브랜드별
-const CATS = ((window.RA_CATEGORIES && window.RA_CATEGORIES.tree) || []).filter(c => !HIDE_CATES.has(c.no));
+/* 세부 분류(치수·상표·형식 단계)는 질문을 달지 않는다 — 대분류와 그 아래 한 단계까지만
+   (대표님 지시 2026-08-11: 캇타·확관기 단계까지 유지, 15mm·바이락스 같은 세부는 제외) */
+const MAX_DEPTH = 1;
+function pruneCats(list, d){
+  return list.map(c => ({ no: c.no, name: c.name,
+    children: d < MAX_DEPTH ? pruneCats(c.children || [], d + 1) : [] }));
+}
+const CATS = pruneCats(
+  ((window.RA_CATEGORIES && window.RA_CATEGORIES.tree) || []).filter(c => !HIDE_CATES.has(c.no)), 0);
 
 /* 카테고리 색인: no → {no, name, children, parent} */
 const CAT_BY_NO = new Map();
