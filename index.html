@@ -958,9 +958,11 @@ function nodeEl(id, n){
       (n.x ? esc(n.x) : '<span class="empty">(아직 안 적음 — 눌러서 채우세요)</span>');
   }
 
-  el.addEventListener("pointerdown", ev => ev.stopPropagation());
+  /* pointerdown 은 캔버스로 흘려보낸다 — 확대해서 화면이 상자로 가득해도 상자 위에서 끌어 이동 가능.
+     6px 넘게 끌면 팬(아래 click 은 무시), 그 안에서 떼면 평소처럼 선택이다 */
   el.addEventListener("click", ev => {
     ev.stopPropagation();
+    if (lastPanMoved > 6){ lastPanMoved = 0; return; }   // 끌기 끝에 오는 클릭은 선택이 아니다
     if (S.locked) return;
     if (S.editing === id) return;
     /* 다른 상자를 적던 중이면 그 글을 확정하고 이 상자로 넘어온다 — 빈 상자 여러 개 만들기 가능 */
@@ -1000,6 +1002,7 @@ function positionToolbar(){
   tb.style.top = (el.offsetTop + el.offsetHeight + 10) + "px";
   tb.querySelectorAll("button").forEach(b => b.addEventListener("click", ev => {
     ev.stopPropagation();
+    if (lastPanMoved > 6){ lastPanMoved = 0; return; }   // 단추에서 시작해 끌었으면 실행하지 않는다
     const act = b.dataset.act;
     if (act === "addq") addChild(S.sel, "q");
     else if (act === "adda") addChild(S.sel, "a");
@@ -1007,7 +1010,6 @@ function positionToolbar(){
     else if (act === "del") delAsk(S.sel);
   }));
 }
-document.getElementById("toolbar").addEventListener("pointerdown", ev => ev.stopPropagation());
 
 function addChild(pid, t){
   if (S.locked || !S.doc) return;
@@ -1141,14 +1143,22 @@ canvas.addEventListener("pointerdown", e => {
   if (e.pointerType === "mouse" && e.button !== 0) return;   // 왼쪽 버튼만
   if (e.pointerType !== "touch") pointers.clear();           // 마우스·펜은 동시 1개 — 잔존 항목이 핀치로 오인되지 않게
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
   if (pointers.size === 2){
     panning = null;
     pinchLast = pinchInfo();
     canvas.classList.remove("panning");
+    try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
   }else if (pointers.size === 1){
-    panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY, moved: 0 };
-    canvas.classList.add("panning");
+    lastPanMoved = 0;   // 새 조작 시작 — 지난 끌기 기록이 이번 클릭을 막지 않게
+    /* 확대하면 화면이 상자·단추로 덮여 빈 바닥이 없다 — 어디서 눌러도 끌면 이동해야 한다.
+       상자·단추 위에서는 6px 넘게 끌었을 때에야 잡는다(캡처+이동 시작).
+       그 전에 떼면 원래의 클릭(상자 선택·확대 단추)으로 동작한다. */
+    const overUI = !!(e.target.closest && e.target.closest(".node,#zoomctl,#toolbar"));
+    panning = { x: e.clientX, y: e.clientY, px: S.panX, py: S.panY, moved: 0, held: !overUI };
+    if (panning.held){
+      try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+      canvas.classList.add("panning");
+    }
   }
 });
 canvas.addEventListener("pointermove", e => {
@@ -1166,12 +1176,21 @@ canvas.addEventListener("pointermove", e => {
   }else if (panning){
     panning.moved = Math.max(panning.moved,
       Math.abs(e.clientX - panning.x) + Math.abs(e.clientY - panning.y));
+    if (!panning.held){
+      if (panning.moved <= 6) return;          // 아직 클릭일 수 있다 — 화면은 안 움직인다
+      panning.held = true;
+      try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+      canvas.classList.add("panning");
+    }
     S.panX = panning.px + (e.clientX - panning.x);
     S.panY = panning.py + (e.clientY - panning.y);
     applyTransform();
   }
 });
 function endPointer(e){
+  /* 상자·단추에서 시작한 터치 팬은 도중에 캡처가 상자→캔버스로 넘어오며
+     상자의 lostpointercapture 가 여기까지 버블된다 — 그건 끝이 아니다 */
+  if (e.type === "lostpointercapture" && e.target !== canvas) return;
   pointers.delete(e.pointerId);
   if (pointers.size < 2) pinchLast = null;
   if (pointers.size === 0){
@@ -1193,8 +1212,7 @@ canvas.addEventListener("click", e => {
   }
 });
 
-/* 확대 단추·잠금 카드가 캔버스의 포인터 잡기에 먹히지 않게 전파를 끊는다 */
-document.getElementById("zoomctl").addEventListener("pointerdown", ev => ev.stopPropagation());
+/* 잠금 카드만 팬 시작점에서 제외 — 확대 단추·상자는 이제 끌어서 이동을 시작할 수 있다 */
 document.getElementById("lockbox").addEventListener("pointerdown", ev => ev.stopPropagation());
 
 function zoomAt(cx, cy, factor){
@@ -1213,14 +1231,19 @@ canvas.addEventListener("wheel", e => {
 }, { passive: false });
 
 document.getElementById("btnZin").addEventListener("click", () => {
+  if (lastPanMoved > 6){ lastPanMoved = 0; return; }   // 단추에서 시작해 끌었으면 확대가 아니다
   const r = canvas.getBoundingClientRect();
   zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25);
 });
 document.getElementById("btnZout").addEventListener("click", () => {
+  if (lastPanMoved > 6){ lastPanMoved = 0; return; }
   const r = canvas.getBoundingClientRect();
   zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1 / 1.25);
 });
-document.getElementById("btnFit").addEventListener("click", fitView);
+document.getElementById("btnFit").addEventListener("click", () => {
+  if (lastPanMoved > 6){ lastPanMoved = 0; return; }
+  fitView();
+});
 
 function contentBounds(){
   const nodes = document.querySelectorAll("#nodes .node");
