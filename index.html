@@ -3,7 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>알옥션 질문·답변 마인드맵</title>
+<title>RChatAI 채팅 구조도</title>
+<!-- 카톡·문자로 보낼 때 뜨는 미리보기 (og:image 는 반드시 절대 주소여야 한다).
+     내용을 바꾸면 ?v= 숫자를 올려야 카카오가 새 미리보기를 가져간다. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="두원알앤에이 RChatAI">
+<meta property="og:title" content="RChatAI 채팅 구조도">
+<meta property="og:description" content="손님이 물어볼 질문과 드릴 답을 분류별로 이어 붙이는 곳입니다. 비밀번호가 필요합니다.">
+<meta property="og:url" content="https://rchatai-dw.github.io/mindmap/">
+<meta property="og:image" content="https://rchatai-dw.github.io/mindmap/og.png?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="손님이 물어볼 질문과 드릴 답을 분류별로 이어 붙이는 곳입니다.">
+<link rel="icon" type="image/png" href="favicon.png">
 <style>
   :root{
     --bg:#f6f5f2; --card:#ffffff; --ink:#1b1b1a; --dim:#6b6a66; --line:#e0ded8;
@@ -182,8 +195,9 @@
 <!-- ───────── 1. 비밀번호 ───────── -->
 <div class="scr" id="scrLogin">
   <div class="logincard">
-    <h1>알옥션 질문·답변 마인드맵</h1>
-    <p>비밀번호를 넣으시면 시작됩니다. 비밀번호는 담당자에게 받으세요.</p>
+    <h1>RChatAI 채팅 구조도</h1>
+    <p>손님 질문과 드릴 답을 분류별로 이어 붙이는 곳입니다.<br>
+       비밀번호를 넣으시면 시작됩니다. 비밀번호는 담당자에게 받으세요.</p>
     <input id="pwInput" type="password" autocomplete="current-password" placeholder="비밀번호">
     <label class="pwshow"><input type="checkbox" id="pwShow"> 비밀번호 보이기</label>
     <button id="btnLogin">들어가기</button>
