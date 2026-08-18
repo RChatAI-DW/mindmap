@@ -267,6 +267,8 @@
              <b>초록색</b>으로 바뀝니다. 한 번 더 누르면 풀립니다.</p>
           <p id="wv3" style="display:none">이 <b>v3</b>에는 사장님이 쓰신 것에 더해 Claude가 만든 초안이 전 분류에 깔려 있습니다.
              틀린 곳은 고치시고, 다 보신 말풍선은 <b>✓</b>를 눌러 주세요. 원본 사이트(주소 끝에 v3 없는 곳)와는 따로 저장됩니다.</p>
+          <p id="wv3b" style="display:none">답변 속 <b>[DB: 단가]</b> <b>[DB: 재고]</b> 같은 표시는 앱이 데이터로 채우는 자리이고,
+             <b>[전화 요청]</b>은 앱의 담당자 연결 단추입니다. 그 자리는 그대로 두시고 말의 흐름만 봐 주세요.</p>
         </div>
       </div>
     </div>
@@ -1365,7 +1367,8 @@ document.addEventListener("keydown", e => {
    ========================================================= */
 (function boot(){
   if (NS){ const v = document.getElementById("vtag"); v.textContent = NS; v.classList.add("on");
-           const w = document.getElementById("wv3"); if (w) w.style.display = "block"; }
+           const w = document.getElementById("wv3"); if (w) w.style.display = "block";
+           const w2 = document.getElementById("wv3b"); if (w2) w2.style.display = "block"; }
   if (S.pw) enterMain();
   else { show("scrLogin"); setTimeout(() => pwInput.focus(), 100); }
 })();
