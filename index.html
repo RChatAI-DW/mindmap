@@ -22,6 +22,7 @@
     --bg:#f6f5f2; --card:#ffffff; --ink:#1b1b1a; --dim:#6b6a66; --line:#e0ded8;
     --accent:#1c449c; --accent-soft:#e8eefb; --warn:#e05a17; --warn-soft:#fdeee4;
     --danger:#8c2f2f; --danger-soft:#f9ecec; --wire:#c9c4b8;
+    --ok:#2f7d33; --ok-soft:#e9f4e7;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%}
@@ -128,6 +129,16 @@
   .node.sel{border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft), 0 2px 8px rgba(0,0,0,.08)}
   .node.rootnode.sel{box-shadow:0 0 0 4px #b6c6ea, 0 2px 8px rgba(0,0,0,.12)}
   .node .empty{color:#b4b1a9; font-style:normal}
+
+  /* 검토 완료 체크 — 말풍선 오른쪽 위 동그란 ✓ 단추. 누르면 켜지고(초록), 또 누르면 풀린다 */
+  .node .chk{position:absolute; top:-13px; right:-13px; width:30px; height:30px; border-radius:50%;
+             border:2px solid var(--line); background:var(--card); color:#c2beb4; font-size:15px;
+             font-weight:700; line-height:1; display:grid; place-items:center; padding:0;
+             box-shadow:0 1px 4px rgba(0,0,0,.10)}
+  .node .chk:hover{border-color:var(--ok); color:var(--ok)}
+  .node.done{border-color:var(--ok); background:var(--ok-soft)}
+  .node.q.done, .node.a.done{border-left-color:var(--ok)}
+  .node.done .chk{background:var(--ok); border-color:var(--ok); color:#fff}
 
   .node textarea{width:100%; min-height:64px; font-family:inherit; font-size:16.5px; line-height:1.55;
                  border:1px solid var(--line); border-radius:8px; padding:8px 10px; resize:none; color:var(--ink)}
@@ -250,6 +261,8 @@
              답변에 <b>＋ 추가 질문 달기</b> … 순서로 이어 붙이시면 됩니다.</p>
           <p>상자만 먼저 여러 개 만들어 두고 글은 나중에 채우셔도 됩니다.
              적으시는 대로 저절로 깃허브에 저장됩니다.</p>
+          <p>말풍선 오른쪽 위의 <b>✓ 단추</b>를 누르면 검토 완료 표시가 되고 상자가
+             <b>초록색</b>으로 바뀝니다. 한 번 더 누르면 풀립니다.</p>
         </div>
       </div>
     </div>
@@ -405,24 +418,28 @@ document.getElementById("btnLogout").addEventListener("click", () => {
    ========================================================= */
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
+function badgeText(q, a, c){
+  return "질문 " + q + " · 답변 " + a + (c ? " · ✓" + c : "");
+}
+
 function badgeOf(no){
   if (S.listState !== "ok") return { text: S.listState === "fail" ? "?" : "…", has: false };
   const s = S.summary[no];
-  const q = s ? (+s.q || 0) : 0, a = s ? (+s.a || 0) : 0;
+  const q = s ? (+s.q || 0) : 0, a = s ? (+s.a || 0) : 0, c = s ? (+s.c || 0) : 0;
   if (!q && !a) return { text: "", has: false };
-  return { text: "질문 " + q + " · 답변 " + a, has: true };
+  return { text: badgeText(q, a, c), has: true };
 }
 
 /* 분류 묶음 배지 = 그 아래 전체 합 */
 function subtreeSum(c){
-  let q = 0, a = 0;
+  let q = 0, a = 0, ck = 0;
   const walk = x => {
     const s = S.summary[x.no];
-    if (s){ q += +s.q || 0; a += +s.a || 0; }
+    if (s){ q += +s.q || 0; a += +s.a || 0; ck += +s.c || 0; }
     (x.children || []).forEach(walk);
   };
   walk(c);
-  return { q, a };
+  return { q, a, c: ck };
 }
 
 async function refreshList(){
@@ -462,7 +479,7 @@ async function enterMain(){
 function rowBadge(c){
   if ((c.children || []).length){
     const t = subtreeSum(c);
-    if (t.q + t.a > 0) return { text: "질문 " + t.q + " · 답변 " + t.a, has: true };
+    if (t.q + t.a > 0) return { text: badgeText(t.q, t.a, t.c), has: true };
   }
   return badgeOf(c.no);
 }
@@ -578,15 +595,16 @@ function liveChildren(pid){
 }
 
 function countDoc(){
-  let q = 0, a = 0;
+  let q = 0, a = 0, c = 0;
   const walk = pid => {
     for (const { id, n } of liveChildren(pid)){
       if (n.t === "q") q++; else a++;
+      if (n.c === 1) c++;
       walk(id);
     }
   };
   walk("");
-  return { q, a };
+  return { q, a, c };
 }
 
 /* 병합 — id 합집합, 같은 id는 u 큰 쪽 승. __proto__류 setter 사고를 막게 널 프로토타입 맵 사용 */
@@ -683,7 +701,7 @@ function doSave(){
       adopt(r.doc);
       backupWrite(S.dirty);   // 저장 중 새 수정이 있었으면 '저장 안 됨' 표시 유지
       const c = countDoc();
-      S.summary[reqCate] = { n: S.doc.name, q: c.q, a: c.a, u: Date.now() };
+      S.summary[reqCate] = { n: S.doc.name, q: c.q, a: c.a, c: c.c, u: Date.now() };
       renderBadges();
       if (S.dirty){
         setSave("저장 중…");   // 남은 수정이 있으니 완료 표시는 아직
@@ -832,7 +850,8 @@ async function openMap(no){
 function updateCnt(){
   if (!S.doc){ return; }
   const c = countDoc();
-  document.getElementById("cnt").textContent = "질문 " + c.q + " · 답변 " + c.a;
+  document.getElementById("cnt").textContent = "질문 " + c.q + " · 답변 " + c.a +
+    (c.c ? " · 검토 ✓ " + c.c + "/" + (c.q + c.a) : "");
 }
 
 /* =========================================================
@@ -942,7 +961,8 @@ function layout(){
 function nodeEl(id, n){
   const el = document.createElement("div");
   const isRoot = id === "";
-  el.className = "node " + (isRoot ? "rootnode" : n.t) + ((S.sel === id) ? " sel" : "");
+  el.className = "node " + (isRoot ? "rootnode" : n.t) + ((S.sel === id) ? " sel" : "") +
+                 ((!isRoot && n.c === 1) ? " done" : "");
   el.dataset.id = id;
 
   if (S.editing === id && !isRoot){
@@ -978,6 +998,22 @@ function nodeEl(id, n){
   }else{
     el.innerHTML = '<span class="ntag">' + (n.t === "q" ? "질문" : "답변") + '</span>' +
       (n.x ? esc(n.x) : '<span class="empty">(아직 안 적음 — 눌러서 채우세요)</span>');
+    /* 검토 완료 토글 — 사장님이 보고 고치신 말풍선에 ✓ 를 남긴다 (다시 누르면 해제) */
+    const chk = document.createElement("button");
+    chk.className = "chk";
+    chk.textContent = "✓";
+    chk.title = (n.c === 1) ? "검토 완료 — 누르면 해제됩니다" : "검토를 마쳤으면 눌러 주세요";
+    chk.addEventListener("click", ev => {
+      ev.stopPropagation();
+      if (lastPanMoved > 6){ lastPanMoved = 0; return; }   // 끌기 끝에 오는 클릭은 토글이 아니다
+      if (S.locked) return;
+      if (S.editing !== null && S.editingTa) editCommit(S.editingTa.value);
+      if (n.c === 1) delete n.c; else n.c = 1;
+      n.u = Date.now();
+      markDirty();
+      layout();
+    });
+    el.appendChild(chk);
   }
 
   /* pointerdown 은 캔버스로 흘려보낸다 — 확대해서 화면이 상자로 가득해도 상자 위에서 끌어 이동 가능.
