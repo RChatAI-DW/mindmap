@@ -147,7 +147,11 @@
   .node.done .chk{background:var(--ok); border-color:var(--ok); color:#fff}
 
   .node textarea{width:100%; min-height:64px; font-family:inherit; font-size:16.5px; line-height:1.55;
-                 border:1px solid var(--line); border-radius:8px; padding:8px 10px; resize:none; color:var(--ink)}
+                 border:1px solid var(--line); border-radius:8px; padding:8px 10px; resize:none; color:var(--ink);
+                 overflow:hidden; display:block}
+  /* 편집 중인 상자는 아래 상자에 가려지지 않게 맨 위로 (2026-08-19 대표님 지적) */
+  .node.editing{z-index:6}
+  .node.sel{z-index:3}
   .node textarea:focus{outline:2px solid var(--accent)}
   .editbtns{display:flex; gap:8px; margin-top:8px}
   .editbtns button{flex:1; padding:9px; font-size:15.5px; font-weight:700; border-radius:8px}
@@ -872,30 +876,54 @@ function updateCnt(){
    ========================================================= */
 const NW = 260, NW_ROOT = 280, GAPX = 90, GAPY = 20;
 
-function layout(){
+/* keepDom=true 면 상자를 다시 만들지 않고(편집 중 입력창·커서 유지) 지금 높이만 다시 재서 자리만 옮긴다.
+   상자 목록이 문서와 안 맞으면(추가·삭제 뒤) 자동으로 전체 다시 그리기로 떨어진다. */
+function layout(keepDom){
   if (!S.doc) return;
   const nodesEl = document.getElementById("nodes");
   const wires = document.getElementById("wires");
 
-  /* 1차: DOM 생성(위치 없이) → 높이 측정 */
   const items = [];
-  const build = (pid, depth) => {
-    const out = [];
-    for (const { id, n } of liveChildren(pid)){
-      const el = nodeEl(id, n);
-      const it = { id, n, el, depth, children: null, h: 0, y: 0, x: 0 };
-      it.children = build(id, depth + 1);
-      items.push(it);
-      out.push(it);
-    }
-    return out;
-  };
-
-  nodesEl.innerHTML = "";
-  const rootEl = nodeEl("", null);
-  nodesEl.appendChild(rootEl);
-  const tops = build("", 1);
-  for (const it of items) nodesEl.appendChild(it.el);
+  let rootEl = null, tops = null;
+  if (keepDom){
+    const elById = new Map();
+    nodesEl.querySelectorAll(".node").forEach(el => elById.set(el.dataset.id, el));
+    rootEl = elById.get("") || null;
+    let ok = !!rootEl;
+    const reuse = (pid, depth) => {
+      const out = [];
+      for (const { id, n } of liveChildren(pid)){
+        const el = elById.get(id);
+        if (!el){ ok = false; return out; }
+        const it = { id, n, el, depth, children: null, h: 0, y: 0, x: 0 };
+        it.children = reuse(id, depth + 1);
+        items.push(it);
+        out.push(it);
+      }
+      return out;
+    };
+    tops = reuse("", 1);
+    if (!ok || items.length !== nodesEl.querySelectorAll(".node").length - 1){ items.length = 0; rootEl = null; tops = null; }
+  }
+  if (!rootEl){
+    /* 1차: DOM 생성(위치 없이) → 높이 측정 */
+    const build = (pid, depth) => {
+      const out = [];
+      for (const { id, n } of liveChildren(pid)){
+        const el = nodeEl(id, n);
+        const it = { id, n, el, depth, children: null, h: 0, y: 0, x: 0 };
+        it.children = build(id, depth + 1);
+        items.push(it);
+        out.push(it);
+      }
+      return out;
+    };
+    nodesEl.innerHTML = "";
+    rootEl = nodeEl("", null);
+    nodesEl.appendChild(rootEl);
+    tops = build("", 1);
+    for (const it of items) nodesEl.appendChild(it.el);
+  }
 
   const rootH = rootEl.offsetHeight;
   for (const it of items) it.h = it.el.offsetHeight;
@@ -975,7 +1003,7 @@ function nodeEl(id, n){
   const el = document.createElement("div");
   const isRoot = id === "";
   el.className = "node " + (isRoot ? "rootnode" : n.t) + ((S.sel === id) ? " sel" : "") +
-                 ((!isRoot && n.c === 1) ? " done" : "");
+                 ((!isRoot && n.c === 1) ? " done" : "") + ((S.editing === id && !isRoot) ? " editing" : "");
   el.dataset.id = id;
 
   if (S.editing === id && !isRoot){
@@ -996,8 +1024,11 @@ function nodeEl(id, n){
       if (ev.key === "Enter" && !ev.shiftKey){ ev.preventDefault(); editCommit(ta.value); }
       if (ev.key === "Escape") requestCancel();
     });
+    const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
     ta.addEventListener("input", () => {
-      ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px";
+      const before = el.offsetHeight;
+      fit();
+      if (el.offsetHeight !== before) layout(true);   // 상자가 자라면 아래 상자들을 밀어낸다 (입력창은 그대로)
       /* 적는 글자를 실시간으로 이 컴퓨터에 남긴다 — 창이 꺼져도 살아남게 */
       try{
         localStorage.setItem(draftKey(id), JSON.stringify({ t: Date.now(), x: ta.value, p: n.p, ty: n.t }));
@@ -1005,7 +1036,7 @@ function nodeEl(id, n){
     });
     ta.addEventListener("pointerdown", ev => ev.stopPropagation());
     S.editingTa = ta;
-    setTimeout(() => { ta.focus(); ta.style.height = ta.scrollHeight + "px"; }, 0);
+    setTimeout(() => { fit(); layout(true); ta.focus(); ensureVisible(id); }, 0);
   }else if (isRoot){
     el.innerHTML = '<span class="ntag">카테고리</span>' + esc(S.doc.name);
   }else{
