@@ -103,7 +103,11 @@
             radial-gradient(circle, #e7e4dc 1.2px, transparent 1.3px) 0 0/26px 26px,
             var(--bg)}
   #canvas.panning{cursor:grabbing}
-  #world{position:absolute; left:0; top:0; transform-origin:0 0}
+  #canvas.panning .node{box-shadow:none}
+  #canvas.panning .node:hover{border-color:var(--line)}
+  /* 이동·확대는 transform 하나로만 움직인다. will-change 로 레이어를 승격해 두면 끌 때 말풍선을
+     매 프레임 다시 그리지 않고 합성기에서 옮기기만 한다 (확대 뒤 드래그 렉 — 2026-08-19 대표님 지적) */
+  #world{position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; backface-visibility:hidden}
   #wires{position:absolute; left:0; top:0; overflow:visible; pointer-events:none}
   #wires path{fill:none; stroke:var(--wire); stroke-width:2}
 
