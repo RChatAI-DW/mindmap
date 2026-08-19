@@ -103,6 +103,8 @@
             radial-gradient(circle, #e7e4dc 1.2px, transparent 1.3px) 0 0/26px 26px,
             var(--bg)}
   #canvas.panning{cursor:grabbing}
+  /* 끄는 동안은 말풍선이 마우스에 반응하지 않게 — 경계를 지날 때마다 hover 로 다시 그리던 간헐 렉 차단 (v3.10) */
+  #canvas.panning #pan{pointer-events:none}
   /* 이동은 #pan 의 translate, 확대는 #world 의 CSS zoom(=그 배율로 다시 배치, 실시간 리샘플링 없음).
      transform:scale 로 확대하면 GPU 가속이 약한 PC에서 끌 때마다 배율을 다시 계산해 렉이 난다
      (2026-08-19 대표님 지적). 핀치·휠 도중에만 #pan 에 임시 scale 을 얹고 손을 떼면 zoom 으로 확정한다. */
@@ -122,7 +124,7 @@
 
   .node{position:absolute; background:var(--card); border:2px solid var(--line); border-radius:12px;
         padding:10px 14px 12px; width:260px; font-size:16.5px; line-height:1.55;
-        word-break:break-word; white-space:pre-wrap; user-select:none; box-shadow:0 2px 6px rgba(0,0,0,.04)}
+        word-break:break-word; white-space:pre-wrap; user-select:none; box-shadow:0 1px 3px rgba(0,0,0,.05)}
   .node:hover{border-color:#c9c4b8}
   .node .ntag{display:block; font-size:12px; font-weight:700; margin-bottom:4px; letter-spacing:.03em}
   .node.q{border-left:6px solid var(--accent)}
@@ -140,7 +142,7 @@
   .node .chk{position:absolute; top:-13px; right:-13px; width:30px; height:30px; border-radius:50%;
              border:2px solid var(--line); background:var(--card); color:#c2beb4; font-size:15px;
              font-weight:700; line-height:1; display:grid; place-items:center; padding:0;
-             box-shadow:0 1px 4px rgba(0,0,0,.10)}
+             box-shadow:0 1px 2px rgba(0,0,0,.10)}
   .node .chk:hover{border-color:var(--ok); color:var(--ok)}
   .node.done{border-color:var(--ok); background:var(--ok-soft)}
   .node.q.done, .node.a.done{border-left-color:var(--ok)}
@@ -1237,6 +1239,13 @@ const pan = document.getElementById("pan");
 const ZOOM_OK = (typeof CSS !== "undefined" && CSS.supports && CSS.supports("zoom", "2"));   // 구형 파이어폭스는 transform scale 로 폴백
 function effZoom(){ return S.zoom * S.tmpScale; }
 
+let rafPending = false;
+/* 끌기(pointermove) 전용 — 한 프레임에 이동 이벤트가 여러 번 와도 style 은 한 번만 쓴다 */
+function scheduleTransform(){
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; applyTransform(); });
+}
 function applyTransform(){
   if (ZOOM_OK){
     world.style.zoom = String(S.zoom);
@@ -1298,7 +1307,7 @@ canvas.addEventListener("pointermove", e => {
       zoomAt(i.cx, i.cy, i.d / pinchLast.d, true);
       S.panX += i.cx - pinchLast.cx;
       S.panY += i.cy - pinchLast.cy;
-      applyTransform();
+      scheduleTransform();
     }
     pinchLast = i;
   }else if (panning){
@@ -1312,7 +1321,7 @@ canvas.addEventListener("pointermove", e => {
     }
     S.panX = panning.px + (e.clientX - panning.x);
     S.panY = panning.py + (e.clientY - panning.y);
-    applyTransform();
+    scheduleTransform();
   }
 });
 function endPointer(e){
