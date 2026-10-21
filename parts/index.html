@@ -142,7 +142,11 @@ body.dragging,body.dragging *{cursor:grabbing !important;user-select:none}
 .qw summary::before{content:'▸ '}
 .qw[open] summary::before{content:'▾ '}
 .qw div{margin-top:6px;padding:10px 12px;background:var(--soft);border-radius:var(--r-sm);line-height:1.6;color:var(--sub)}
-.qt{display:block;width:100%;min-height:52px;margin:10px 0 6px;border:1px solid transparent;border-radius:var(--r-ctl);padding:10px 14px;resize:vertical;background:var(--soft);font:inherit;font-size:16px;line-height:1.55;color:var(--ink)}
+.qo{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.qc{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);padding:8px 14px;font-size:15px;font-weight:500;color:var(--ink);text-align:left;line-height:1.45}
+.qc:hover{border-color:var(--line2);background:var(--soft)}
+.qc.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.qt{display:block;width:100%;min-height:44px;margin:10px 0 6px;border:1px solid transparent;border-radius:var(--r-ctl);padding:10px 14px;resize:vertical;background:var(--soft);font:inherit;font-size:16px;line-height:1.55;color:var(--ink)}
 .qt:focus{border-color:var(--ink);background:var(--bg);outline:none}
 .qt::placeholder{color:var(--faint)}
 .qb{display:flex;align-items:center;gap:4px}
@@ -520,7 +524,7 @@ function nodeFor(key){
   }
   if (key.startsWith('q-')) {   // 여쭐 것 답
     const id = key.slice(2), a = (S.meta.qa||{})[id] || {}, q = QBYID[id] || {};
-    return { p:'', t:'a', o:0, u:a.u||now(), x: fit({ k:'qa', id, type:q.type ?? null, typeName:q.type!=null?catName(q.type):'', q:q.q||'', status:a.s||'none', text:a.t||'' }) };
+    return { p:'', t:'a', o:0, u:a.u||now(), x: fit({ k:'qa', id, type:q.type ?? null, typeName:q.type!=null?catName(q.type):'', q:q.q||'', status:a.s||'none', choice:a.c||[], choiceText:qaChoiceText(id, a), text:a.t||'' }) };
   }
   if (key==='g-memo') return { p:'', t:'a', o:0, u:(S.meta.memoU||now()), x: fit({ k:'memo', text:S.meta.memo||'' }) };
   return null;
@@ -664,7 +668,7 @@ function applyServer(nodes){
       if (x.removed) S.meta.catHide[no] = n.u; else delete S.meta.catHide[no];
       S.meta.catU[no] = n.u;
     } else if (k.startsWith('q-') && x.k === 'qa') {
-      S.meta.qa = S.meta.qa || {}; S.meta.qa[id] = { t:x.text || '', s:x.status || 'none', u:n.u };
+      S.meta.qa = S.meta.qa || {}; S.meta.qa[id] = { t:x.text || '', s:x.status || 'none', c:Array.isArray(x.choice) ? x.choice : [], u:n.u };
     } else if (k === 'g-memo') {
       S.meta.memo = x.text || ''; S.meta.memoU = n.u;
     } else continue;
@@ -702,7 +706,8 @@ const QS = DATA.questions || [];
 const QBYT = {}; QS.forEach(q => (QBYT[q.type] ||= []).push(q));
 const QBYID = Object.fromEntries(QS.map(q => [q.id, q]));
 function qaOf(id){ return (S.meta.qa||{})[id] || null; }
-function qaDone(id){ const a = qaOf(id); return !!a && (!!(a.t||'').trim() || a.s==='unknown'); }   // 「나중에」는 아직 안 한 것
+function qaDone(id){ const a = qaOf(id); return !!a && ((a.c||[]).length > 0 || !!(a.t||'').trim() || a.s==='unknown'); }   // 「나중에」는 아직 안 한 것
+function qaChoiceText(id, a){ const q = QBYID[id] || {}; return ((a||{}).c||[]).map(i => (q.opts||[])[i]).filter(Boolean).join(' · '); }
 function qaLeft(list){ return (list || QS.filter(q => CATS.includes(q.type))).filter(q => !qaDone(q.id)).length; }
 function setQa(id, patch){ S.meta.qa = S.meta.qa || {}; S.meta.qa[id] = Object.assign({}, S.meta.qa[id] || {}, patch, { u:now() }); markDirty('q-'+id); }
 
@@ -722,7 +727,7 @@ function undoKey(){
   for (const [id, n] of Object.entries(S.added)) if (!n.d) add[id] = (n.label || '') + '|' + addedView(n, id).chips.map(z => (z.on ? '+' : '-') + z.name).join(',');
   for (const [id, u] of Object.entries(S.ucats || {})) if (!u.d) uc[id] = u.name;
   for (const [no, v] of Object.entries(m.catMemo || {})) if (v.t) cm[no] = v.t;
-  for (const [id, v] of Object.entries(m.qa || {})) if (v.t || (v.s && v.s !== 'none' && v.s !== 'ans')) qa[id] = (v.s === 'ans' ? '' : v.s) + '|' + (v.t || '');
+  for (const [id, v] of Object.entries(m.qa || {})) if (v.t || (v.c||[]).length || (v.s && v.s !== 'none' && v.s !== 'ans')) qa[id] = (v.s === 'ans' ? '' : v.s) + '|' + (v.c||[]).join(',') + '|' + (v.t || '');
   return JSON.stringify({ ans, add, uc, cats:Object.keys(m.cats || {}).sort(), cn:m.catName || {}, ch:Object.keys(m.catHide || {}).sort(), cm, memo:m.memo || '', qa });
 }
 function undoReset(){ undoBase = { full:undoState(), key:undoKey() }; showUndo(); }
@@ -1342,7 +1347,7 @@ function renderHelp(){
     <p>손대지 않은 줄은 <b>화면에 보이는 그대로</b> 확인한 것으로 저장됩니다.</p>
     <p>잘 모르는 카테고리는 「건너뛰기」, 앞으로 돌아가려면 「← 이전」을 누르세요. 확인한 카테고리도 언제든 다시 열어 고칠 수 있습니다.</p>`)}
   ${QS.length ? step(7,'여쭐 것',`<p>카테고리 화면 아래쪽(부속품 다음)에 <b>여쭐 것</b> 칸이 있는 카테고리가 있습니다. 부속품을 조사하다가 사장님께 여쭤야 할 것이 생긴 곳입니다.</p>
-    <p>질문 아래 칸에 아시는 대로 짧게 적어 주세요. 모르시면 <b>모름</b>, 나중에 보시려면 <b>나중에</b>를 누르세요. 「조사 근거 보기」를 누르면 왜 여쭙는지 볼 수 있습니다.</p>
+    <p>질문마다 미리 만들어 둔 답 가운데 맞는 것을 누르세요. 「여러 개 고르기」라고 적힌 질문은 여러 개를 누를 수 있습니다. 맞는 답이 없으면 아래 칸에 적어 주세요. 모르시면 <b>모름</b>, 나중에 보시려면 <b>나중에</b>를 누르세요.</p>
     <p>왼쪽 맨 위 <b>여쭐 것 모아 보기</b>를 누르면 모든 질문을 한 화면에서 차례로 답하실 수 있습니다.</p>`) : ''}
   ${step(QS.length ? 8 : 7,'되돌리기',`<p>잘못 눌렀으면 오른쪽 위 <span class="btn" style="pointer-events:none">되돌리기</span> 를 누르세요. 키보드의 <b>Ctrl + Z</b> 도 됩니다.</p>
     <p>칩 켜고 끄기, 글자 고치기, 줄·카테고리 빼기, 붙여넣기, 확인, 메모까지 <b>무엇이든 최근 20번</b>까지 하나씩 되돌립니다. 되돌린 것도 바로 저장됩니다.</p>`)}
@@ -1363,19 +1368,20 @@ function render(){
   if (S.meta.mode==='help') renderHelp(); else if (S.meta.mode==='qa' && QS.length) renderQaAll(); else { S.meta.mode = 'cat'; renderCat(); }
 }
 // ── 여쭐 것: 질문 한 줄 · 근거(접힘) · 답 칸 · 「모름」「나중에」
+function qaLabel(id){ const a = qaOf(id) || {}, s = a.s || 'none'; return qaDone(id) ? (s==='unknown' && !(a.c||[]).length && !(a.t||'').trim() ? '모름으로 답함' : '✓ 답함') : (s==='later' ? '나중에 답하기로 함' : ''); }
 function qaHtml(q){
-  const a = qaOf(q.id) || {}, s = a.s || 'none', done = qaDone(q.id);
+  const a = qaOf(q.id) || {}, s = a.s || 'none', done = qaDone(q.id), ch = new Set(a.c || []);
   return `<div class="qi ${done?'done':''}" data-qa="${esc(q.id)}">
     <div class="qq">${esc(q.q)}</div>
-    ${q.why ? `<details class="qw"><summary>조사 근거 보기</summary><div>${esc(q.why)}</div></details>` : ''}
-    <textarea class="qt" rows="2" maxlength="1500" placeholder="답을 적어 주세요">${esc(a.t||'')}</textarea>
-    <div class="qb"><button class="mini ${s==='unknown'?'on':''}" data-qs="unknown">모름</button><button class="mini ${s==='later'?'on':''}" data-qs="later">나중에</button><span class="qd">${done ? (s==='unknown' && !(a.t||'').trim() ? '모름으로 답함' : '✓ 답함') : (s==='later' ? '나중에 답하기로 함' : '')}</span></div>
+    ${(q.opts||[]).length ? `<div class="qo">${q.opts.map((o,i)=>`<button class="qc ${ch.has(i)?'on':''}" data-qc="${i}">${esc(o)}</button>`).join('')}</div>` : ''}
+    <textarea class="qt" rows="1" maxlength="1500" placeholder="${(q.opts||[]).length ? '다른 답이면 적어 주세요' : '답을 적어 주세요'}">${esc(a.t||'')}</textarea>
+    <div class="qb"><button class="mini ${s==='unknown'?'on':''}" data-qs="unknown">모름</button><button class="mini ${s==='later'?'on':''}" data-qs="later">나중에</button><span class="qd">${qaLabel(q.id)}</span></div>
   </div>`;
 }
 function renderQaAll(){
   const left = qaLeft();
   let h = `<div class="ch"><h2>여쭐 것 모아 보기</h2><span class="gp">${left ? left+'개 남음' : '모두 답함'}</span></div>
-  <p class="hlead">부속품을 조사하다가 생긴 질문입니다. 아시는 대로 짧게 적어 주세요. 모르시면 「모름」, 나중에 보시려면 「나중에」를 누르세요. 적는 즉시 저장됩니다.</p>`;
+  <p class="hlead">부속품을 조사하다가 생긴 질문입니다. 맞는 답을 누르시고, 없으면 아래 칸에 적어 주세요. 모르시면 「모름」, 나중에 보시려면 「나중에」를 누르세요. 누르는 즉시 저장됩니다.</p>`;
   for (const g of GROUPS) {
     const nos = catsOf(g).filter(no => (QBYT[no]||[]).length); if (!nos.length) continue;
     for (const no of nos) {
@@ -1388,21 +1394,32 @@ function renderQaAll(){
   renderSide();
 }
 function qaRefresh(el){        // 한 질문만 다시 그린다(글자 칸의 커서를 지키려고 화면 전체는 안 그림)
-  const id = el.dataset.qa, a = qaOf(id) || {}, s = a.s || 'none', done = qaDone(id);
+  const id = el.dataset.qa, a = qaOf(id) || {}, s = a.s || 'none', done = qaDone(id), ch = new Set(a.c || []);
   el.querySelectorAll('[data-qs]').forEach(b => b.classList.toggle('on', b.dataset.qs === s));
-  const st = el.querySelector('.qd'); if (st) st.textContent = done ? (s==='unknown' && !(a.t||'').trim() ? '모름으로 답함' : '✓ 답함') : (s==='later' ? '나중에 답하기로 함' : '');
+  el.querySelectorAll('[data-qc]').forEach(b => b.classList.toggle('on', ch.has(+b.dataset.qc)));
+  const st = el.querySelector('.qd'); if (st) st.textContent = qaLabel(id);
   el.classList.toggle('done', done);
+  const sec = el.closest('.sec'), hint = sec && sec.querySelector('.sh .hint');
+  if (hint) { const left = [...sec.querySelectorAll('[data-qa]')].filter(x => !qaDone(x.dataset.qa)).length; hint.textContent = left ? left+'개 남음' : '모두 답함'; }
   refreshProgress();
 }
+$('#main').addEventListener('click', e => {      // 선택지: 하나 고르기(다시 누르면 취소) · 여러 개 고르기 문항은 켜고 끄기
+  const b = e.target.closest('[data-qc]'); if (!b) return;
+  const el = b.closest('[data-qa]'), id = el.dataset.qa, q = QBYID[id] || {}, a = qaOf(id) || {}, i = +b.dataset.qc;
+  let c = [...(a.c || [])];
+  if (q.multi) c = c.includes(i) ? c.filter(x => x !== i) : [...c, i].sort((x, y) => x - y);
+  else c = c.includes(i) ? [] : [i];
+  setQa(id, { c, s: (c.length || (a.t||'').trim()) ? 'ans' : (a.s === 'ans' ? 'none' : (a.s || 'none')) }); save(); scheduleSend(); qaRefresh(el);
+});
 $('#main').addEventListener('click', e => {
   const b = e.target.closest('[data-qs]'); if (!b) return;
   const el = b.closest('[data-qa]'), id = el.dataset.qa, a = qaOf(id) || {}, s = b.dataset.qs;
-  setQa(id, { s: a.s === s ? ((a.t||'').trim() ? 'ans' : 'none') : s }); save(); scheduleSend(); qaRefresh(el);
+  setQa(id, { s: a.s === s ? (((a.t||'').trim() || (a.c||[]).length) ? 'ans' : 'none') : s }); save(); scheduleSend(); qaRefresh(el);
 });
 $('#main').addEventListener('input', e => {
   if (!e.target.matches('.qt')) return;
   const el = e.target.closest('[data-qa]'), id = el.dataset.qa, a = qaOf(id) || {}, v = e.target.value;
-  setQa(id, { t:v, s: v.trim() ? 'ans' : (a.s === 'ans' ? 'none' : (a.s || 'none')) });
+  setQa(id, { t:v, s: (v.trim() || (a.c||[]).length) ? 'ans' : (a.s === 'ans' ? 'none' : (a.s || 'none')) });
   clearTimeout(memoT); memoT = setTimeout(() => { flushMemo(); qaRefresh(el); }, 500);
   const st = el.querySelector('.qd'); if (st) st.textContent = '';
 });
