@@ -36,6 +36,9 @@ textarea,input{font-family:inherit;font-size:inherit;color:inherit}
 .spacer{flex:1}
 .plain{background:var(--soft);border:0;border-radius:var(--r-sm);padding:9px 16px;font-size:15px;font-weight:600;color:var(--sub)}
 .plain:hover{background:var(--line)}
+.plain:disabled{opacity:.45;cursor:default;background:var(--soft)}
+.plain{white-space:nowrap}
+.plain.undo{color:var(--ink);display:inline-flex;align-items:center;gap:6px}
 .tabs{display:flex;background:var(--soft);border-radius:var(--r-sm);padding:3px}
 .tabs button{background:none;border:0;border-radius:8px;padding:6px 14px;font-size:15px;color:var(--sub)}
 .tabs button.on{background:var(--bg);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
@@ -50,8 +53,11 @@ textarea,input{font-family:inherit;font-size:inherit;color:inherit}
 #tree{padding:4px 8px 8px;flex:1}
 #tree .none{padding:14px 12px;font-size:14px;color:var(--faint)}
 .hp,.gr,.ty{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;border-radius:var(--r-sm);padding:11px 12px;font-size:16px;margin:1px 0;color:var(--ink)}
-.hp{color:var(--sub);font-weight:600;margin-bottom:8px;position:relative}
-.hp::after{content:'';position:absolute;left:12px;right:12px;bottom:-5px;height:1px;background:var(--line)}
+.hp{color:var(--sub);font-weight:600;position:relative}
+.hp.end{margin-bottom:8px}
+.hp.end::after{content:'';position:absolute;left:12px;right:12px;bottom:-5px;height:1px;background:var(--line)}
+.hp small{color:var(--warn);font-weight:700;font-size:14px}
+.hp small.all{color:var(--ok)}
 .hp:hover,.gr:hover,.ty:hover{background:var(--soft)}
 .hp.cur,.gr.cur,.ty.cur{background:var(--soft);font-weight:700;color:var(--ink)}
 .gr small,.ty small{color:var(--faint);font-weight:500;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -123,6 +129,26 @@ body.dragging,body.dragging *{cursor:grabbing !important;user-select:none}
 .addbox input{flex:1;height:44px;border:1.5px solid var(--ink);border-radius:var(--r-ctl);padding:0 14px;background:var(--bg);font-size:16px}
 .addbox input:focus{outline:none}
 
+/* 여쭐 것 */
+.sec.qa .sh .add{margin-left:auto}
+.sec.qa .sh .hint{color:var(--warn);font-weight:700}
+.qi{padding:14px 0;border-bottom:1px solid var(--soft)}
+.sec .qi:last-child{border-bottom:0}
+.qq{font-size:16px;font-weight:600;line-height:1.6;color:var(--ink)}
+.qi.done .qq{color:var(--sub);font-weight:500}
+.qw{margin:6px 0 0;font-size:14px;color:var(--faint)}
+.qw summary{cursor:pointer;font-weight:600;color:var(--faint);list-style:none;display:inline-block}
+.qw summary::-webkit-details-marker{display:none}
+.qw summary::before{content:'▸ '}
+.qw[open] summary::before{content:'▾ '}
+.qw div{margin-top:6px;padding:10px 12px;background:var(--soft);border-radius:var(--r-sm);line-height:1.6;color:var(--sub)}
+.qt{display:block;width:100%;min-height:52px;margin:10px 0 6px;border:1px solid transparent;border-radius:var(--r-ctl);padding:10px 14px;resize:vertical;background:var(--soft);font:inherit;font-size:16px;line-height:1.55;color:var(--ink)}
+.qt:focus{border-color:var(--ink);background:var(--bg);outline:none}
+.qt::placeholder{color:var(--faint)}
+.qb{display:flex;align-items:center;gap:4px}
+.qb .mini.on{background:var(--ink);color:#fff}
+.qd{margin-left:8px;font-size:14px;font-weight:600;color:var(--ok)}
+
 /* 메모 */
 .memo textarea{display:block;width:100%;min-height:72px;margin:12px 0 8px;border:1px solid transparent;border-radius:var(--r-ctl);padding:12px 14px;resize:vertical;background:var(--soft);font:inherit;font-size:16px;line-height:1.55;color:var(--ink)}
 .memo textarea:focus{border-color:var(--ink);background:var(--bg);outline:none}
@@ -174,7 +200,9 @@ body.dragging,body.dragging *{cursor:grabbing !important;user-select:none}
 @media (max-width:900px){
   #top{height:56px;padding:0 16px;gap:10px}
   #top h1{font-size:17px}
-  #mExport,#saveSt{display:none}
+  #mExport,#saveSt,.progress #prog{display:none}
+  #top h1{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .plain.undo{padding:8px 12px;font-size:14px}
   .progress{font-size:14px}
   #wrap{display:block}
   #side{position:sticky;top:56px;z-index:4;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;align-items:center;overflow:visible}
@@ -215,6 +243,7 @@ body.dragging,body.dragging *{cursor:grabbing !important;user-select:none}
   <span class="st" id="saveSt">-</span>
   <span class="st" id="sendSt">-</span>
   <span class="spacer"></span>
+  <button class="plain undo" id="mUndo" disabled title="되돌릴 것 없음"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>되돌리기</button>
   <button class="plain" id="mExport" title="지금까지 고른 내용을 다운로드 폴더에 파일로 저장">파일로 저장</button>
 </div>
 <div id="wrap">
@@ -380,6 +409,7 @@ function save(){
     if (++saveCount % 10 === 0) localStorage.setItem(KEY_BAK, txt);
     storageOK = true;
     setSaveSt('저장됨 '+hhmm(now()), '');
+    undoNote();
   } catch(e) {
     storageOK = false;
     setSaveSt('저장 안 됨 · 「저장 파일」 필요', 'bad');
@@ -423,7 +453,8 @@ const ORDER = CARDS.map(c=>c.id);
 // ── 진행
 function refreshProgress(){
   const total = CATS.length, done = CATS.filter(no=>S.meta.cats && S.meta.cats[no]).length;
-  $('#prog').textContent = `카테고리 ${fmt(done)} / ${fmt(total)}`;
+  const ql = QS.filter(q => CATS.includes(q.type)), qd = ql.length - qaLeft(ql);
+  $('#prog').innerHTML = `카테고리 ${fmt(done)} / ${fmt(total)}` + (ql.length ? `<span class="qp"> · 질문 ${fmt(qd)} / ${fmt(ql.length)}</span>` : '');
   $('#barfill').style.width = (total? (done/total*100):0)+'%';
   renderSide();
 }
@@ -487,6 +518,10 @@ function nodeFor(key){
     const no = +key.slice(2);
     return { p:'', t:'a', o:0, u:(S.meta.catU||{})[no]||now(), x: fit({ k:'catedit', type:no, name:(TYPES[no]||{}).name||'', newName:(S.meta.catName||{})[no]||'', removed:catHidden(no) }) };
   }
+  if (key.startsWith('q-')) {   // 여쭐 것 답
+    const id = key.slice(2), a = (S.meta.qa||{})[id] || {}, q = QBYID[id] || {};
+    return { p:'', t:'a', o:0, u:a.u||now(), x: fit({ k:'qa', id, type:q.type ?? null, typeName:q.type!=null?catName(q.type):'', q:q.q||'', status:a.s||'none', text:a.t||'' }) };
+  }
   if (key==='g-memo') return { p:'', t:'a', o:0, u:(S.meta.memoU||now()), x: fit({ k:'memo', text:S.meta.memo||'' }) };
   return null;
 }
@@ -536,6 +571,7 @@ function localU(k){
   if (k.startsWith('m-')) return ((S.meta.catMemo||{})[no]||{}).u;
   if (k.startsWith('u-')) return ((S.ucats||{})[id]||{}).u;
   if (k.startsWith('r-')) return (S.meta.catU||{})[no];
+  if (k.startsWith('q-')) return ((S.meta.qa||{})[id]||{}).u;
   if (k==='g-memo') return S.meta.memoU;
 }
 function sameU(k, u){ const l = localU(k); return l === undefined || l === u; }
@@ -627,6 +663,8 @@ function applyServer(nodes){
       if (x.newName) S.meta.catName[no] = x.newName; else delete S.meta.catName[no];
       if (x.removed) S.meta.catHide[no] = n.u; else delete S.meta.catHide[no];
       S.meta.catU[no] = n.u;
+    } else if (k.startsWith('q-') && x.k === 'qa') {
+      S.meta.qa = S.meta.qa || {}; S.meta.qa[id] = { t:x.text || '', s:x.status || 'none', u:n.u };
     } else if (k === 'g-memo') {
       S.meta.memo = x.text || ''; S.meta.memoU = n.u;
     } else continue;
@@ -636,7 +674,8 @@ function applyServer(nodes){
   for (const id of Object.keys(S.answers)) if (!seen.has('k-'+id) && !S.dirty['k-'+id]) { delete S.answers[id]; changed++; }
   for (const id of Object.keys(S.added)) if (!seen.has('n-'+id) && !S.dirty['n-'+id]) { delete S.added[id]; changed++; }
   for (const no of Object.keys(S.meta.cats||{})) if (!seen.has('c-'+no) && !S.dirty['c-'+no]) { delete S.meta.cats[no]; changed++; }
-  if (changed) { rebuildCats(); save(); }
+  for (const id of Object.keys(S.meta.qa||{})) if (!seen.has('q-'+id) && !S.dirty['q-'+id]) { delete S.meta.qa[id]; changed++; }
+  if (changed) { undoMute++; rebuildCats(); save(); undoMute--; if (undoBase) { undoStack = []; undoReset(); } }   // 다른 컴퓨터에서 고친 것이 들어오면 되돌리기 기록은 새로 시작
   lastServer = now();
   return changed;
 }
@@ -657,6 +696,77 @@ async function pullServer(){
   } catch(e) {}
 }
 window.addEventListener('focus', ()=>{ pullServer(); });
+
+// ── 여쭐 것(2026-10-21): 부속품 조사에서 나온 사장님께 여쭐 실무 질문(build/acc_open_sorted.json 의 ask) — 카테고리마다 답 칸
+const QS = DATA.questions || [];
+const QBYT = {}; QS.forEach(q => (QBYT[q.type] ||= []).push(q));
+const QBYID = Object.fromEntries(QS.map(q => [q.id, q]));
+function qaOf(id){ return (S.meta.qa||{})[id] || null; }
+function qaDone(id){ const a = qaOf(id); return !!a && (!!(a.t||'').trim() || a.s==='unknown'); }   // 「나중에」는 아직 안 한 것
+function qaLeft(list){ return (list || QS.filter(q => CATS.includes(q.type))).filter(q => !qaDone(q.id)).length; }
+function setQa(id, patch){ S.meta.qa = S.meta.qa || {}; S.meta.qa[id] = Object.assign({}, S.meta.qa[id] || {}, patch, { u:now() }); markDirty('q-'+id); }
+
+// ── 되돌리기(최근 20번, 2026-10-21 대표 지시): 저장할 때마다 바뀐 상태를 한 단계로 묶어 기억한다.
+//    같은 순간(한 번의 누름)에 일어난 저장은 한 단계. 두 번 눌러 글자 고치기의 첫 누름(켜고 끄기)은 기록에서 뺀다(undoCancel).
+//    되돌린 값은 「새로 고친 것」(새 시각)으로 서버에 보낸다 — 없던 값은 「미확인·지움」 표시로 보낸다.
+const UNDO_MAX = 20;
+let undoStack = [], undoBase = null, undoMute = 0, undoT = null, undoCancel = false;
+function undoState(){ const m = S.meta; return JSON.stringify({ answers:S.answers, added:S.added, ucats:S.ucats||{}, cats:m.cats||{}, catName:m.catName||{}, catHide:m.catHide||{}, catMemo:m.catMemo||{}, memo:m.memo||'', qa:m.qa||{} }); }
+// 비교는 화면에 보이는 값으로 — 「손대지 않음」과 「기본값으로 확인」, 시각(u)만 다른 것은 같은 상태로 본다
+function undoKey(){
+  const m = S.meta, ans = {}, add = {}, uc = {}, cm = {}, qa = {};
+  for (const [id, a] of Object.entries(S.answers)) {
+    if ((!a.status || a.status === 'none') && a.label === undefined) continue;
+    const c = BYID[id]; ans[id] = c ? (a.status === 'drop' ? 'D' : '') + (a.label ?? '') + '|' + cardView(c, a).chips.map(z => (z.on ? '+' : '-') + z.name).join(',') : (a.status || '') + (a.text || '');
+  }
+  for (const [id, n] of Object.entries(S.added)) if (!n.d) add[id] = (n.label || '') + '|' + addedView(n, id).chips.map(z => (z.on ? '+' : '-') + z.name).join(',');
+  for (const [id, u] of Object.entries(S.ucats || {})) if (!u.d) uc[id] = u.name;
+  for (const [no, v] of Object.entries(m.catMemo || {})) if (v.t) cm[no] = v.t;
+  for (const [id, v] of Object.entries(m.qa || {})) if (v.t || (v.s && v.s !== 'none' && v.s !== 'ans')) qa[id] = (v.s === 'ans' ? '' : v.s) + '|' + (v.t || '');
+  return JSON.stringify({ ans, add, uc, cats:Object.keys(m.cats || {}).sort(), cn:m.catName || {}, ch:Object.keys(m.catHide || {}).sort(), cm, memo:m.memo || '', qa });
+}
+function undoReset(){ undoBase = { full:undoState(), key:undoKey() }; showUndo(); }
+function undoNote(){ if (undoMute || !undoBase || undoT) return; undoT = true; queueMicrotask(undoCommit); }   // 한 번의 누름(같은 작업) 안의 저장만 한 단계로 — 다음 누름과 섞이지 않게
+function undoCommit(){
+  undoT = null; if (!undoBase) return;
+  const f = undoState(); if (f === undoBase.full) return;
+  const key = undoKey(); if (key === undoBase.key) { undoBase.full = f; return; }
+  const top = undoStack[undoStack.length - 1];
+  if (undoCancel && top && top.key === key) undoStack.pop();         // 두 번 누름의 첫 누름을 없던 일로 — 그 단계도 지움
+  else { undoStack.push(undoBase); if (undoStack.length > UNDO_MAX) undoStack.shift(); }
+  undoCancel = false;
+  undoBase = { full:f, key }; showUndo();
+}
+function showUndo(){ const b = document.getElementById('mUndo'); if (!b) return; b.disabled = !undoStack.length; b.title = undoStack.length ? `되돌리기 (${undoStack.length}번 남음 · Ctrl+Z)` : '되돌릴 것 없음'; }
+function undo(){
+  if (typeof finishRen === 'function') { if (editCat != null) finishCat(true, true); finishRen(true, true); }
+  flushMemo(); if (undoT) undoCommit();
+  const prev = undoStack.pop(); if (!prev) { showUndo(); toast('되돌릴 것 없음'); return; }
+  const P = JSON.parse(prev.full), C = JSON.parse(undoState()), t = now();
+  const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  const keys = (a, b) => [...new Set([...Object.keys(a||{}), ...Object.keys(b||{})])];
+  undoMute++;
+  for (const id of keys(P.answers, C.answers)) if (!same(P.answers[id], C.answers[id])) { S.answers[id] = P.answers[id] ? Object.assign({}, P.answers[id], { u:t }) : { status:'none', u:t }; markDirty('k-'+id); }
+  for (const id of keys(P.added, C.added)) if (!same(P.added[id], C.added[id])) { S.added[id] = P.added[id] ? Object.assign({}, P.added[id], { u:t }) : Object.assign({}, C.added[id], { d:1, u:t }); markDirty('n-'+id); }
+  S.ucats = S.ucats || {};
+  for (const id of keys(P.ucats, C.ucats)) if (!same(P.ucats[id], C.ucats[id])) { S.ucats[id] = P.ucats[id] ? Object.assign({}, P.ucats[id], { u:t }) : Object.assign({}, C.ucats[id], { d:1, u:t }); markDirty('u-'+id); }
+  const m = S.meta; m.cats = m.cats || {}; m.catName = m.catName || {}; m.catHide = m.catHide || {}; m.catU = m.catU || {}; m.catMemo = m.catMemo || {}; m.qa = m.qa || {};
+  for (const no of keys(P.cats, C.cats)) if (!same(P.cats[no], C.cats[no])) { if (P.cats[no]) m.cats[no] = t; else delete m.cats[no]; markDirty('c-'+no); }
+  for (const no of new Set([...keys(P.catName, C.catName), ...keys(P.catHide, C.catHide)])) if (!same(P.catName[no], C.catName[no]) || !same(P.catHide[no], C.catHide[no])) {
+    if (P.catName[no] !== undefined) m.catName[no] = P.catName[no]; else delete m.catName[no];
+    if (P.catHide[no] !== undefined) m.catHide[no] = P.catHide[no]; else delete m.catHide[no];
+    m.catU[no] = t; markDirty('r-'+no);
+  }
+  for (const no of keys(P.catMemo, C.catMemo)) if (!same(P.catMemo[no], C.catMemo[no])) { m.catMemo[no] = { t:(P.catMemo[no]||{}).t || '', u:t }; markDirty('m-'+no); }
+  if (P.memo !== C.memo) { m.memo = P.memo; m.memoU = t; markDirty('g-memo'); }
+  for (const id of keys(P.qa, C.qa)) if (!same(P.qa[id], C.qa[id])) { m.qa[id] = P.qa[id] ? Object.assign({}, P.qa[id], { u:t }) : { t:'', s:'none', u:t }; markDirty('q-'+id); }
+  rebuildCats();
+  if (m.mode === 'cat' && !CATS.includes(m.curType)) m.curType = CATS[0];
+  save(); undoMute--;
+  undoBase = { full:undoState(), key:undoKey() };
+  scheduleSend(CONFIG.web ? 1500 : undefined); refreshProgress(); render(); showUndo();
+  toast(undoStack.length ? `되돌림 · ${undoStack.length}번 더 되돌릴 수 있음` : '되돌림');
+}
 
 // ── 저장 파일
 function exportFile(){
@@ -680,6 +790,7 @@ function importFile(file){
       for (const [id,u] of Object.entries(st.ucats||{})) { S.ucats = S.ucats||{}; const cur=S.ucats[id]; if (!cur || (u.u||0) > (cur.u||0)) { S.ucats[id]=u; markDirty('u-'+id); } }
       for (const k of ['catName','catHide']) for (const [no,v] of Object.entries((st.meta||{})[k]||{})) { S.meta[k] = S.meta[k]||{}; if (S.meta[k][no]===undefined) { S.meta[k][no]=v; markDirty('r-'+no); } }
       rebuildCats();
+      for (const [id,a] of Object.entries((st.meta||{}).qa||{})) { S.meta.qa = S.meta.qa||{}; const cur=S.meta.qa[id]; if (!cur || (a.u||0) > (cur.u||0)) { S.meta.qa[id]=a; markDirty('q-'+id); } }
       for (const [no,m] of Object.entries((st.meta||{}).catMemo||{})) { S.meta.catMemo = S.meta.catMemo||{}; const cur=S.meta.catMemo[no]; if (!cur || (m.u||0) > (cur.u||0)) { S.meta.catMemo[no]=m; markDirty('m-'+no); } }
       save(); scheduleSend(3000); refreshProgress(); render(); toast('저장 파일 합침');
     } catch(e) { alert('읽을 수 없는 파일'); }
@@ -705,18 +816,20 @@ function renderSide(){
     $('#tree').innerHTML = h || '<div class="none">검색 결과 없음</div>'; return;
   }
   const help = S.meta.mode==='help';
-  h += `<div class="hp ${help?'cur':''}" data-help="1"><span>사용법</span></div>`;
+  h += `<div class="hp ${help?'cur':''}${QS.length?'':' end'}" data-help="1"><span>사용법</span></div>`;
+  if (QS.length) { const ql = qaLeft(); h += `<div class="hp end ${S.meta.mode==='qa'?'cur':''}" data-qa-all="1"><span>여쭐 것 모아 보기</span><small class="${ql?'':'all'}">${ql?ql+'개 남음':'✓'}</small></div>`; }
   for (const g of GROUPS) {
     const tys = catsOf(g); if (!tys.length) continue;
     const gd = tys.filter(catDone).length;
-    h += `<div class="gr ${!help&&cg&&cg.id===g.id?'cur':''}" data-g="${g.id}"><span>${esc(g.name)}</span><small class="${gd===tys.length?'all':''}">${gd===tys.length?'✓':gd+'/'+tys.length}</small></div>`;
+    h += `<div class="gr ${S.meta.mode==='cat'&&cg&&cg.id===g.id?'cur':''}" data-g="${g.id}"><span>${esc(g.name)}</span><small class="${gd===tys.length?'all':''}">${gd===tys.length?'✓':gd+'/'+tys.length}</small></div>`;
   }
   $('#tree').innerHTML = h;
 }
 $('#tree').addEventListener('click', e=>{
   if (e.target.closest('[data-help]')) { finishRen(true, true); flushMemo(); S.meta.mode='help'; save(); render(); window.scrollTo(0,0); return; }
+  if (e.target.closest('[data-qa-all]')) { if (editCat!=null) finishCat(true, true); finishRen(true, true); flushMemo(); S.meta.mode='qa'; save(); render(); window.scrollTo(0,0); return; }
   const gr = e.target.closest('.gr');
-  if (gr) { const g = GROUPS.find(x=>x.id===gr.dataset.g), tys = catsOf(g); if (S.meta.mode==='help' || groupOf(S.meta.curType)!==g) goCat(tys.find(n=>!catDone(n)) ?? tys[0]); return; }
+  if (gr) { const g = GROUPS.find(x=>x.id===gr.dataset.g), tys = catsOf(g); if (S.meta.mode!=='cat' || groupOf(S.meta.curType)!==g) goCat(tys.find(n=>!catDone(n)) ?? tys[0]); return; }
   const ty = e.target.closest('.ty'); if (ty) { $('#find').value=''; goCat(+ty.dataset.t); }
 });
 $('#find').addEventListener('input', ()=>renderSide());
@@ -935,7 +1048,7 @@ function goCat(no){ if (editCat!=null) finishCat(true, true); finishRen(true, tr
 // ── 칩 글자 고치기: 칩을 두 번 누르면 그 칩이 글자 칸으로 바뀐다. 다 지우면 칩을 빼고, 같은 이름이 있으면 하나로 합친다.
 function snapRow(key){ return key.startsWith('c:') ? JSON.stringify(S.answers[key.slice(2)] ?? null) : JSON.stringify({ items:(S.added[key.slice(2)]||{}).items || [], xoff:(S.added[key.slice(2)]||{}).xoff || [] }); }
 function restoreRow(key, snap){     // 두 번 누름의 첫 누름(켜고 끄기)을 없던 일로
-  const id = key.slice(2), v = JSON.parse(snap);
+  const id = key.slice(2), v = JSON.parse(snap); undoCancel = true;
   if (key.startsWith('c:')) { if (v===null) delete S.answers[id]; else S.answers[id] = v; afterAnswer(id); markDirty('k-'+id); save(); refreshProgress(); }
   else if (S.added[id]) { const z = v; S.added[id].items = z.items; S.added[id].xoff = z.xoff; touchAdded(id); }
 }
@@ -1043,6 +1156,8 @@ function renderCat(){
     if (openAdd===key) h += `<div class="addbox"><input id="addIn" value="${(!bc.length && !ad.length) ? '전체' : ''}" placeholder="줄 이름 (예: 2~5HP, 댄포스 EVR)"><button class="btn pri" id="addOk">저장</button><button class="btn" id="addNo">취소</button></div>`;
     h += `</div>`;
   }
+  const qs = QBYT[no] || [];
+  if (qs.length) { const ql = qaLeft(qs); h += `<div class="sec qa"><div class="sh">여쭐 것<span class="hint">${ql ? ql+'개 남음' : '모두 답함'}</span></div>${qs.map(qaHtml).join('')}</div>`; }
   h += `<div class="sec memo"><div class="sh">메모<span class="saved" id="memoSt"></span></div>
     <textarea id="catMemo" maxlength="1500" rows="2" placeholder="자유롭게 적기">${esc(catMemo(no))}</textarea></div>`;
   h += `<div class="foot2">
@@ -1226,25 +1341,77 @@ function renderHelp(){
   ${step(6,'확인하고 다음으로',`<p>카테고리를 다 보셨으면 아래의 <span class="btn pri" style="pointer-events:none">확인 · 다음 카테고리 →</span> 를 누르세요. 키보드의 Enter 를 눌러도 됩니다.</p>
     <p>손대지 않은 줄은 <b>화면에 보이는 그대로</b> 확인한 것으로 저장됩니다.</p>
     <p>잘 모르는 카테고리는 「건너뛰기」, 앞으로 돌아가려면 「← 이전」을 누르세요. 확인한 카테고리도 언제든 다시 열어 고칠 수 있습니다.</p>`)}
-  ${CONFIG.web ? step(7,'저장',`<p>누르는 즉시 <b>회사 서버에 자동 저장</b>됩니다. 화면 위쪽에 「저장 완료」가 보이면 끝입니다. 따로 누를 단추는 없습니다.</p>
+  ${QS.length ? step(7,'여쭐 것',`<p>카테고리 화면 아래쪽(부속품 다음)에 <b>여쭐 것</b> 칸이 있는 카테고리가 있습니다. 부속품을 조사하다가 사장님께 여쭤야 할 것이 생긴 곳입니다.</p>
+    <p>질문 아래 칸에 아시는 대로 짧게 적어 주세요. 모르시면 <b>모름</b>, 나중에 보시려면 <b>나중에</b>를 누르세요. 「조사 근거 보기」를 누르면 왜 여쭙는지 볼 수 있습니다.</p>
+    <p>왼쪽 맨 위 <b>여쭐 것 모아 보기</b>를 누르면 모든 질문을 한 화면에서 차례로 답하실 수 있습니다.</p>`) : ''}
+  ${step(QS.length ? 8 : 7,'되돌리기',`<p>잘못 눌렀으면 오른쪽 위 <span class="btn" style="pointer-events:none">되돌리기</span> 를 누르세요. 키보드의 <b>Ctrl + Z</b> 도 됩니다.</p>
+    <p>칩 켜고 끄기, 글자 고치기, 줄·카테고리 빼기, 붙여넣기, 확인, 메모까지 <b>무엇이든 최근 20번</b>까지 하나씩 되돌립니다. 되돌린 것도 바로 저장됩니다.</p>`)}
+  ${CONFIG.web ? step(QS.length ? 9 : 8,'저장',`<p>누르는 즉시 <b>회사 서버에 자동 저장</b>됩니다. 화면 위쪽에 「저장 완료」가 보이면 끝입니다. 따로 누를 단추는 없습니다.</p>
     <p>다른 컴퓨터나 다른 브라우저로 이 주소를 열어도 <b>같은 내용</b>이 보입니다.</p>
     <p>인터넷이 잠깐 끊기면 고친 내용을 이 컴퓨터에 모아 두었다가, 다시 연결되면 자동으로 보냅니다. 위쪽에 「전송 대기」가 보이면 아직 못 보낸 것이 있다는 뜻이니 창을 닫지 말고 기다려 주세요.</p>
     <p>예전에 노트북 파일로 작업하며 만든 「저장 파일」이 있으면 왼쪽 아래 「저장 파일 불러오기」로 합칠 수 있습니다.</p>`)
-  : step(7,'저장과 전송',`<p>누르는 즉시 <b>이 노트북에 자동 저장</b>됩니다. 인터넷이 없어도 되고, 노트북을 껐다 켜도 남아 있습니다. 화면 위쪽에 「저장됨」이 보입니다.</p>
+  : step(QS.length ? 9 : 8,'저장과 전송',`<p>누르는 즉시 <b>이 노트북에 자동 저장</b>됩니다. 인터넷이 없어도 되고, 노트북을 껐다 켜도 남아 있습니다. 화면 위쪽에 「저장됨」이 보입니다.</p>
     <p>인터넷이 연결된 곳에서 이 파일을 열어 두면 <b>서버로 자동 전송</b>됩니다. 위쪽에 「전송 완료」가 뜨면 끝입니다.</p>
     <p>오른쪽 위 「파일로 저장」을 누르면 지금까지의 내용을 파일로 따로 남길 수 있습니다.</p>`)}
-  ${CONFIG.web ? '' : step(8,'주의',`<p>항상 <b>같은 브라우저</b>로 열고 시크릿 창을 쓰지 말아 주세요.</p>`)}
+  ${CONFIG.web ? '' : step(QS.length ? 10 : 9,'주의',`<p>항상 <b>같은 브라우저</b>로 열고 시크릿 창을 쓰지 말아 주세요.</p>`)}
   <div class="foot2"><span class="pos">이 설명은 왼쪽 맨 위 「사용법」에서 언제든 다시 볼 수 있습니다</span><button class="btn pri" id="hStart">시작하기 →</button></div>`;
   $('#main').onclick = e => { if (e.target.id==='hStart') startWork(); };
   renderSide();
 }
 function render(){
   $('#main').onclick = null;
-  if (S.meta.mode==='help') renderHelp(); else { S.meta.mode = 'cat'; renderCat(); }
+  if (S.meta.mode==='help') renderHelp(); else if (S.meta.mode==='qa' && QS.length) renderQaAll(); else { S.meta.mode = 'cat'; renderCat(); }
 }
+// ── 여쭐 것: 질문 한 줄 · 근거(접힘) · 답 칸 · 「모름」「나중에」
+function qaHtml(q){
+  const a = qaOf(q.id) || {}, s = a.s || 'none', done = qaDone(q.id);
+  return `<div class="qi ${done?'done':''}" data-qa="${esc(q.id)}">
+    <div class="qq">${esc(q.q)}</div>
+    ${q.why ? `<details class="qw"><summary>조사 근거 보기</summary><div>${esc(q.why)}</div></details>` : ''}
+    <textarea class="qt" rows="2" maxlength="1500" placeholder="답을 적어 주세요">${esc(a.t||'')}</textarea>
+    <div class="qb"><button class="mini ${s==='unknown'?'on':''}" data-qs="unknown">모름</button><button class="mini ${s==='later'?'on':''}" data-qs="later">나중에</button><span class="qd">${done ? (s==='unknown' && !(a.t||'').trim() ? '모름으로 답함' : '✓ 답함') : (s==='later' ? '나중에 답하기로 함' : '')}</span></div>
+  </div>`;
+}
+function renderQaAll(){
+  const left = qaLeft();
+  let h = `<div class="ch"><h2>여쭐 것 모아 보기</h2><span class="gp">${left ? left+'개 남음' : '모두 답함'}</span></div>
+  <p class="hlead">부속품을 조사하다가 생긴 질문입니다. 아시는 대로 짧게 적어 주세요. 모르시면 「모름」, 나중에 보시려면 「나중에」를 누르세요. 적는 즉시 저장됩니다.</p>`;
+  for (const g of GROUPS) {
+    const nos = catsOf(g).filter(no => (QBYT[no]||[]).length); if (!nos.length) continue;
+    for (const no of nos) {
+      const qs = QBYT[no];
+      h += `<div class="sec qa"><div class="sh">${esc(catName(no))}<span class="hint">${qaLeft(qs) ? qaLeft(qs)+'개 남음' : '모두 답함'}</span><button class="add" data-gocat="${no}">카테고리 열기</button></div>${qs.map(qaHtml).join('')}</div>`;
+    }
+  }
+  $('#main').innerHTML = h;
+  $('#main').onclick = e => { const g = e.target.closest('[data-gocat]'); if (g) goCat(+g.dataset.gocat); };
+  renderSide();
+}
+function qaRefresh(el){        // 한 질문만 다시 그린다(글자 칸의 커서를 지키려고 화면 전체는 안 그림)
+  const id = el.dataset.qa, a = qaOf(id) || {}, s = a.s || 'none', done = qaDone(id);
+  el.querySelectorAll('[data-qs]').forEach(b => b.classList.toggle('on', b.dataset.qs === s));
+  const st = el.querySelector('.qd'); if (st) st.textContent = done ? (s==='unknown' && !(a.t||'').trim() ? '모름으로 답함' : '✓ 답함') : (s==='later' ? '나중에 답하기로 함' : '');
+  el.classList.toggle('done', done);
+  refreshProgress();
+}
+$('#main').addEventListener('click', e => {
+  const b = e.target.closest('[data-qs]'); if (!b) return;
+  const el = b.closest('[data-qa]'), id = el.dataset.qa, a = qaOf(id) || {}, s = b.dataset.qs;
+  setQa(id, { s: a.s === s ? ((a.t||'').trim() ? 'ans' : 'none') : s }); save(); scheduleSend(); qaRefresh(el);
+});
+$('#main').addEventListener('input', e => {
+  if (!e.target.matches('.qt')) return;
+  const el = e.target.closest('[data-qa]'), id = el.dataset.qa, a = qaOf(id) || {}, v = e.target.value;
+  setQa(id, { t:v, s: v.trim() ? 'ans' : (a.s === 'ans' ? 'none' : (a.s || 'none')) });
+  clearTimeout(memoT); memoT = setTimeout(() => { flushMemo(); qaRefresh(el); }, 500);
+  const st = el.querySelector('.qd'); if (st) st.textContent = '';
+});
+$('#main').addEventListener('focusout', e => { if (e.target.matches && e.target.matches('.qt')) { flushMemo(); const el = e.target.closest('[data-qa]'); if (el) qaRefresh(el); } });
 $('#mExport').onclick=exportFile;
+$('#mUndo').onclick=()=>undo();
 $('#imp').onchange=e=>{ if (e.target.files[0]) importFile(e.target.files[0]); };
 document.addEventListener('keydown', e=>{
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key==='z' || e.key==='Z')) { if (e.target.matches('textarea,input')) return; e.preventDefault(); undo(); return; }
   if (e.target.matches('textarea,input')) return;
   if (e.key==='Enter') { if (S.meta.mode==='help') startWork(); else confirmCat(S.meta.curType); e.preventDefault(); }
 });
@@ -1321,6 +1488,7 @@ window.addEventListener('storage', e=>{ if (e.key===KEY) { S = load(); render();
   if (pendingCount()) save();
   refreshProgress(); render(); showSendState();
   if (pendingCount()) scheduleSend(3000);
+  undoReset();
   window.__appReady = true;
 })();
 </script>
