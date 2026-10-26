@@ -224,7 +224,9 @@ let D = null, A = {}, EP = null, deck = null, idx = 0, pending = {}, flushT = 0,
 //   이 브라우저에 먼저 두고 서버로 모아 보낸다. 보관본 = { ep: 서버 초기화 번호, a: 답 } — 서버가 초기화되면 번호가 달라 버린다.
 //   로컬(serve.py): api/answers 에 0.8초 모아 보냄.
 //   게시본(window.CFG 있음): 마인드맵 함수 v3 칸 — 카드 자료 CFG.dataCate(비밀번호가 있어야 읽힘),
-//     답 CFG.ansCate(노드 = 카드 번호, x = 답 JSON, 「meta」 = 초기화 번호). 관문은 IP당 분당 10회라 4초 모아 보내고 최소 8초 간격.
+//     답 CFG.ansCate(노드 = 카드 번호, x = 답 JSON, 「meta」 = 초기화 번호).
+//     고치면 바로(0.3초 모아) 보낸다 — 서버 저장에 3초쯤 걸린다(데이터 저장소 커밋). 관문이 IP당 분당 10회라 이어서 고치면 7초 간격으로 모아 보내고,
+//     창을 닫거나 다른 탭으로 가면 기다리지 않고 그 자리에서 보낸다(대표 10/26 「수정되면 바로바로 서버에」).
 const CFG = window.CFG || null;
 const LS_PW = 'jh-review-pw';
 let PW = '', lastSave = 0, lastLoad = 0, HIST = [];
@@ -240,13 +242,23 @@ function put(id, patch, noHist) {
 }
 function schedule(ms) {
   clearTimeout(flushT);
-  flushT = setTimeout(flush, ms ?? (CFG ? Math.max(4000, lastSave + 8000 - Date.now()) : 800));
+  flushT = setTimeout(flush, ms ?? (CFG ? Math.max(300, lastSave + 7000 - Date.now()) : 300));
 }
-async function flush() {
+let flushing = false;
+async function flush(now) {
+  if (flushing && !now) return schedule(1000);
   const send = pending; pending = {};
+  flushing = true;
+  try { await flushSend(send, now); } finally { flushing = false; }
+}
+// 창을 닫거나 다른 탭으로 갈 때 — 남은 것을 바로 보낸다(keepalive: 창이 닫혀도 요청은 간다)
+function flushNow() { if (Object.keys(pending).length) { clearTimeout(flushT); flush(true); } }
+window.addEventListener('pagehide', flushNow);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushNow(); });
+async function flushSend(send, now) {
   if (!Object.keys(send).length) return;
   try {
-    const res = CFG ? await webSave(send) : await localSave(send);
+    const res = CFG ? await webSave(send, now) : await localSave(send, now);
     if (res.reset) {   // 서버 답이 초기화됨 — 이 브라우저 답도 서버 판으로
       EP = res.epoch; A = res.answers; pending = {}; HIST = []; writeLocal();
       toast('서버 답이 초기화되어 새로 불러왔습니다');
@@ -276,17 +288,17 @@ async function localLoad() {
   const sv = await r.json();
   return { deck: deckData, epoch: sv.epoch, answers: sv.answers };
 }
-async function localSave(send) {
-  const r = await fetch('api/answers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epoch: EP, answers: send }) });
+async function localSave(send, keepalive) {
+  const r = await fetch('api/answers', { method: 'POST', keepalive: !!keepalive, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epoch: EP, answers: send }) });
   if (r.status === 409) { const sv = await r.json(); return { reset: true, epoch: sv.epoch, answers: sv.answers }; }
   if (!r.ok) throw new Error(r.status);
   return {};
 }
 
 // 게시본 — 답 노드에 초기화 번호(ep)를 같이 적어, 초기화 전 브라우저가 늦게 보낸 답은 읽을 때 버린다
-async function mm(body) {
+async function mm(body, keepalive) {
   const r = await fetch(CFG.fn, {
-    method: 'POST',
+    method: 'POST', keepalive: !!keepalive,
     headers: { 'Content-Type': 'application/json', apikey: CFG.anon, Authorization: 'Bearer ' + CFG.anon },
     body: JSON.stringify({ pw: PW, ns: 'v3', ...body }),
   });
@@ -317,11 +329,11 @@ async function webLoad() {
   lastLoad = Date.now();
   return { deck: JSON.parse(text), epoch: ep, answers: a };
 }
-async function webSave(send) {
+async function webSave(send, keepalive) {
   const nodes = {};
   for (const [id, rec] of Object.entries(send)) nodes[id] = { p: '', t: 'a', x: JSON.stringify({ ...rec, ep: EP }), u: rec.t || Date.now(), o: 0 };
   lastSave = Date.now();
-  const doc = (await mm({ op: 'save', cate: CFG.ansCate, doc: { cate: CFG.ansCate, name: '재현 지식 검수 답', nodes } })).doc;
+  const doc = (await mm({ op: 'save', cate: CFG.ansCate, doc: { cate: CFG.ansCate, name: '재현 지식 검수 답', nodes } }, keepalive)).doc;
   const { ep, a } = readAnswers(doc.nodes);
   return ep !== EP ? { reset: true, epoch: ep, answers: a } : { answers: a };
 }
