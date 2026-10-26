@@ -32,12 +32,13 @@ textarea,input{font-family:inherit;font-size:17px;color:inherit}
 #stage{flex:1;position:relative;min-height:0}
 .ghost,.card{position:absolute;left:16px;right:16px;top:4px;bottom:28px;border-radius:var(--r-card);background:var(--bg)}
 .ghost{box-shadow:0 1px 3px rgba(0,23,51,.06);transform-origin:50% 100%}
-.ghost.g1{transform:translateY(12px) scale(.95);opacity:.8}
+.ghost.g1{transform:translateY(12px) scale(.95);opacity:.8;overflow:hidden;pointer-events:none;user-select:none}
+.ghost .peek{padding:22px 20px 24px}
 .ghost.g2{transform:translateY(24px) scale(.9);opacity:.5}
 .card{box-shadow:var(--float);padding:22px 20px 24px;overflow-y:auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
 .card textarea,.card input{user-select:text;-webkit-user-select:text}
 .card.enter-left{animation:inL .2s ease}
-.card.enter{animation:inN .18s ease}
+.card.enter{animation:none}   /* 뒤 카드가 이미 앞자리로 올라와 있어 따로 나타나는 효과 없음 */
 @keyframes inL{from{transform:translateX(-60px);opacity:0}}
 @keyframes inN{from{transform:scale(.97);opacity:.6}}
 .card.shake{animation:shake .3s}
@@ -457,7 +458,8 @@ function render() {
   if (!c) return renderEnd();
   const n = L.length - idx;
   $('#stage').innerHTML =
-    (n > 2 ? '<div class="ghost g2"></div>' : '') + (n > 1 ? '<div class="ghost g1"></div>' : '') +
+    (n > 2 ? '<div class="ghost g2"></div>' : '') +
+    (n > 1 ? `<div class="ghost g1"><div class="peek">${KIND[deck][0](L[idx + 1])}</div></div>` : '') +   // 바로 뒤 카드는 내용까지 그려 둔다
     `<div class="card ${fromLeft ? 'enter-left' : 'enter'}"><div class="drag"></div>${KIND[deck][0](c)}</div>`;
   fromLeft = false;
   const card = $('#stage .card');
@@ -816,10 +818,20 @@ function fly(dir, then) {
   if (!card) return then();
   card.style.transition = 'transform .2s ease, opacity .2s ease';
   card.style.transform = dir === 'r' ? 'translateX(120%) rotate(8deg)' : 'translateY(-110%)';
+  if (dir === 'r' || dir === 'u') lift(1, true);
   card.style.opacity = '0';
   setTimeout(then, 190);
 }
+// 밀수록 뒤 카드가 앞으로 올라온다(0 = 뒤에 있음 · 1 = 앞 카드 자리)
+function lift(p, anim) {
+  const g = $('#stage .ghost.g1');
+  if (!g) return;
+  g.style.transition = anim ? 'transform .2s ease, opacity .2s ease' : 'none';
+  g.style.transform = `translateY(${12 * (1 - p)}px) scale(${0.95 + 0.05 * p})`;
+  g.style.opacity = String(0.8 + 0.2 * p);
+}
 function snap(card) {
+  lift(0, true);
   if (!card) return;
   card.style.transition = 'transform .18s ease'; card.style.transform = '';
   const h = $('.drag', card); if (h) h.style.opacity = 0;
@@ -909,6 +921,7 @@ function bindSwipe(card) {
     try { card.setPointerCapture(e.pointerId); } catch {}
     const up = dy < 0 && Math.abs(dy) > Math.abs(dx);
     card.style.transform = up ? `translateY(${Math.min(dy, 0)}px)` : `translateX(${dx}px) rotate(${dx / 24}deg)`;
+    lift(Math.min(1, Math.max(Math.abs(dx), up ? -dy : 0) / 140));
     const h = hint();
     const lab = up && dy < -40 ? '↑ 나중에' : dx > 40 ? (deck === 'p' ? '확인 ›' : '다음 ›') : dx < -40 ? '‹ 이전' : '';
     h.textContent = lab; h.style.opacity = lab ? 1 : 0;
