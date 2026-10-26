@@ -951,7 +951,6 @@ function chDetail() {
   const pc = t.price_check ? `가격 대조: 말한 가격 ${t.price_check.said ?? 0}개${(t.price_check.unknown || []).length ? ` · 근거 못 찾은 가격 ${t.price_check.unknown.length}개` : ' · 모두 근거 있음'}` : '';
   const gr = t.ground ? `값 대조: ${t.ground.checked ?? 0}개 확인${(t.ground.missed || []).length ? ` · 근거 없는 값 ${t.ground.missed.join(', ')}` : ''}` : '';
   box.innerHTML = `
-    ${sec('고른 답', `${q ? `<p class="dsrc">손님: ${esc(q.content || '')}</p>` : ''}<div class="bub a">${mdLite(m.content || '')}</div>`)}
     ${sec('① 알아들은 것', (condHtml || '') + (asRows.length ? `<details ${condHtml ? '' : 'open'}><summary>AI가 정리한 상담 상태</summary>${kv(asRows)}</details>` : '') || '<p class="dsrc">조건 기록 없음(되묻기·설명 턴)</p>')}
     ${sec('② 서버에 물은 것', tools || '<p class="dsrc">도구를 부르지 않고 답함</p>')}
     ${sec('② 서버 실제 데이터', vHtml || (calcs ? '' : '<p class="dsrc">표에 실린 품목 없음</p>'))}
