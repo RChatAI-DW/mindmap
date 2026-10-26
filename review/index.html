@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>지식 검수</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2.0.5/fonts/static/woff2/SUIT.css">
+<style>
+/* 색·모서리·글꼴은 사장님 지식 정리 웹판(RChatAI 앱 토큰)과 같다 · 본문 17, 14 미만 금지 */
+:root{
+  --ink:#191F28; --sub:#4E5968; --faint:#8B95A1;
+  --bg:#FFFFFF; --soft:#F2F4F6; --line:#E5E8EB; --line2:#D1D6DB;
+  --ok:#18A5A5; --ok-soft:#EDF8F8; --warn:#F57800; --warn-soft:#FFF3E0;
+  --r-card:16px; --r-ctl:12px;
+  --float:0 8px 24px rgba(0,23,51,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--soft);color:var(--ink);font-family:"SUIT","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;-webkit-tap-highlight-color:transparent}
+textarea,input{font-family:inherit;font-size:17px;color:inherit}
+#app{max-width:560px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column}
+
+/* 위 띠 */
+#top{flex:none;height:56px;display:flex;align-items:center;gap:8px;padding:0 12px}
+#top .home{width:40px;height:40px;border-radius:12px;color:var(--sub);display:grid;place-items:center}
+#top .title{flex:1;min-width:0;text-align:left;font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 4px;border-radius:10px}
+#top .title small{font-weight:500;color:var(--faint);font-size:15px;margin-left:6px}
+#top .count{font-size:15px;color:var(--sub);font-variant-numeric:tabular-nums}
+#sync{font-size:14px;color:var(--faint);min-width:0}
+
+/* 카드 무대 */
+#stage{flex:1;position:relative;min-height:0}
+.ghost,.card{position:absolute;left:16px;right:16px;top:4px;bottom:28px;border-radius:var(--r-card);background:var(--bg)}
+.ghost{box-shadow:0 1px 3px rgba(0,23,51,.06);transform-origin:50% 100%}
+.ghost.g1{transform:translateY(12px) scale(.95);opacity:.8}
+.ghost.g2{transform:translateY(24px) scale(.9);opacity:.5}
+.card{box-shadow:var(--float);padding:22px 20px 24px;overflow-y:auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
+.card textarea,.card input{user-select:text;-webkit-user-select:text}
+.card.enter-left{animation:inL .2s ease}
+.card.enter{animation:inN .18s ease}
+@keyframes inL{from{transform:translateX(-60px);opacity:0}}
+@keyframes inN{from{transform:scale(.97);opacity:.6}}
+.card.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+.meta{display:flex;align-items:center;gap:8px;margin-bottom:14px;min-height:28px}
+.tag{font-size:14px;color:var(--sub);background:var(--soft);border-radius:8px;padding:3px 10px}
+.st{margin-left:auto;font-size:14px;font-weight:600;border-radius:8px;padding:3px 10px}
+.st.ans,.st.done{color:var(--ok);background:var(--ok-soft)}
+.st.later{color:var(--warn);background:var(--warn-soft)}
+.qt{font-size:22px;line-height:1.45;font-weight:700;margin:0 0 10px;letter-spacing:-.2px;word-break:keep-all}
+.ctx{font-size:15px;color:var(--sub);margin:0 0 18px;word-break:keep-all}
+
+/* 질문 선택지 */
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-ctl);text-align:left;background:var(--bg);word-break:keep-all}
+.opt .n{flex:none;width:24px;height:24px;border-radius:7px;background:var(--soft);color:var(--faint);font-size:14px;font-weight:700;display:grid;place-items:center}
+.opt.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.opt.on .n{background:rgba(255,255,255,.18);color:#fff}
+.opt .pen{margin-left:auto;font-size:14px;opacity:.6}
+.wbtn{margin-top:14px;font-size:15px;color:var(--sub);padding:8px 2px}
+.txt{display:block;width:100%;min-height:96px;margin-top:12px;padding:12px 14px;border:1px solid var(--line2);border-radius:var(--r-ctl);resize:vertical;line-height:1.5;background:var(--bg)}
+.txt:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:transparent}
+
+/* 부품 카드 */
+.sib{font-size:15px;font-weight:500;color:var(--faint);margin-left:4px;font-variant-numeric:tabular-nums}
+.galae{display:inline-block;font-size:15px;font-weight:600;color:var(--ink);border:1px solid var(--line2);border-radius:999px;padding:3px 12px;margin:-2px 0 18px}
+.sec{font-size:15px;font-weight:700;margin:4px 0 2px}
+.hint{font-size:14px;color:var(--faint);margin:0 0 12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.pc{min-height:44px;padding:9px 16px;border-radius:999px;background:var(--soft);color:var(--faint);font-size:16px}
+.pc.on{background:var(--ink);color:#fff;font-weight:600}
+.pc[data-x]{cursor:grab;touch-action:none;-webkit-touch-callout:none}
+.pc.ph{opacity:0}
+.pc.lift{position:fixed;z-index:60;margin:0;pointer-events:none;cursor:grabbing;transform:scale(1.05);box-shadow:var(--float);transition:transform .12s ease}
+body.dragging,body.dragging *{cursor:grabbing !important;user-select:none}
+.pc.add{background:var(--bg);border:1.5px dashed var(--line2);color:var(--sub)}
+.pc[data-x]{position:relative}
+.pc .x{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--sub);color:#fff;font-size:15px;line-height:21px;text-align:center;font-weight:600;display:none;box-shadow:0 0 0 2px var(--bg)}
+.pc .x:hover{background:var(--ink)}
+@media (hover:hover){ .pc[data-x]:hover .x{display:block} }
+@media (hover:none){ .pc .x{display:block;width:20px;height:20px;line-height:19px;font-size:14px;opacity:.75} }
+body.dragging .pc .x,.pc.lift .x{display:none}
+.chips .add{align-self:center}
+.tile.guide{background:var(--ink);color:#fff}
+.tile.guide span{color:rgba(255,255,255,.75)}
+.tile .step{display:block;font-style:normal;font-size:14px;font-weight:600;color:var(--ok);margin-top:8px}
+.tag.boss{color:var(--warn);background:var(--warn-soft)}
+.when{font-size:14px;color:var(--faint)}
+.who{font-size:14px;color:var(--faint);margin:12px 2px 4px}
+.bub{border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.6;word-break:keep-all;overflow-wrap:anywhere}
+.bub.u{background:var(--soft)}
+.bub.a{border:1px solid var(--line)}
+.bub.sm{font-size:15px;padding:10px 12px;color:var(--sub)}
+.bub p{margin:0}
+.bub .gap{height:8px}
+.tblwrap{overflow-x:auto;margin:8px 0}
+.bub table{border-collapse:collapse;font-size:14px;min-width:100%}
+.bub th,.bub td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;white-space:nowrap}
+.bub th{color:var(--sub);font-weight:600}
+.prevbtn{font-size:15px;color:var(--sub);padding:6px 0}
+.prevlog{border-left:3px solid var(--line);padding-left:10px;margin:2px 0 8px}
+.opts.two{flex-direction:row}
+.opts.two .opt{flex:1}
+.pc small{font-size:14px;opacity:.65;margin-right:5px}
+.guide-wrap{padding:4px 16px 32px;overflow-y:auto;height:100%}
+.guide-wrap h2{font-size:20px;margin:32px 0 6px;letter-spacing:-.2px}
+.guide-wrap .lead{color:var(--sub);font-size:15px;margin:0 0 16px}
+.flow{display:flex;flex-direction:column}
+.io{align-self:center;background:var(--ink);color:#fff;border-radius:999px;padding:8px 18px;font-weight:700;font-size:16px}
+.io small{font-weight:400;opacity:.7;margin-left:8px;font-size:14px}
+.arrow{width:2px;height:20px;background:var(--line2);margin:0 auto;position:relative}
+.arrow:after{content:'';position:absolute;bottom:-2px;left:-4px;border:5px solid transparent;border-top-color:var(--line2);border-bottom:0}
+.stepbox{display:flex;gap:12px;background:var(--bg);border-radius:var(--r-card);padding:16px;box-shadow:0 1px 3px rgba(0,23,51,.06)}
+.stepbox .no{flex:none;width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:700}
+.stepbox b{font-size:17px}
+.stepbox p{margin:4px 0 0;font-size:15px;color:var(--sub);word-break:keep-all}
+.stepbox .base{color:var(--faint);font-size:14px}
+.who2{font-size:14px;color:var(--faint)}
+.dk{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.dk span{font-size:14px;font-weight:600;color:var(--ok);background:var(--ok-soft);border-radius:8px;padding:3px 10px}
+.loop{background:var(--bg);border-radius:var(--r-card);padding:4px 16px}
+.lp{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lp:last-child{border-bottom:0}
+.lp .who3{flex:none;width:76px;font-size:14px;font-weight:700;padding-top:2px}
+.lp p{margin:0;font-size:15px;word-break:keep-all}
+.mrow{background:var(--bg);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.mrow .to{color:var(--ok);font-weight:600;font-size:15px;margin-top:2px}
+.mrow p{margin:4px 0 0;font-size:15px;color:var(--sub);word-break:keep-all}
+.mrow .warn{color:var(--warn)}
+.guide-wrap .wide{background:var(--bg)}
+.undo{width:40px;height:40px;border-radius:12px;color:var(--sub);display:grid;place-items:center;flex:none}
+.undo:disabled{opacity:.3;cursor:default}
+.pwin{display:block;width:100%;height:54px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r-ctl);font-size:17px;background:var(--bg)}
+.pwin:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.sumlink{display:block;margin:28px auto 0;font-size:15px;color:var(--sub);text-decoration:underline;padding:8px}
+.sumstat{display:flex;gap:10px;margin:8px 0 14px}
+.sumstat div{flex:1;background:var(--bg);border-radius:12px;padding:12px 14px}
+.sumstat b{display:block;font-size:22px}
+.sumstat span{font-size:14px;color:var(--sub)}
+.seg{display:flex;background:var(--line);border-radius:12px;padding:3px;margin-bottom:10px}
+.seg button{flex:1;height:40px;border-radius:10px;font-size:15px;color:var(--sub)}
+.seg button.on{background:var(--bg);color:var(--ink);font-weight:700}
+.dl{display:flex;gap:10px;margin-top:6px}
+.dl span{flex:none;width:52px;font-size:14px;color:var(--faint);padding-top:1px}
+.dl p{margin:0 !important;color:var(--ink) !important;font-size:15px;word-break:keep-all}
+.addin{min-height:44px;width:150px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);outline:0}
+
+/* 밀 때 보이는 글 */
+.drag{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:5;font-size:15px;font-weight:700;padding:5px 14px;border-radius:999px;background:var(--ink);color:#fff;opacity:0;pointer-events:none;transition:opacity .1s}
+
+/* 아래 띠 */
+#bar{flex:none;display:flex;gap:10px;padding:10px 16px calc(14px + env(safe-area-inset-bottom))}
+#bar button{height:54px;border-radius:var(--r-ctl);font-weight:600}
+#bar .prev{width:64px;background:var(--bg);color:var(--sub);display:grid;place-items:center}
+#bar .later{flex:1;background:var(--bg);color:var(--sub)}
+#bar .next{flex:1.6;background:var(--ink);color:#fff}
+#bar button:disabled{opacity:.35;cursor:default}
+
+/* 홈 */
+.home-wrap{padding:28px 16px 24px;overflow-y:auto;height:100%}
+.home-wrap h1{font-size:26px;margin:0 0 4px;letter-spacing:-.3px}
+.home-wrap .lead{color:var(--sub);margin:0 0 24px;font-size:15px}
+.tile{display:block;width:100%;text-align:left;background:var(--bg);border-radius:var(--r-card);padding:22px 20px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,23,51,.06)}
+.tile b{display:block;font-size:20px}
+.tile span{display:block;color:var(--sub);font-size:15px;margin-top:2px}
+.bar{height:6px;border-radius:3px;background:var(--soft);margin:16px 0 8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);border-radius:3px}
+.tile .nums{font-size:15px;color:var(--sub);font-variant-numeric:tabular-nums}
+.how{margin-top:20px;font-size:15px;color:var(--sub);line-height:1.8}
+.how b{color:var(--ink)}
+
+/* 끝 화면 · 건너뛰기 목록 */
+.end{position:absolute;left:16px;right:16px;top:4px;bottom:22px;background:var(--bg);border-radius:var(--r-card);padding:32px 20px;box-shadow:var(--float);overflow-y:auto}
+.end h2{font-size:22px;margin:0 0 8px}
+.end p{color:var(--sub);margin:0 0 24px}
+.wide{display:block;width:100%;min-height:54px;border-radius:var(--r-ctl);background:var(--soft);font-weight:600;margin-bottom:10px}
+.wide.ink{background:var(--ink);color:#fff}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:20}
+#sheet.open{display:block}
+#sheet .in{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;max-height:75vh;overflow-y:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+#sheet h3{font-size:17px;margin:0 0 10px}
+.srow{display:flex;width:100%;align-items:center;min-height:52px;padding:0 6px;border-bottom:1px solid var(--line);text-align:left}
+.srow span{margin-left:auto;color:var(--faint);font-size:15px;font-variant-numeric:tabular-nums}
+.srow.cur{font-weight:700}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:15px;padding:10px 16px;border-radius:12px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;white-space:nowrap}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top"></header>
+  <main id="stage"></main>
+  <footer id="bar"></footer>
+</div>
+<div id="sheet"><div class="in"></div></div>
+<div id="toast"></div>
+<script>window.CFG = {"fn": "https://wjlzfknaezwwyusdrdtt.supabase.co/functions/v1/mindmap", "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHpma25hZXp3d3l1c2RyZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MjAwODEsImV4cCI6MjEwMTM5NjA4MX0.q8g2wFBP_ideMcGgtgKeFwwxBdIG7ajpcv6RJxJbO9s", "dataCate": 900021, "ansCate": 900022};</script>
+<script>
+'use strict';
+// step = 이 덱을 하면 상담의 어느 단계가 바뀌나 (상담 구조 화면의 ①~④)
+const DECKS = {
+  p: { name: '부품 지식', desc: '부품마다 손님께 묻는 항목 · 같이 권하는 부속', step: '① 되묻기 · ② 같이 권하기' },
+  q: { name: '질문', desc: '현장 기준을 확인하는 질문', step: '①② 상담 기준 · 자료' },
+  a: { name: '상담 답 검수', desc: '실제 상담 답이 맞는지', step: '결과 확인 → 틀린 단계를 고침' },
+};
+const ORDER = ['p', 'q'];
+const A_OPTS = ['맞다', '틀린 데가 있다 (적기)'];
+// 틀린 곳 — 고를 때 상담 어느 단계 문제인지 함께 남는다
+const WHERE = [
+  ['물어야 할 걸 안 물음', '①'], ['안 물어도 될 걸 물음', '①'], ['말을 잘못 알아들음', '①'],
+  ['엉뚱한 부품·메이커', '②'], ['값·계산이 틀림', '②'], ['빠진 부품·부속', '②'],
+  ['설명이 틀림', '③'], ['말이 어색함', '③'],
+];
+const W = '(적기)';
+const CHEV = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+const LS = 'jh-review-v1';
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+let D = null, A = {}, EP = null, deck = null, idx = 0, pending = {}, flushT = 0, online = true, fromLeft = false;
+
+// ── 저장 ──
+//   이 브라우저에 먼저 두고 서버로 모아 보낸다. 보관본 = { ep: 서버 초기화 번호, a: 답 } — 서버가 초기화되면 번호가 달라 버린다.
+//   로컬(serve.py): api/answers 에 0.8초 모아 보냄.
+//   게시본(window.CFG 있음): 마인드맵 함수 v3 칸 — 카드 자료 CFG.dataCate(비밀번호가 있어야 읽힘),
+//     답 CFG.ansCate(노드 = 카드 번호, x = 답 JSON, 「meta」 = 초기화 번호). 관문은 IP당 분당 10회라 4초 모아 보내고 최소 8초 간격.
+const CFG = window.CFG || null;
+const LS_PW = 'jh-review-pw';
+let PW = '', lastSave = 0, lastLoad = 0, HIST = [];
+function readLocal() { try { return JSON.parse(localStorage.getItem(LS) || '{}'); } catch { return {}; } }
+function writeLocal() { try { localStorage.setItem(LS, JSON.stringify({ ep: EP, a: A })); } catch {} }
+function put(id, patch, noHist) {
+  if (!noHist) remember(id, Object.keys(patch));
+  A[id] = { ...(A[id] || {}), ...patch, t: Date.now() };
+  pending[id] = A[id];
+  writeLocal();
+  schedule();
+  sync('저장 중');
+}
+function schedule(ms) {
+  clearTimeout(flushT);
+  flushT = setTimeout(flush, ms ?? (CFG ? Math.max(4000, lastSave + 8000 - Date.now()) : 800));
+}
+async function flush() {
+  const send = pending; pending = {};
+  if (!Object.keys(send).length) return;
+  try {
+    const res = CFG ? await webSave(send) : await localSave(send);
+    if (res.reset) {   // 서버 답이 초기화됨 — 이 브라우저 답도 서버 판으로
+      EP = res.epoch; A = res.answers; pending = {}; HIST = []; writeLocal();
+      toast('서버 답이 초기화되어 새로 불러왔습니다');
+      return deck ? go(deck, 0) : renderHome();
+    }
+    if (res.answers && adopt(res.answers) && deck && list()[idx]) rerender();   // 다른 기기에서 고친 것
+    online = true; sync('저장됨');
+  } catch (e) {
+    for (const k in send) if (!pending[k]) pending[k] = send[k];
+    if (e && e.auth) return askPw('비밀번호가 바뀌었습니다. 다시 넣어 주세요.');
+    online = false; sync('서버 끊김 · 이 브라우저에 보관');
+    schedule(e && e.retry ? e.retry * 1000 : (CFG ? 15000 : 5000));
+  }
+}
+function adopt(sv) {
+  let ch = false;
+  for (const k in sv) if (!pending[k] && (sv[k].t || 0) > ((A[k] || {}).t || 0)) { A[k] = sv[k]; ch = true; }
+  if (ch) writeLocal();
+  return ch;
+}
+function sync(t) { const el = $('#sync'); if (el) el.textContent = t; }
+
+// 로컬
+async function localLoad() {
+  const deckData = await (await fetch('deck.json')).json();
+  const r = await fetch('api/answers'); if (!r.ok) throw new Error(r.status);
+  const sv = await r.json();
+  return { deck: deckData, epoch: sv.epoch, answers: sv.answers };
+}
+async function localSave(send) {
+  const r = await fetch('api/answers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epoch: EP, answers: send }) });
+  if (r.status === 409) { const sv = await r.json(); return { reset: true, epoch: sv.epoch, answers: sv.answers }; }
+  if (!r.ok) throw new Error(r.status);
+  return {};
+}
+
+// 게시본 — 답 노드에 초기화 번호(ep)를 같이 적어, 초기화 전 브라우저가 늦게 보낸 답은 읽을 때 버린다
+async function mm(body) {
+  const r = await fetch(CFG.fn, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: CFG.anon, Authorization: 'Bearer ' + CFG.anon },
+    body: JSON.stringify({ pw: PW, ns: 'v3', ...body }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) throw { auth: true };
+  if (r.status === 429) throw { retry: +(r.headers.get('Retry-After') || 30) };
+  if (!r.ok) throw new Error(j.error || r.status);
+  return j;
+}
+function readAnswers(nodes) {
+  let ep = '0';
+  if (nodes && nodes.meta && !nodes.meta.d) { try { ep = JSON.parse(nodes.meta.x).epoch || '0'; } catch {} }
+  const a = {};
+  for (const [id, n] of Object.entries(nodes || {})) {
+    if (n.d || id === 'meta') continue;
+    try { const rec = JSON.parse(n.x); if ((rec.ep || '0') === ep) { delete rec.ep; a[id] = rec; } } catch {}
+  }
+  return { ep, a };
+}
+async function webLoad() {
+  const dd = (await mm({ op: 'load', cate: CFG.dataCate })).doc;
+  if (!dd || !dd.nodes['d-meta']) throw new Error('카드 자료 없음');
+  const meta = JSON.parse(dd.nodes['d-meta'].x);
+  let text = '';
+  for (let i = 0; i < meta.n; i++) text += dd.nodes['d-' + String(i).padStart(4, '0')].x;
+  const ad = (await mm({ op: 'load', cate: CFG.ansCate })).doc;
+  const { ep, a } = readAnswers(ad && ad.nodes);
+  lastLoad = Date.now();
+  return { deck: JSON.parse(text), epoch: ep, answers: a };
+}
+async function webSave(send) {
+  const nodes = {};
+  for (const [id, rec] of Object.entries(send)) nodes[id] = { p: '', t: 'a', x: JSON.stringify({ ...rec, ep: EP }), u: rec.t || Date.now(), o: 0 };
+  lastSave = Date.now();
+  const doc = (await mm({ op: 'save', cate: CFG.ansCate, doc: { cate: CFG.ansCate, name: '재현 지식 검수 답', nodes } })).doc;
+  const { ep, a } = readAnswers(doc.nodes);
+  return ep !== EP ? { reset: true, epoch: ep, answers: a } : { answers: a };
+}
+// 다른 기기에서 고친 답 받기 — 창으로 돌아왔을 때, 1분에 한 번까지
+document.addEventListener('visibilitychange', async () => {
+  if (!CFG || document.hidden || !D || Date.now() - lastLoad < 60000 || Object.keys(pending).length) return;
+  lastLoad = Date.now();
+  try {
+    const { ep, a } = readAnswers(((await mm({ op: 'load', cate: CFG.ansCate })).doc || {}).nodes);
+    if (ep !== EP) { EP = ep; A = a; HIST = []; writeLocal(); toast('서버 답이 초기화되어 새로 불러왔습니다'); return deck ? go(deck, 0) : renderHome(); }
+    if (adopt(a) && deck && list()[idx]) rerender();
+  } catch {}
+});
+function askPw(msg) {
+  $('#top').innerHTML = ''; $('#bar').innerHTML = '';
+  $('#stage').innerHTML = `<div class="home-wrap">
+    <h1>지식 검수</h1><p class="lead">${esc(msg || '비밀번호를 넣어 주세요.')}</p>
+    <form id="pwf"><input id="pw" type="password" class="pwin" autocomplete="current-password" aria-label="비밀번호">
+    <button class="wide ink" style="margin-top:12px">들어가기</button></form></div>`;
+  $('#pwf').onsubmit = e => {
+    e.preventDefault();
+    PW = $('#pw').value;
+    try { localStorage.setItem(LS_PW, PW); } catch {}
+    start();
+  };
+  $('#pw').focus();
+}
+
+// ── 되돌리기 — 바꾸기 전 답을 쌓아 두고 하나씩 되돌린다(같은 카드·같은 칸을 1.5초 안에 이어 고치면 한 번으로)
+function remember(id, keys) {
+  const k = keys.slice().sort().join(','), last = HIST[HIST.length - 1], now = Date.now();
+  if (last && last.id === id && last.k === k && now - last.at < 1500) { last.at = now; return; }
+  HIST.push({ id, k, at: now, prev: A[id] ? JSON.parse(JSON.stringify(A[id])) : null });
+  if (HIST.length > 100) HIST.shift();
+  undoBtn();
+}
+function undo() {
+  const h = HIST.pop();
+  undoBtn();
+  if (!h) return toast('되돌릴 것이 없습니다');
+  A[h.id] = h.prev ? { ...h.prev, t: Date.now() } : { t: Date.now() };
+  pending[h.id] = A[h.id];
+  writeLocal(); schedule(); sync('저장 중');
+  toast('되돌렸습니다');
+  for (const k of ORDER) {
+    const i = D.decks[k].findIndex(c => c.id === h.id);
+    if (i >= 0) return go(k, i);
+  }
+  if (location.hash === '#sum') renderSummary();
+}
+const UNDO_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
+const undoHtml = () => `<button id="undo" class="undo" aria-label="되돌리기" title="되돌리기 (Ctrl+Z)" ${HIST.length ? '' : 'disabled'}>${UNDO_SVG}</button>`;
+function undoBtn() { const b = $('#undo'); if (b) b.disabled = !HIST.length; }
+function bindUndo() { const b = $('#undo'); if (b) b.onclick = undo; }
+
+// ── 덱 도우미 ──
+const list = () => D.decks[deck];
+const st = id => (A[id] || {}).status;
+const seen = id => !!st(id);
+const section = c => deck === 'q' ? c.topic.split(' · ')[0] : deck === 'a' ? c.topic : c.group;
+const isW = o => o.endsWith(W);
+const optLabel = o => isW(o) ? o.slice(0, -W.length).trim() : o;
+const firstOpen = (from = 0) => { const L = list(); for (let i = from; i < L.length; i++) if (!seen(L[i].id)) return i; return -1; };
+function countDeck(k) {
+  const L = D.decks[k]; let done = 0, later = 0;
+  for (const c of L) { const s = st(c.id); if (s === 'later') later++; else if (s) done++; }
+  return { n: L.length, done, later };
+}
+
+// ── 화면 ──
+function go(k, i) {
+  deck = k;
+  if (k == null) { location.hash = ''; return renderHome(); }
+  if (k === 'guide') { deck = null; history.replaceState(null, '', '#guide'); return renderGuide(); }
+  if (k === 'sum') return renderSummary();
+  if (i == null) { i = firstOpen(); if (i < 0) i = list().length; }
+  idx = i;
+  history.replaceState(null, '', `#${k}/${idx}`);
+  render();
+}
+
+function renderHome() {
+  $('#top').innerHTML = `<div style="flex:1"></div><span id="sync"></span>${undoHtml()}`;
+  bindUndo();
+  $('#bar').innerHTML = '';
+  $('#stage').innerHTML = `<div class="home-wrap">
+    <h1>지식 검수</h1>
+    <p class="lead">카드를 한 장씩 보고 판단하시면 됩니다.</p>
+    <button class="tile guide" data-k="guide"><b>상담 구조</b><span>상담이 어떻게 돌아가고, 카드 답이 어디에 들어가는지</span></button>
+    ${ORDER.map(k => { const c = countDeck(k); return `
+      <button class="tile" data-k="${k}">
+        <b>${DECKS[k].name}</b><span>${DECKS[k].desc}</span><em class="step">바뀌는 곳 · ${DECKS[k].step}</em>
+        <div class="bar"><i style="width:${(100 * c.done / c.n).toFixed(1)}%"></i></div>
+        <div class="nums">${c.done} / ${c.n}${c.later ? ` · 나중에 ${c.later}` : ''}</div>
+      </button>`; }).join('')}
+    <div class="how">
+      <b>다음 ›</b> 오른쪽으로 밀기 · 저장하고 넘김<br>
+      <b>‹ 이전</b> 왼쪽으로 밀기 · 앞 카드로<br>
+      <b>↑ 나중에</b> 위로 밀기 · 모르거나 나중에 볼 것<br>
+      카드는 칩이 아닌 곳(제목·빈 곳)을 밀어 넘깁니다 · 칩을 끌면 순서 바꾸기<br>
+      키보드: ← → ↑ · 숫자 1~4 로 선택지 고르기
+    </div>
+    <button class="sumlink" data-k="sum">답 모아 보기 (구현 담당용)</button></div>`;
+  $('#stage').querySelectorAll('.tile,.sumlink').forEach(b => b.onclick = () => go(b.dataset.k));
+  sync(online ? '' : '서버 끊김 · 이 브라우저에 보관');
+}
+
+function render() {
+  const L = list(), c = L[idx];
+  const secName = c ? section(c) : '';
+  $('#top').innerHTML = `
+    <button class="home" aria-label="처음 화면">${CHEV}</button>
+    <button class="title">${DECKS[deck].name}<small>${esc(secName)} ▾</small></button>
+    <span id="sync"></span>
+    <span class="count">${Math.min(idx + 1, L.length)} / ${L.length}</span>${undoHtml()}`;
+  $('#top .home').onclick = () => go(null);
+  bindUndo();
+  $('#top .title').onclick = openSheet;
+  sync(online ? (Object.keys(pending).length ? '저장 중' : '') : '서버 끊김 · 이 브라우저에 보관');
+
+  if (!c) return renderEnd();
+  const n = L.length - idx;
+  $('#stage').innerHTML =
+    (n > 2 ? '<div class="ghost g2"></div>' : '') + (n > 1 ? '<div class="ghost g1"></div>' : '') +
+    `<div class="card ${fromLeft ? 'enter-left' : 'enter'}"><div class="drag"></div>${KIND[deck][0](c)}</div>`;
+  fromLeft = false;
+  const card = $('#stage .card');
+  KIND[deck][1](card, c);
+  bindSwipe(card);
+  fitTouch(card);
+
+  $('#bar').innerHTML = `
+    <button class="prev" ${idx === 0 ? 'disabled' : ''} aria-label="이전">${CHEV}</button>
+    <button class="later">↑ 나중에</button>
+    <button class="next">${deck === 'p' ? '확인 ›' : '다음 ›'}</button>`;
+  $('#bar .prev').onclick = prev;
+  $('#bar .later').onclick = later;
+  $('#bar .next').onclick = next;
+}
+
+const badge = id => { const s = st(id); return s ? `<span class="st ${s}">${s === 'later' ? '나중에' : s === 'ans' ? '답함' : '확인함'}</span>` : ''; };
+
+// 질문 카드
+function qCard(c) {
+  const r = A[c.id] || {}, ch = r.choice || [];
+  const wOpen = !c.opts.length || r.w || (r.text || '').trim() || ch.some(i => isW(c.opts[i] || ''));
+  return `<div class="meta"><span class="tag">${esc(c.topic)}</span>${badge(c.id)}</div>
+    <h2 class="qt">${esc(c.q)}</h2>
+    ${c.ctx ? `<p class="ctx">${esc(c.ctx)}</p>` : ''}
+    ${c.opts.length ? `<div class="opts">${c.opts.map((o, i) => `
+      <button class="opt ${ch.includes(i) ? 'on' : ''}" data-i="${i}"><span class="n">${c.multi ? (ch.includes(i) ? '✓' : '') : i + 1}</span><span>${esc(optLabel(o))}</span>${isW(o) ? '<span class="pen">✎</span>' : ''}</button>`).join('')}</div>` : ''}
+    ${c.opts.length && !wOpen ? '<button class="wbtn">✎ 직접 적기</button>' : ''}
+    ${wOpen ? `<textarea class="txt" maxlength="1500" placeholder="${c.opts.length ? '덧붙일 말이나 맞는 답을 적어 주세요' : '여기에 적어 주세요'}">${esc(r.text || '')}</textarea>` : ''}`;
+}
+function bindQ(card, c) {
+  card.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(c, +b.dataset.i));
+  const wb = $('.wbtn', card);
+  if (wb) wb.onclick = () => { put(c.id, { w: 1 }); rerender(true); };
+  const ta = $('.txt', card);
+  if (ta) ta.oninput = () => put(c.id, { text: ta.value });
+}
+function pick(c, i) {
+  if (i >= c.opts.length) return;
+  let ch = [...((A[c.id] || {}).choice || [])];
+  if (c.multi) ch = ch.includes(i) ? ch.filter(x => x !== i) : [...ch, i].sort((a, b) => a - b);
+  else ch = ch[0] === i ? [] : [i];
+  put(c.id, { choice: ch });
+  rerender(isW(c.opts[i]) && ch.includes(i));
+}
+
+// 부품 카드
+//   기록: items(지금 칩 목록) · on(켜진 칩) · add(새로 더한 칩) · ren({원래 이름: 새 이름}) · del(뺀 원래 칩) · memo
+const pItems = c => (A[c.id] || {}).items || c.items;
+function pOn(c) { return new Set((A[c.id] || {}).on || c.sel); }
+const origOf = (r, name) => Object.keys(r.ren || {}).find(k => r.ren[k] === name) ?? name;
+const chipW = t => Math.max(2.5, [...t].reduce((a, ch) => a + (/[\u3131-\uD79D]/.test(ch) ? 1 : 0.62), 0) + 0.6);
+function pSave(c, items, on, extra) { put(c.id, { items, on: items.filter(x => on.has(x)), ...extra }); }
+function chipRename(c, old, nw) {
+  nw = nw.trim();
+  if (nw === old) return false;
+  if (!nw) { chipRemove(c, old); return true; }
+  const r = A[c.id] || {}, on = pOn(c), had = on.has(old), merge = pItems(c).includes(nw);
+  const items = merge ? pItems(c).filter(x => x !== old) : pItems(c).map(x => x === old ? nw : x);
+  on.delete(old); if (had) on.add(nw);
+  let add = r.add || [], ren = { ...(r.ren || {}) };
+  if (add.includes(old)) add = [...new Set(add.map(x => x === old ? nw : x))];
+  else ren[origOf(r, old)] = nw;
+  pSave(c, items, on, { add, ren });
+  return merge;   // 같은 이름 칩과 합쳐졌으면 다시 그려야 한다
+}
+function chipRemove(c, name) {
+  const r = A[c.id] || {}, on = pOn(c);
+  on.delete(name);
+  const extra = (r.add || []).includes(name)
+    ? { add: r.add.filter(x => x !== name) }
+    : { del: [...new Set([...(r.del || []), origOf(r, name)])] };
+  pSave(c, pItems(c).filter(x => x !== name), on, extra);
+}
+function chipRenameStart(card, c, b) {
+  const old = b.dataset.x, inp = document.createElement('input');
+  inp.className = 'addin'; inp.value = old; inp.style.width = chipW(old) + 1.4 + 'em';
+  b.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = save => {
+    if (done) return; done = true;
+    if (save) chipRename(c, old, inp.value);   // 다 지우면 빠진다 · 같은 이름이면 합쳐진다
+    rerender();
+  };
+  inp.oninput = () => { inp.style.width = chipW(inp.value) + 1.4 + 'em'; };
+  inp.onkeydown = ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+    if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+  };
+  inp.onblur = () => finish(true);
+}
+function pCard(c) {
+  const r = A[c.id] || {}, on = pOn(c), all = pItems(c);
+  const ask = c.kind === 'ask';
+  const sib = list().filter(x => x.type === c.type);   // 같은 부품 카드는 이어서 나온다 — 그 안에서 몇 번째인지
+  // 칩 모서리의 × = 빼기(컴퓨터는 마우스를 올리면, 폰은 늘 보임) · 두 번 빠르게 누르면 이름 고치기
+  const chips = all.map(x => `<button class="pc ${on.has(x) ? 'on' : ''}" data-x="${esc(x)}">${esc(x)}<span class="x" aria-label="빼기">×</span></button>`).join('');
+  return `<div class="meta"><span class="tag">${esc(c.group)}</span>${c.boss ? '<span class="tag boss">사장님 답</span>' : ''}${badge(c.id)}</div>
+    <h2 class="qt">${esc(c.name)}${sib.length > 1 ? ` <span class="sib">${sib.indexOf(c) + 1} / ${sib.length}</span>` : ''}</h2>
+    ${c.galae ? `<span class="galae">${esc(c.galae)}</span>` : ''}
+    <div class="sec">${ask ? '손님께 묻는 항목' : '같이 권하는 부속'}</div>
+    <p class="hint">${ask ? '켜진 항목만 손님께 묻습니다' : '켜진 부속은 「○○는 필요 없으세요?」 하고 묻습니다'} · 끌어서 순서 바꾸기 · 두 번 눌러 이름 고치기</p>
+    <div class="chips">${chips}<button class="pc add">+ 추가</button></div>
+    <div class="sec" style="margin-top:22px">메모</div>
+    <textarea class="txt" maxlength="1500">${esc(r.memo || '')}</textarea>`;
+}
+function bindP(card, c) {
+  let lastTap = { el: null, t: 0 };
+  card.querySelectorAll('.pc[data-x]').forEach(b => b.onclick = e => {
+    if (card._chipDragged) { card._chipDragged = false; return; }
+    const x = b.dataset.x;
+    if (e.target.closest('.x')) { chipRemove(c, x); toast(`「${x}」 뺌`); return rerender(); }
+    const on = pOn(c);
+    on.has(x) ? on.delete(x) : on.add(x);
+    pSave(c, pItems(c), on);
+    b.classList.toggle('on');
+    const now = performance.now(), dbl = lastTap.el === b && now - lastTap.t < 350;
+    lastTap = { el: b, t: now };
+    if (dbl) chipRenameStart(card, c, b);   // 두 번 누름 = 켜고 끄기 두 번(제자리) + 이름 고치기
+  });
+  bindChipDrag(card, c);
+  $('.pc.add', card).onclick = e => {
+    const inp = document.createElement('input');
+    inp.className = 'addin'; inp.placeholder = '항목 이름';
+    e.currentTarget.replaceWith(inp); inp.focus();
+    const done = () => {
+      const v = inp.value.trim(), r = A[c.id] || {};
+      if (v && !pItems(c).includes(v)) {
+        const on = pOn(c); on.add(v);
+        pSave(c, [...pItems(c), v], on, { add: [...(r.add || []), v] });
+      }
+      rerender();
+    };
+    inp.onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.onblur = null; done(); } if (ev.key === 'Escape') { inp.onblur = null; rerender(); } };
+    inp.onblur = done;
+  };
+  const ta = $('.txt', card);
+  ta.oninput = () => put(c.id, { memo: ta.value });
+}
+
+// 상담 답 카드 — 손님 말 + AI 답 한 턴. 틀렸으면 어디가 틀렸는지(상담 단계 ①②③)와 고칠 점
+let aPrevOpen = null;
+const aQ = c => ({ ...c, opts: A_OPTS, multi: false });
+function mdLite(t) {
+  const inline = x => esc(x).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  const cells = l => l.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(x => x.trim());
+  let out = '', tbl = null;
+  const flushT = () => {
+    if (!tbl) return;
+    out += `<div class="tblwrap"><table>${tbl.map((r, i) => `<tr>${r.map(x => i ? `<td>${inline(x)}</td>` : `<th>${inline(x)}</th>`).join('')}</tr>`).join('')}</table></div>`;
+    tbl = null;
+  };
+  for (const l of String(t || '').split('\n')) {
+    if (/^\s*\|/.test(l)) {
+      if (/^[\s|:-]+$/.test(l) && l.includes('-')) continue;   // | --- | 줄
+      (tbl = tbl || []).push(cells(l));
+      continue;
+    }
+    flushT();
+    out += l.trim() ? `<p>${inline(l)}</p>` : '<div class="gap"></div>';
+  }
+  flushT();
+  return out;
+}
+function bubble(r, t, sm) {
+  return `<div class="who">${r === 'u' ? '손님' : 'AI'}</div><div class="bub ${r}${sm ? ' sm' : ''}">${r === 'a' ? mdLite(t) : esc(t).replace(/\n/g, '<br>')}</div>`;
+}
+function aCard(c) {
+  const r = A[c.id] || {}, ch = r.choice || [], wrong = ch.includes(1), where = r.where || [];
+  const wOpen = wrong || r.w || (r.text || '').trim();
+  const po = aPrevOpen === c.id;
+  return `<div class="meta"><span class="tag">${esc(c.topic)}</span><span class="when">${esc(c.at)}</span>${badge(c.id)}</div>
+    ${c.prev.length ? `<button class="prevbtn">${po ? '앞 대화 접기 ▴' : '앞 대화 보기 ▾'}</button>${po ? `<div class="prevlog">${c.prev.map(m => bubble(m.r, m.t, 1)).join('')}</div>` : ''}` : ''}
+    ${bubble('u', c.user)}${bubble('a', c.ai)}
+    <div class="sec" style="margin-top:22px">이 답이 맞습니까?</div>
+    <div class="opts two">${A_OPTS.map((o, i) => `<button class="opt ${ch.includes(i) ? 'on' : ''}" data-i="${i}"><span class="n">${i + 1}</span><span>${esc(optLabel(o))}</span></button>`).join('')}</div>
+    ${wrong ? `<div class="sec" style="margin-top:20px">어디가 틀렸나요</div><p class="hint">여러 개 고를 수 있습니다 · 번호는 상담 구조의 단계</p>
+      <div class="chips">${WHERE.map(([w, n]) => `<button class="pc ${where.includes(w) ? 'on' : ''}" data-w="${esc(w)}"><small>${n}</small>${esc(w)}</button>`).join('')}</div>
+      <div class="sec" style="margin-top:20px">고칠 점</div>` : ''}
+    ${!wOpen ? '<button class="wbtn">✎ 덧붙이기</button>' : ''}
+    ${wOpen ? `<textarea class="txt">${esc(r.text || '')}</textarea>` : ''}`;
+}
+function bindA(card, c) {
+  card.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(aQ(c), +b.dataset.i));
+  card.querySelectorAll('.pc[data-w]').forEach(b => b.onclick = () => {
+    const w = b.dataset.w, cur = (A[c.id] || {}).where || [];
+    put(c.id, { where: cur.includes(w) ? cur.filter(x => x !== w) : [...cur, w] });
+    b.classList.toggle('on');
+  });
+  const pb = $('.prevbtn', card);
+  if (pb) pb.onclick = () => { aPrevOpen = aPrevOpen === c.id ? null : c.id; rerender(); };
+  const wb = $('.wbtn', card);
+  if (wb) wb.onclick = () => { put(c.id, { w: 1 }); rerender(true); };
+  const ta = $('.txt', card);
+  if (ta) ta.oninput = () => put(c.id, { text: ta.value });
+}
+const KIND = { q: [qCard, bindQ], p: [pCard, bindP], a: [aCard, bindA] };
+
+// 상담 구조 — 상담이 어떻게 돌고, 덱마다 어느 단계가 바뀌는지
+function renderGuide() {
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 구조</button><span id="sync"></span>`;
+  $('#top .home').onclick = () => go(null);
+  $('#bar').innerHTML = '';
+  const dk = (...n) => `<div class="dk">${n.map(x => `<span>${x}</span>`).join('')}</div>`;
+  const stepBox = (no, who, title, body, base, decks) => `<div class="stepbox"><div class="no">${no}</div><div>
+    <div class="who2">${who}</div><b>${title}</b><p>${body}</p>${base ? `<p class="base">${base}</p>` : ''}${decks}</div></div>`;
+  const arrow = '<div class="arrow"></div>';
+  $('#stage').innerHTML = `<div class="guide-wrap">
+    <h2 style="margin-top:8px">손님 말이 답이 되기까지</h2>
+    <p class="lead">네 단계를 거칩니다. 초록 딱지는 그 단계를 바꾸는 카드입니다. ③④와 계산 · 자료 대조는 구현 담당이 맡습니다.</p>
+    <div class="flow">
+      <div class="io">손님 말<small>글 · 음성 · 사진</small></div>${arrow}
+      ${stepBox('①', 'AI', '알아듣고 되묻기', '무엇을 찾는지, 조건이 무엇인지 읽고, 빠진 값이 있으면 손님께 되묻습니다.', '기준: 부품마다 묻는 항목 · 회사 규칙', dk('부품 지식', '질문'))}${arrow}
+      ${stepBox('②', '서버', '찾고 계산하기', '조건에 맞는 부품을 판매 많은 순으로 찾습니다. 압축기·팽창변 같은 선정은 계산 엔진이, 창고 부하는 두원표준 엑셀 방식이, 유니트는 표준 구성표가 맡습니다.', '자료: 품목 마스터(사양 · 가격 · 재고)', dk('질문', '부품 지식 · 부속'))}${arrow}
+      ${stepBox('③', 'AI', '답 쓰기', '찾고 계산한 결과만 가지고 손님께 드릴 답을 씁니다.', '', '')}${arrow}
+      ${stepBox('④', '서버', '검사', '답에 적힌 가격이 회사 자료와 같은지, 근거 없는 모델명이 없는지 다시 봅니다.', '', '')}${arrow}
+      <div class="io">답</div>
+    </div>
+
+    <h2>카드 답이 상담에 들어가기까지</h2>
+    <div class="loop">
+      <div class="lp"><span class="who3">지식 담당</span><p>카드에 답합니다. 궁금한 것은 Claude Code 로 상담 기록·코드를 직접 찾아보고, 고칠 점은 GitHub 「상담 대기」 이슈로 남깁니다.</p></div>
+      <div class="lp"><span class="who3">구현 담당</span><p>사장님 말씀 · 회사 자료와 대조해 확인합니다.</p></div>
+      <div class="lp"><span class="who3">구현 담당</span><p>상담 기준 · 자료 · 코드에 반영하고 라이브에 올립니다.</p></div>
+      <div class="lp"><span class="who3">지식 담당</span><p>앱에서 직접 상담해 보고, 현장 기준과 다른 답이 나오면 Claude Code 로 까닭을 찾아 이슈로 남깁니다.</p></div>
+    </div>
+
+    <h2>카드마다 바뀌는 곳</h2>
+    <div class="mrow"><b>부품 지식 · 묻는 항목</b><div class="to">① 되묻기</div><p>예: 전자변 5/8 이하를 찾으면 관사이즈 · 접속을 먼저 묻습니다.</p></div>
+    <div class="mrow"><b>부품 지식 · 같이 권하는 부속</b><div class="to">② 같이 권하기</div><p>예: 전자변을 찾으면 「코일은 필요 없으세요?」</p><p class="warn">아직 상담에 연결 전입니다. 답은 모아 두고 구현 담당이 연결합니다.</p></div>
+    <div class="mrow"><b>질문</b><div class="to">①② 상담 기준 · 자료</div><p>예: 동결실 입고율 → 부하계산 값이 바뀝니다. 사양 확인 → 부품 찾기 결과가 바뀝니다.</p></div>
+
+    <h2>사람이 정하지 않는 것</h2>
+    <div class="mrow"><p>압축기 · 팽창변 등 계산 값 → 제조사 계산기(쿨셀렉터 · 비쳐 · 보크)가 기준</p><p>가격 · 재고 → 회사 ERP 자료</p><p>금액 약속 · 면책 문구 → 사장님 결정</p></div>
+    <button class="wide ink" style="margin-top:20px" id="gStart">카드 시작하기</button>
+  </div>`;
+  $('#gStart').onclick = () => go(null);
+}
+
+// 답 모아 보기 — 구현 담당이 재현이형 답에서 무엇이 바뀌었는지 본다(바뀐 것만 / 전부 · CSV 받기)
+let sumAll = false;
+function partDiff(c) {
+  const r = A[c.id] || {}, ren = r.ren || {}, del = new Set(r.del || []), add = r.add || [];
+  const map = x => ren[x] ?? x;
+  const baseOn = new Set(c.sel.filter(x => !del.has(x)).map(map));
+  const cur = pItems(c), on = pOn(c);
+  const turnedOn = cur.filter(x => on.has(x) && !baseOn.has(x) && !add.includes(x));
+  const turnedOff = cur.filter(x => !on.has(x) && baseOn.has(x));
+  const baseOrder = c.items.filter(x => !del.has(x)).map(map);
+  const reordered = !!r.items && cur.filter(x => !add.includes(x)).join('|') !== baseOrder.filter(x => cur.includes(x)).join('|');
+  const d = {
+    on: turnedOn, off: turnedOff, add: add.map(x => x + (on.has(x) ? '' : '(꺼짐)')),
+    ren: Object.entries(ren).map(([a, b]) => `${a} → ${b}`), del: [...del],
+    order: reordered ? cur.join(' · ') : '', memo: (r.memo || '').trim(),
+  };
+  d.changed = !!(d.on.length || d.off.length || d.add.length || d.ren.length || d.del.length || d.order || d.memo);
+  return d;
+}
+const stLabel = s => s === 'later' ? '나중에' : s === 'ans' ? '답함' : s === 'done' ? '확인함' : '안 봄';
+function qAnswer(c) {
+  const r = A[c.id] || {};
+  const picks = (r.choice || []).map(i => optLabel(c.opts[i] || ''));
+  return { picks, text: (r.text || '').trim() };
+}
+function renderSummary() {
+  deck = null;
+  history.replaceState(null, '', '#sum');
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">답 모아 보기</button><span id="sync"></span>${undoHtml()}`;
+  $('#top .home').onclick = () => go(null);
+  bindUndo();
+  $('#bar').innerHTML = '';
+  const P = D.decks.p, Q = D.decks.q;
+  const pd = P.map(c => ({ c, d: partDiff(c), s: st(c.id) }));
+  const qd = Q.map(c => ({ c, a: qAnswer(c), s: st(c.id) }));
+  const pSeen = pd.filter(x => x.s).length, pChanged = pd.filter(x => x.d.changed).length;
+  const qSeen = qd.filter(x => x.s).length;
+  const line = (k, v) => v && (v.length ?? 1) ? `<div class="dl"><span>${k}</span><p>${esc(Array.isArray(v) ? v.join(' · ') : v)}</p></div>` : '';
+  const pShow = pd.filter(x => sumAll ? x.s || x.d.changed : x.d.changed);
+  const qShow = qd.filter(x => sumAll ? x.s : x.a.picks.length || x.a.text);
+  $('#stage').innerHTML = `<div class="guide-wrap">
+    <div class="sumstat">
+      <div><b>${pSeen}</b><span>부품 카드 본 것 / ${P.length}</span></div>
+      <div><b>${pChanged}</b><span>바꾼 카드</span></div>
+      <div><b>${qSeen}</b><span>질문 답 / ${Q.length}</span></div>
+    </div>
+    <div class="seg"><button class="${sumAll ? '' : 'on'}" data-all="0">바뀐 것만</button><button class="${sumAll ? 'on' : ''}" data-all="1">본 것 전부</button></div>
+    <button class="wide" id="csv">엑셀로 받기 (CSV)</button>
+    <h2>부품 지식</h2>
+    ${pShow.length ? pShow.map(({ c, d, s }) => `<div class="mrow">
+      <b>${esc(c.name)}${c.galae ? ' · ' + esc(c.galae) : ''}</b><div class="to">${c.kind === 'ask' ? '묻는 항목' : '같이 권하는 부속'} · ${stLabel(s)}${c.also && c.also.length ? ' · 같이 적용 ' + c.also.join(',') : ''}</div>
+      ${line('켬', d.on)}${line('끔', d.off)}${line('새 칩', d.add)}${line('이름', d.ren)}${line('뺌', d.del)}${line('순서', d.order)}${line('메모', d.memo)}
+    </div>`).join('') : '<p class="lead">아직 없습니다.</p>'}
+    <h2>질문</h2>
+    ${qShow.length ? qShow.map(({ c, a, s }) => `<div class="mrow">
+      <b>${esc(c.q)}</b><div class="to">${esc(c.topic)} · ${stLabel(s)}</div>
+      ${line('답', a.picks)}${line('적은 말', a.text)}${line('틀린 곳', (A[c.id] || {}).where || [])}
+    </div>`).join('') : '<p class="lead">아직 없습니다.</p>'}
+  </div>`;
+  $('#stage').querySelectorAll('[data-all]').forEach(b => b.onclick = () => { sumAll = b.dataset.all === '1'; renderSummary(); });
+  $('#csv').onclick = () => {
+    const rows = [['구분', '부품·주제', '갈래', '칸', '상태', '켬', '끔', '새 칩', '이름 바꿈', '뺀 칩', '순서', '메모·답', '적은 말', '같이 적용', '카드 번호']];
+    for (const { c, d, s } of pd) if (s || d.changed)
+      rows.push(['부품 지식', c.name, c.galae, c.kind === 'ask' ? '묻는 항목' : '같이 권하는 부속', stLabel(s), d.on.join(' · '), d.off.join(' · '), d.add.join(' · '), d.ren.join(' · '), d.del.join(' · '), d.order, d.memo, '', (c.also || []).join(','), c.id]);
+    for (const { c, a, s } of qd) if (s)
+      rows.push(['질문', c.topic, '', c.q, stLabel(s), '', '', '', '', '', '', a.picks.join(' · '), a.text, '', c.id]);
+    const csv = '﻿' + rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const el = Object.assign(document.createElement('a'), { href: url, download: `지식검수_답_${new Date().toISOString().slice(0, 10)}.csv` });
+    document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+}
+
+function rerender(focusText) {
+  const card = $('#stage .card'), top = card ? card.scrollTop : 0;
+  const c = list()[idx];
+  card.innerHTML = '<div class="drag"></div>' + KIND[deck][0](c);
+  card.classList.remove('enter', 'enter-left');
+  KIND[deck][1](card, c);
+  card.scrollTop = top;
+  fitTouch(card);
+  if (focusText) { const ta = $('.txt', card); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }
+}
+
+// 넘기기
+function answered(c) {
+  if (deck === 'p') return true;
+  const r = A[c.id] || {};
+  return (r.choice || []).length > 0 || (r.text || '').trim() !== '';
+}
+function commitInput() { const el = document.activeElement; if (el && el.classList && el.classList.contains('addin')) el.blur(); }
+function next() {
+  commitInput();
+  const c = list()[idx]; if (!c) return;
+  if (!answered(c)) {
+    const card = $('#stage .card');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    snap(card);
+    return toast('고르거나 적어 주세요 · 모르면 ↑ 나중에');
+  }
+  put(c.id, { status: deck === 'p' ? 'done' : 'ans' });
+  fly('r', () => go(deck, idx + 1));
+}
+function later() {
+  commitInput();
+  const c = list()[idx]; if (!c) return;
+  put(c.id, { status: 'later' });
+  fly('u', () => go(deck, idx + 1));
+}
+function prev() {
+  commitInput();
+  if (idx === 0) { snap($('#stage .card')); return; }
+  fromLeft = true; go(deck, idx - 1);
+}
+function fly(dir, then) {
+  const card = $('#stage .card');
+  if (!card) return then();
+  card.style.transition = 'transform .2s ease, opacity .2s ease';
+  card.style.transform = dir === 'r' ? 'translateX(120%) rotate(8deg)' : 'translateY(-110%)';
+  card.style.opacity = '0';
+  setTimeout(then, 190);
+}
+function snap(card) {
+  if (!card) return;
+  card.style.transition = 'transform .18s ease'; card.style.transform = '';
+  const h = $('.drag', card); if (h) h.style.opacity = 0;
+}
+
+// 칩 끌어서 순서 바꾸기 — 사장님 웹판과 같은 방식: 칩이 손을 따라오고, 들어갈 자리의 칩들이 부드럽게 비켜난다.
+//   칩 위에서 시작한 끌기는 늘 순서 바꾸기(카드 넘기기는 칩이 아닌 곳에서). 6px 안 움직이고 떼면 그냥 켜고 끄기.
+let chipDrag = null;
+function flipMove(box, fn) {   // 자리가 바뀌는 칩들을 미끄러지듯 옮긴다
+  const els = [...box.querySelectorAll('.pc[data-x]')], before = new Map(els.map(e => [e, e.getBoundingClientRect()]));
+  fn();
+  for (const e of els) {
+    const b = before.get(e), a = e.getBoundingClientRect(), dx = b.left - a.left, dy = b.top - a.top;
+    if (!dx && !dy) continue;
+    e.style.transition = 'none'; e.style.transform = `translate(${dx}px,${dy}px)`;
+    requestAnimationFrame(() => { e.style.transition = 'transform .18s ease'; e.style.transform = ''; });
+  }
+}
+function bindChipDrag(card, c) {
+  const box = $('.chips', card);
+  if (!box) return;
+  box.querySelectorAll('.pc[data-x]').forEach(el => el.addEventListener('pointerdown', e => {
+    if (e.button || e.target.closest('.x')) return;
+    chipDrag = { el, box, c, card, x: e.clientX, y: e.clientY, on: false, ghost: null, lock: 0 };
+  }));
+}
+window.addEventListener('pointermove', e => {
+  const d = chipDrag;
+  if (!d) return;
+  if (!d.on) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6) return;
+    const r = d.el.getBoundingClientRect();
+    const g = d.el.cloneNode(true);
+    g.classList.add('lift');
+    Object.assign(g.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+    document.body.appendChild(g);
+    Object.assign(d, { ghost: g, ox: d.x - r.left, oy: d.y - r.top, on: true });
+    d.el.classList.add('ph'); document.body.classList.add('dragging');
+  }
+  e.preventDefault();
+  d.ghost.style.left = (e.clientX - d.ox) + 'px'; d.ghost.style.top = (e.clientY - d.oy) + 'px';
+  if (performance.now() < d.lock) return;
+  const under = document.elementFromPoint(e.clientX, e.clientY), t = under && under.closest ? under.closest('.pc[data-x]') : null;
+  if (!t || t === d.el || t.parentNode !== d.box) return;
+  const r = t.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+  if (after ? t.nextElementSibling === d.el : t.previousElementSibling === d.el) return;   // 이미 그 자리
+  flipMove(d.box, () => d.box.insertBefore(d.el, after ? t.nextElementSibling : t));
+  d.lock = performance.now() + 140;
+}, { passive: false });
+function endChipDrag(apply) {
+  const d = chipDrag; chipDrag = null;
+  if (!d || !d.on) return;
+  document.body.classList.remove('dragging');
+  const r = d.el.getBoundingClientRect(), g = d.ghost;
+  g.style.transition = 'left .14s ease, top .14s ease, transform .14s ease';
+  g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.transform = 'scale(1)';
+  d.card._chipDragged = true;   // 떼는 순간의 클릭이 칩 켜고 끄기로 이어지지 않게(클릭이 안 오면 바로 풀림)
+  setTimeout(() => { d.card._chipDragged = false; }, 0);
+  setTimeout(() => {
+    g.remove(); d.el.classList.remove('ph');
+    if (!apply) return;
+    const order = [...d.box.querySelectorAll('.pc[data-x]')].map(x => x.dataset.x);
+    if (order.join('|') !== pItems(d.c).join('|')) { pSave(d.c, order, pOn(d.c)); toast('순서 바꿈'); }
+  }, 150);
+}
+window.addEventListener('pointerup', () => endChipDrag(true));
+window.addEventListener('pointercancel', () => endChipDrag(false));
+window.addEventListener('click', e => { if (document.body.classList.contains('dragging')) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+// 밀기 (단추·입력 칸 위에서는 시작하지 않음)
+function bindSwipe(card) {
+  let sx = 0, sy = 0, dx = 0, dy = 0, on = false, swallow = false;
+  const hint = () => $('.drag', card);
+  // 밀고 난 손을 뗄 때 선택지·칩이 눌리지 않게
+  card.addEventListener('click', ev => { if (swallow) { swallow = false; ev.stopPropagation(); ev.preventDefault(); } }, true);
+  card.addEventListener('pointerdown', e => {
+    swallow = false;
+    if (e.button || e.target.closest('textarea,input,.addin,.tblwrap,.pc[data-x]')) return;
+    on = true; sx = e.clientX; sy = e.clientY; dx = dy = 0;
+    card.style.transition = 'none';
+  });
+  card.addEventListener('pointermove', e => {
+    if (!on) return;
+    dx = e.clientX - sx; dy = e.clientY - sy;
+    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+    try { card.setPointerCapture(e.pointerId); } catch {}
+    const up = dy < 0 && Math.abs(dy) > Math.abs(dx);
+    card.style.transform = up ? `translateY(${Math.min(dy, 0)}px)` : `translateX(${dx}px) rotate(${dx / 24}deg)`;
+    const h = hint();
+    const lab = up && dy < -40 ? '↑ 나중에' : dx > 40 ? (deck === 'p' ? '확인 ›' : '다음 ›') : dx < -40 ? '‹ 이전' : '';
+    h.textContent = lab; h.style.opacity = lab ? 1 : 0;
+  });
+  const end = e => {
+    if (!on) return; on = false;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) swallow = true;
+    const up = dy < 0 && Math.abs(dy) > Math.abs(dx);
+    if (e.type !== 'pointercancel' && up && dy < -90) return later();
+    if (e.type !== 'pointercancel' && dx > 100) return next();
+    if (e.type !== 'pointercancel' && dx < -100) return prev();
+    snap(card);
+  };
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+}
+// 카드 안이 넘치면 세로 스크롤을 살리고(위로 밀기는 단추로), 안 넘치면 위로 밀기까지 받는다
+function fitTouch(card) { card.style.touchAction = card.scrollHeight > card.clientHeight + 1 ? 'pan-y' : 'none'; }
+
+// 끝 화면
+function renderEnd() {
+  const L = list(), c = countDeck(deck), open = L.length - c.done - c.later;
+  const fl = L.findIndex(x => st(x.id) === 'later');
+  $('#stage').innerHTML = `<div class="end">
+    <h2>${open ? '여기까지입니다' : '끝까지 봤습니다'}</h2>
+    <p>${deck === 'p' ? '확인함' : '답함'} ${c.done} · 나중에 ${c.later}${open ? ` · 안 본 것 ${open}` : ''}</p>
+    ${open ? '<button class="wide ink" data-a="open">안 본 것 이어서 보기</button>' : ''}
+    ${c.later ? `<button class="wide ${open ? '' : 'ink'}" data-a="later">나중에 ${c.later}장 다시 보기</button>` : ''}
+    <button class="wide" data-a="first">처음부터 다시 보기</button>
+    <button class="wide" data-a="home">처음 화면</button></div>`;
+  $('#bar').innerHTML = `<button class="prev" aria-label="이전">${CHEV}</button>`;
+  $('#bar .prev').onclick = prev;
+  $('#stage').querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === 'open') go(deck, firstOpen());
+    if (a === 'later') go(deck, fl);
+    if (a === 'first') go(deck, 0);
+    if (a === 'home') go(null);
+  });
+}
+
+// 묶음 건너뛰기
+function openSheet() {
+  const L = list(), cur = L[idx] ? section(L[idx]) : '', secs = [];
+  L.forEach((c, i) => {
+    const s = section(c);
+    let o = secs.find(x => x.s === s);
+    if (!o) secs.push(o = { s, first: i, open: -1, n: 0, done: 0 });
+    o.n++; if (seen(c.id)) o.done++; else if (o.open < 0) o.open = i;
+  });
+  const sh = $('#sheet');
+  $('.in', sh).innerHTML = `<h3>${DECKS[deck].name} · 묶음으로 건너뛰기</h3>` +
+    secs.map((o, k) => `<button class="srow ${o.s === cur ? 'cur' : ''}" data-k="${k}">${esc(o.s)}<span>${o.done} / ${o.n}</span></button>`).join('');
+  sh.classList.add('open');
+  sh.onclick = e => {
+    const b = e.target.closest('.srow');
+    sh.classList.remove('open');
+    if (b) { const o = secs[+b.dataset.k]; go(deck, o.open >= 0 ? o.open : o.first); }
+  };
+}
+
+let toastT = 0;
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z') && D && !e.target.closest('textarea,input')) {
+    e.preventDefault(); return undo();
+  }
+  if (!deck || e.target.closest('textarea,input') || $('#sheet').classList.contains('open')) {
+    if (e.key === 'Escape') $('#sheet').classList.remove('open');
+    return;
+  }
+  if (e.key === 'ArrowRight') next();
+  else if (e.key === 'ArrowLeft') prev();
+  else if (e.key === 'ArrowUp') { e.preventDefault(); later(); }
+  else if (e.key === 'Escape') go(null);
+  else if (deck === 'q' && /^[1-9]$/.test(e.key) && list()[idx]) pick(list()[idx], +e.key - 1);
+  else if (deck === 'a' && /^[12]$/.test(e.key) && list()[idx]) pick(aQ(list()[idx]), +e.key - 1);
+});
+window.addEventListener('resize', () => { const c = $('#stage .card'); if (c) fitTouch(c); });
+
+async function start() {
+  const lo = readLocal(), local = lo.a || {};
+  let server = null;
+  if (CFG) $('#stage').innerHTML = '<div class="home-wrap"><h1>지식 검수</h1><p class="lead">불러오는 중…</p></div>';
+  try { server = CFG ? await webLoad() : await localLoad(); }
+  catch (e) {
+    if (e && e.auth) return askPw(PW ? '비밀번호가 맞지 않습니다.' : null);
+    online = false;
+  }
+  if (!server) {
+    $('#stage').innerHTML = '<div class="home-wrap"><h1>지식 검수</h1><p class="lead">서버에 닿지 않습니다. 잠시 뒤 다시 열어 주세요.</p></div>';
+    return;
+  }
+  D = server.deck;
+  if (server.epoch !== lo.ep) {   // 서버가 초기화된 뒤 처음 — 보관본은 버린다
+    EP = server.epoch; A = { ...server.answers };
+  } else {
+    EP = server.epoch; A = { ...server.answers };
+    for (const k in local) if (!A[k] || (local[k].t || 0) > (A[k].t || 0)) { A[k] = local[k]; pending[k] = local[k]; }
+  }
+  writeLocal();
+  if (Object.keys(pending).length) schedule(CFG ? 4000 : 0);
+  const m = location.hash.match(/^#([pq])\/(\d+)$/);
+  if (m) go(m[1], Math.min(+m[2], D.decks[m[1]].length)); else if (location.hash === '#guide') go('guide'); else if (location.hash === '#sum') go('sum'); else renderHome();
+}
+try { PW = localStorage.getItem(LS_PW) || ''; } catch {}
+if (CFG && !PW) askPw(); else start();
+</script>
+</body>
+</html>
