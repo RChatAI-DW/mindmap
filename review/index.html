@@ -136,11 +136,10 @@ body.dragging .pc .x,.pc.lift .x{display:none}
 .undo:disabled{opacity:.3;cursor:default}
 .pwin{display:block;width:100%;height:54px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r-ctl);font-size:17px;background:var(--bg)}
 .pwin:focus{outline:2px solid var(--ink);outline-offset:-1px}
-body.wide #app{max-width:1240px}
+body.wide #app{max-width:1600px}
 .chnew{font-size:15px;color:var(--sub);background:var(--bg);border-radius:10px;padding:8px 12px;flex:none}
-.chwrap{display:flex;gap:14px;height:100%;padding:0 16px 14px}
 .chleft{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);border-radius:var(--r-card)}
-.chlog{flex:1;overflow-y:auto;padding:12px 14px}
+.chlog{flex:1;min-height:0;overflow-y:auto;padding:12px 14px}
 .cm{display:flex;margin:8px 0}
 .cm.u{justify-content:flex-end}
 .cm .bub{max-width:88%}
@@ -166,7 +165,6 @@ body.wide #app{max-width:1240px}
 .dline{margin:2px 0 6px;font-size:15px}
 .draw{margin:4px 2px 16px}
 details summary{cursor:pointer;font-size:14px;color:var(--sub);margin:6px 0}
-@media (max-width:820px){ .chwrap{flex-direction:column;overflow-y:auto} .chleft{min-height:60vh} .chright{flex:none} }
 .sumlink{display:block;margin:28px auto 0;font-size:15px;color:var(--sub);text-decoration:underline;padding:8px}
 .sumstat{display:flex;gap:10px;margin:8px 0 14px}
 .sumstat div{flex:1;background:var(--bg);border-radius:12px;padding:12px 14px}
@@ -180,28 +178,50 @@ details summary{cursor:pointer;font-size:14px;color:var(--sub);margin:6px 0}
 .dl p{margin:0 !important;color:var(--ink) !important;font-size:15px;word-break:keep-all}
 .addin{min-height:44px;width:150px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);outline:0}
 
-/* 상담 테스트 — 질문 목록 · 답마다 의견 */
-.cats{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
-.cat{min-height:40px;padding:7px 14px;border-radius:999px;background:var(--bg);color:var(--sub);font-size:15px;box-shadow:0 1px 3px rgba(0,23,51,.06)}
-.cat.on{background:var(--ink);color:#fff;font-weight:600}
-.cat small{font-size:14px;opacity:.7;margin-left:6px;font-variant-numeric:tabular-nums}
-.qlist{background:var(--bg);border-radius:var(--r-card);overflow:hidden}
-.qrow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 16px;border-bottom:1px solid var(--line);text-align:left;word-break:keep-all}
-.qrow:last-child{border-bottom:0}
-@media (hover:hover){ .qrow:hover{background:var(--soft)} }
-.qrow .n{flex:none;width:22px;color:var(--faint);font-size:14px;font-variant-numeric:tabular-nums}
-.qrow .qt2{flex:1;min-width:0;font-size:16px}
-.qs,.fbtag{flex:none;font-size:14px;font-weight:600;border-radius:8px;padding:3px 10px}
+/* 상담 테스트 — 왼쪽 질문 목록 · 가운데 상담 · 오른쪽 의견과 판단 기록 */
+.ws{display:grid;grid-template-columns:300px minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:14px;height:100%;padding:0 16px 14px}
+.ws>*{min-height:0}
+.side{display:flex;flex-direction:column;min-width:0;background:var(--bg);border-radius:var(--r-card);overflow:hidden}
+.sidelist{flex:1;min-height:0;overflow-y:auto;padding:4px 0}
+.sc{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:8px 16px;text-align:left;font-size:16px;font-weight:600;color:var(--sub);border-top:1px solid var(--line)}
+.sc:first-child{border-top:0}
+.sc small{margin-left:auto;font-size:14px;font-weight:500;color:var(--faint);font-variant-numeric:tabular-nums}
+.sc.on{color:var(--ink)}
+.sq{display:flex;align-items:flex-start;gap:8px;width:100%;padding:9px 14px 9px 13px;border-left:3px solid transparent;text-align:left;font-size:15px;line-height:1.45;word-break:keep-all}
+.sq .n{flex:none;width:20px;color:var(--faint);font-size:14px;font-variant-numeric:tabular-nums;padding-top:1px}
+.sq .t{flex:1;min-width:0}
+.sq.cur{background:var(--soft);border-left-color:var(--ink);font-weight:600}
+@media (hover:hover){ .sq:hover,.sc:hover{background:var(--soft)} }
+.sidefree{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.sidefree textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line2);border-radius:12px;padding:8px 10px;font-size:15px}
+.sidefree .chsend{padding:0 12px;font-size:15px;flex:none}
+.qs,.fbtag{flex:none;font-size:14px;font-weight:600;border-radius:8px;padding:1px 8px}
 .qs.fb,.fbtag.fb{color:var(--warn);background:var(--warn-soft)}
 .qs.ok,.fbtag.ok{color:var(--ok);background:var(--ok-soft)}
 .qs.run{color:var(--sub);background:var(--soft)}
-.free .chf{background:var(--bg);border-radius:var(--r-card);border-top:0}
-.chq{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
-.chq-t{flex:1;min-width:0;font-weight:700;font-size:16px;word-break:keep-all}
-.runsel{flex:none;font-family:inherit;font-size:14px;color:var(--sub);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:6px 8px}
-.chnew.ink{background:var(--ink);color:#fff;font-weight:600}
+.chq{padding:10px 14px 12px;border-bottom:1px solid var(--line)}
+.chq-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chq-c{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums}
+.chq-t{margin-top:6px;font-weight:700;font-size:16px;word-break:keep-all}
+.chq .chnew{background:var(--soft);font-size:14px;padding:6px 12px}
+.chq .chnew.ink{background:var(--ink);color:#fff;font-weight:600}
+.mback{display:none}
+.runsel{flex:none;font-family:inherit;font-size:14px;color:var(--sub);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:5px 8px}
 .cm.a{flex-direction:column;align-items:flex-start}
-.fbtag{margin:4px 0 0 2px;padding:2px 8px}
+.fbtag{margin:4px 0 0 2px}
+@media (max-width:1100px){
+  .ws{grid-template-columns:260px minmax(0,1fr);grid-template-rows:none;grid-auto-rows:min-content;overflow-y:auto}
+  .side{grid-row:span 2;position:sticky;top:0;height:calc(100dvh - 104px)}
+  .ws .chleft{height:72vh}
+}
+@media (max-width:820px){
+  .ws{grid-template-columns:minmax(0,1fr)}
+  .side{grid-row:auto;position:static}
+  .ws.conv .side{display:none}
+  .ws:not(.conv) .chleft,.ws:not(.conv) .chright{display:none}
+  .ws .chleft{height:auto;min-height:62vh}
+  .mback{display:inline-block}
+}
 .okbtn{min-height:40px;padding:6px 16px;border-radius:999px;border:1.5px solid var(--line2);color:var(--sub);font-size:15px;font-weight:600}
 .okbtn.on{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
 .fbl{display:block;font-size:15px;font-weight:700;margin:14px 0 6px}
@@ -877,7 +897,7 @@ function renderSummary() {
 //   관문 비밀번호 → consult-trace 가 서버 안에서 회사 시험 계정으로 라이브 상담 함수(chat)를 부르고, 답이 끝나면 그 상담의 판단 기록을 읽는다.
 //   답 칸에 남는 것 — tq-<질문 번호> {runs:[{sid, at}]} 그 질문으로 연 상담 · tq-free-<카테고리> {runs:[{sid, at, q}]} 직접 물어본 상담
 //                    fb-<답 번호> {cat, q, qt, sid, u 손님 말, a 답 앞부분, ok 괜찮음, ask 되물어야 할 것, fix 바꿔야 할 내용}
-const LS_DEV = 'jh-chat-device', LS_CAT = 'jh-test-cat';
+const LS_DEV = 'jh-chat-device';
 let CH = { cat: null, q: null, qtext: '', sid: null, msgs: [], sel: null, busy: false, live: '' };
 const TCATS = () => (D && D.decks.t) || [];
 const catOf = k => TCATS().find(c => c.key === k) || TCATS()[0];
@@ -919,50 +939,81 @@ async function chTrace(sid) {
   return j.messages || [];
 }
 
-// 질문 목록 — 카테고리 칩 · 질문 줄(누르면 새 상담으로 바로 물음) · 직접 물어본 것 · 직접 물어보기
+// 상담 테스트 화면 — 왼쪽 질문 목록(카테고리를 누르면 펼침) · 가운데 상담 · 오른쪽 고른 답의 의견과 판단 기록(대표 10/26 「왼쪽 목록 · 오른쪽 상담」)
+//   좁은 화면(820px 이하)은 목록과 상담을 번갈아 보여 준다 — 질문을 누르면 상담, 「‹ 목록」으로 돌아온다.
+const LS_LAST = 'jh-test-last';
+let SIDE = null;   // 펼친 카테고리 — 다른 카테고리를 둘러봐도 가운데 상담은 그대로 둔다
+const narrow = () => window.matchMedia('(max-width:820px)').matches;
+// #chat · #chat/<카테고리> — 넓은 화면은 마지막에 보던 질문(없으면 그 카테고리 첫 질문)을 묻지 않고 띄운다
 function renderTest(k) {
-  deck = null; wide(false);
-  if (!k) try { k = localStorage.getItem(LS_CAT); } catch {}
-  const c = catOf(k);
+  let last = null; try { last = JSON.parse(localStorage.getItem(LS_LAST) || 'null'); } catch {}
+  const c = catOf(k || (last && last.cat));
+  if (!c) { $('#stage').innerHTML = '<div class="home-wrap"><p class="lead">질문 자료가 없습니다.</p></div>'; return; }
+  if (!narrow()) return openConv(c.key, last && last.cat === c.key ? last.key : c.qs[0].id);
+  SIDE = c.key;
+  CH = { cat: c.key, q: null, qtext: '', sid: null, msgs: [], sel: null, busy: false, live: '' };
+  history.replaceState(null, '', '#chat/' + c.key);
+  ensureWs(); wsMode(false); renderSide(); chRender();
+}
+function ensureWs() {
+  deck = null; wide(true);
+  if ($('#ws')) return;
   $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트</button><span id="sync"></span>`;
   $('#top .home').onclick = () => go(null);
   $('#bar').innerHTML = '';
-  if (!c) { $('#stage').innerHTML = '<div class="home-wrap"><p class="lead">질문 자료가 없습니다.</p></div>'; return; }
-  try { localStorage.setItem(LS_CAT, c.key); } catch {}
-  history.replaceState(null, '', '#chat/' + c.key);
-  const fbs = fbList(), free = runsOf(c.key, null).slice().reverse();
-  $('#stage').innerHTML = `<div class="guide-wrap">
-    <div class="cats">${TCATS().map(x => `<button class="cat ${x.key === c.key ? 'on' : ''}" data-c="${x.key}">${esc(x.name)}<small>${x.qs.filter(q => runsOf(x.key, q.id).length).length}/${x.qs.length}</small></button>`).join('')}</div>
-    <div class="qlist">${c.qs.map((q, i) => `<button class="qrow" data-q="${q.id}"><span class="n">${i + 1}</span><span class="qt2">${esc(q.q)}</span>${pill(fbs.filter(r => r.q === q.id), runsOf(c.key, q.id).length)}</button>`).join('')}</div>
-    ${free.length ? `<h2>직접 물어본 것</h2><div class="qlist">${free.map(r => `<button class="qrow" data-s="${r.sid}"><span class="qt2">${esc(r.q)}</span>${pill(fbs.filter(x => x.sid === r.sid), true)}</button>`).join('')}</div>` : ''}
-    <form id="frf" class="free"><h2>직접 물어보기</h2><div class="chf"><textarea id="frin" rows="2" aria-label="직접 물어볼 말"></textarea><button class="chsend">보내기</button></div></form>
-  </div>`;
-  $('#stage').querySelectorAll('.cat').forEach(b => b.onclick = () => renderTest(b.dataset.c));
-  $('#stage').querySelectorAll('.qrow[data-q]').forEach(b => b.onclick = () => openConv(c.key, b.dataset.q, runsOf(c.key, b.dataset.q).length ? null : 'ask'));
-  $('#stage').querySelectorAll('.qrow[data-s]').forEach(b => b.onclick = () => openConv(c.key, 's' + b.dataset.s));
-  $('#frf').onsubmit = e => { e.preventDefault(); const t = $('#frin').value.trim(); if (t) openFree(c.key, t); };
-  $('#frin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#frf').requestSubmit(); } };
+  $('#stage').innerHTML = `<div class="ws" id="ws"><aside class="side" id="side"></aside>
+    <div class="chleft"><div id="chq" class="chq"></div><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2" aria-label="이어서 물을 말"></textarea><button class="chsend">보내기</button></form></div>
+    <div id="chright" class="chright"></div></div>`;
+  $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; if (CH.busy) return toast('답을 쓰는 중입니다'); if (!CH.cat || !t.trim()) return; $('#chin').value = ''; if (!CH.qtext) CH.qtext = t.trim(); chSend(t); };
+  $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
   sync(online ? (Object.keys(pending).length ? '저장 중' : '') : '서버 끊김 · 이 브라우저에 보관');
 }
+const wsMode = conv => { const w = $('#ws'); if (w) w.classList.toggle('conv', !!conv); };
+// 왼쪽 목록 — 카테고리 줄(해 본 질문 수) · 펼친 카테고리의 질문(의견 수 · 괜찮음 · 해 봄)과 직접 물어본 것 · 맨 아래 직접 묻기
+function renderSide() {
+  const el = $('#side'); if (!el) return;
+  const old = $('#sidelist'), top = old ? old.scrollTop : 0;
+  const fr = $('#frin'), draft = fr ? fr.value : '', typing = fr && document.activeElement === fr;
+  const fbs = fbList(), open = TCATS().find(c => c.key === SIDE);
+  el.innerHTML = `<div class="sidelist" id="sidelist">${TCATS().map(c => {
+    let h = `<button class="sc ${c === open ? 'on' : ''}" data-c="${c.key}" aria-expanded="${c === open}"><span>${esc(c.name)}</span><small>${c.qs.filter(q => runsOf(c.key, q.id).length).length}/${c.qs.length}</small></button>`;
+    if (c !== open) return h;
+    h += c.qs.map((q, i) => `<button class="sq ${CH.q === q.id ? 'cur' : ''}" data-q="${q.id}"><span class="n">${i + 1}</span><span class="t">${esc(q.q)}</span>${pill(fbs.filter(r => r.q === q.id), runsOf(c.key, q.id).length)}</button>`).join('');
+    h += runsOf(c.key, null).slice().reverse().map(r => `<button class="sq ${!CH.q && CH.sid === r.sid ? 'cur' : ''}" data-s="${r.sid}"><span class="n">·</span><span class="t">${esc(r.q)}</span>${pill(fbs.filter(x => x.sid === r.sid), true)}</button>`).join('');
+    return h;
+  }).join('')}</div>
+  <form id="frf" class="sidefree"><textarea id="frin" rows="2" aria-label="직접 물어볼 말"></textarea><button class="chsend">직접 묻기</button></form>`;
+  $('#sidelist').scrollTop = top;
+  el.querySelectorAll('.sc').forEach(b => b.onclick = () => { SIDE = SIDE === b.dataset.c ? null : b.dataset.c; renderSide(); const o = $('#side .sc.on'); if (o) o.scrollIntoView({ block: 'nearest' }); });
+  el.querySelectorAll('.sq[data-q]').forEach(b => b.onclick = () => openConv(SIDE, b.dataset.q, runsOf(SIDE, b.dataset.q).length ? null : 'ask'));
+  el.querySelectorAll('.sq[data-s]').forEach(b => b.onclick = () => openConv(SIDE, 's' + b.dataset.s));
+  const f = $('#frin'); f.value = draft; if (typing) f.focus();
+  $('#frf').onsubmit = e => { e.preventDefault(); const t = f.value.trim(); if (!t) return; f.value = ''; openFree(SIDE || CH.cat || TCATS()[0].key, t); };
+  f.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#frf').requestSubmit(); } };
+}
 
-// 상담 화면 — key = 질문 번호 또는 s<상담 번호>(직접 물어본 것). mode 'ask' = 새 상담으로 지금 묻기, 없으면 마지막에 물은 상담을 보여 준다
+// 상담 열기 — key = 질문 번호 또는 s<상담 번호>(직접 물어본 것). mode 'ask' = 새 상담으로 지금 묻기, 없으면 마지막에 물은 상담을 보여 준다
 async function openConv(k, key, mode) {
   const c = catOf(k), free = /^s\d+$/.test(key || '');
-  const q = free ? null : c && c.qs.find(x => x.id === key);
-  if (!c || (!free && !q)) return renderTest(c && c.key);
+  if (!c) return;
+  const q = free ? null : c.qs.find(x => x.id === key);
+  if (!free && !q) return openConv(c.key, c.qs[0].id);
   const runs = runsOf(c.key, q ? q.id : null);
   const ch = CH = { cat: c.key, q: q ? q.id : null, qtext: q ? q.q : '', sid: null, msgs: [], sel: null, busy: false, live: '' };
   if (free) { ch.sid = +key.slice(1); ch.qtext = (runs.find(r => r.sid === ch.sid) || {}).q || ''; }
   else if (mode !== 'ask' && runs.length) ch.sid = runs[runs.length - 1].sid;
+  SIDE = c.key;
+  try { localStorage.setItem(LS_LAST, JSON.stringify({ cat: c.key, key })); } catch {}
   history.replaceState(null, '', `#chat/${c.key}/${key}`);
-  renderConv();
+  ensureWs(); wsMode(true); renderSide(); chRender();
   if (mode === 'ask') return chSend(ch.qtext);
   if (ch.sid) await chShow(ch, ch.sid);
 }
 function openFree(k, text) {
   CH = { cat: k, q: null, qtext: text, sid: null, msgs: [], sel: null, busy: false, live: '' };
+  SIDE = k;
   history.replaceState(null, '', `#chat/${k}/new`);
-  renderConv();
+  ensureWs(); wsMode(true); renderSide();
   chSend(text);
 }
 // 상담 기록을 읽어 보여 준다 — 읽는 사이 다른 질문으로 옮겼으면 버린다
@@ -977,46 +1028,39 @@ async function chShow(ch, sid) {
   ch.sel = last ? last.id : null;
   chRender();
 }
-function renderConv() {
-  deck = null; wide(true);
-  const c = catOf(CH.cat), i = CH.q ? c.qs.findIndex(x => x.id === CH.q) : -1;
-  $('#top').innerHTML = `<button class="home" aria-label="질문 목록">${CHEV}</button><button class="title">${esc(c.name)}<small>${i >= 0 ? `${i + 1} / ${c.qs.length}` : '직접 물어봄'}</small></button><span id="sync"></span>
-    <button class="chnew" id="again">다시 묻기</button>${i >= 0 && i < c.qs.length - 1 ? '<button class="chnew ink" id="nextq">다음 질문 ›</button>' : ''}`;
-  $('#top .home').onclick = () => renderTest(c.key);
-  $('#top .title').onclick = () => renderTest(c.key);
-  $('#again').onclick = () => {
-    if (CH.busy) return toast('답을 쓰는 중입니다');
-    if (CH.q) openConv(c.key, CH.q, 'ask'); else if (CH.qtext) openFree(c.key, CH.qtext);
-  };
-  const nx = $('#nextq');
-  if (nx) nx.onclick = () => { if (CH.busy) return toast('답을 쓰는 중입니다'); const q = c.qs[i + 1]; openConv(c.key, q.id, runsOf(c.key, q.id).length ? null : 'ask'); };
-  $('#bar').innerHTML = '';
-  $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chq" class="chq"></div><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2" aria-label="이어서 물을 말"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
-  $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; if (CH.busy) return toast('답을 쓰는 중입니다'); $('#chin').value = ''; if (!CH.qtext) CH.qtext = t.trim(); chSend(t); };
-  $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
-  sync(online ? (Object.keys(pending).length ? '저장 중' : '') : '서버 끊김 · 이 브라우저에 보관');
-  chRender();
-}
-// 위 띠 — 지금 질문 · 여러 번 물었으면 몇 번째 상담을 볼지 · 아직 안 물었으면 「물어보기」
+// 가운데 위 — 카테고리 · 몇 번째 질문 · 몇 번째 상담 · 물어보기/다시 묻기 · 다음 질문, 아래 줄에 질문
 function chHead() {
   const el = $('#chq'); if (!el) return;
+  if (!CH.qtext) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const c = catOf(CH.cat), i = CH.q ? c.qs.findIndex(x => x.id === CH.q) : -1;
   const runs = CH.q ? runsOf(CH.cat, CH.q) : [];
   const sel = runs.length > 1 ? `<select id="runsel" class="runsel" aria-label="물은 때">${runs.map((r, j) => `<option value="${r.sid}" ${r.sid === CH.sid ? 'selected' : ''}>${j + 1}번째 · ${fmtAt(r.at)}</option>`).join('')}</select>` : '';
-  const ask = !CH.sid && !CH.busy && !CH.msgs.length && CH.qtext ? '<button class="chnew ink" id="askq">물어보기</button>' : '';
-  el.innerHTML = `<span class="chq-t">${esc(CH.qtext)}</span>${sel}${ask}`;
-  el.style.display = CH.qtext ? '' : 'none';
+  const asked = CH.sid || CH.msgs.length || CH.busy;
+  el.innerHTML = `<div class="chq-row"><button class="chnew mback" id="mback">‹ 목록</button><span class="chq-c">${esc(c.name)} · ${i >= 0 ? `${i + 1}번` : '직접 물어봄'}</span><span style="flex:1"></span>
+    ${sel}${asked ? '<button class="chnew" id="again">다시 묻기</button>' : '<button class="chnew ink" id="askq">물어보기</button>'}${i >= 0 && i < c.qs.length - 1 ? '<button class="chnew" id="nextq">다음 질문 ›</button>' : ''}</div>
+    <div class="chq-t">${esc(CH.qtext)}</div>`;
+  $('#mback').onclick = () => { wsMode(false); SIDE = CH.cat; renderSide(); history.replaceState(null, '', '#chat/' + CH.cat); };
   const s = $('#runsel');
   if (s) s.onchange = () => {
     if (CH.busy) { s.value = CH.sid; return toast('답을 쓰는 중입니다'); }
     CH.sid = +s.value; CH.msgs = []; CH.sel = null; chRender(); chShow(CH, CH.sid);
   };
   const a = $('#askq'); if (a) a.onclick = () => chSend(CH.qtext);
+  const ag = $('#again');
+  if (ag) ag.onclick = () => {
+    if (CH.busy) return toast('답을 쓰는 중입니다');
+    if (CH.q) openConv(CH.cat, CH.q, 'ask'); else openFree(CH.cat, CH.qtext);
+  };
+  const nx = $('#nextq');
+  if (nx) nx.onclick = () => { const q = c.qs[i + 1]; openConv(c.key, q.id, runsOf(c.key, q.id).length ? null : 'ask'); };
 }
 // 물은 상담 기록 — 새 상담이 열리는 순간(session 이벤트) 남긴다(답이 끝나기 전에 창을 닫아도 남게)
 function addRun(ch) {
   const runs = runsOf(ch.cat, ch.q).filter(r => r.sid !== ch.sid);
   runs.push({ sid: ch.sid, at: Date.now(), ...(ch.q ? {} : { q: ch.qtext.slice(0, 140) }) });
   put(runsKey(ch.cat, ch.q), { runs: runs.slice(ch.q ? -50 : -15) }, true);
+  renderSide();
 }
 async function chSend(text) {
   const ch = CH;
@@ -1041,7 +1085,7 @@ async function chSend(text) {
         let ev; try { ev = JSON.parse(line.slice(5)); } catch { continue; }
         if (ev.type === 'session' && ev.session_id && ev.session_id !== ch.sid) {
           ch.sid = ev.session_id; addRun(ch);
-          if (CH === ch && !ch.q) history.replaceState(null, '', `#chat/${ch.cat}/s${ch.sid}`);
+          if (CH === ch && !ch.q) { history.replaceState(null, '', `#chat/${ch.cat}/s${ch.sid}`); try { localStorage.setItem(LS_LAST, JSON.stringify({ cat: ch.cat, key: 's' + ch.sid })); } catch {} }
         }
         else if (ev.type === 'delta' && ev.text) { ch.live += ev.text; if (CH === ch) chLive(); }
         else if (ev.type === 'progress' && ev.text && !ch.live && CH === ch) { const b = $('#chlive'); if (b) b.innerHTML = `<span class="lead">${esc(ev.text)}</span>`; }
@@ -1103,11 +1147,14 @@ const refShort = r => { const a = String(r || '').split('/').filter(Boolean); re
 // 오른쪽 — 고른 답에 대한 의견(괜찮음 · 되물어야 할 것 · 바꿔야 할 내용, 적는 대로 저장) + 그 답의 판단 기록
 const prevUser = m => { const i = CH.msgs.indexOf(m); for (let j = i - 1; j >= 0; j--) if (CH.msgs[j].role === 'user') return String(CH.msgs[j].content || ''); return ''; };
 function fbPut(m, patch) {
+  const b = A['fb-' + m.id], was = `${fbHas(b)}${!!(b && b.ok)}`;
   put('fb-' + m.id, {
     cat: CH.cat, q: CH.q, ...(CH.q ? {} : { qt: CH.qtext.slice(0, 140) }), sid: CH.sid,
     u: prevUser(m).slice(0, 200), a: String(m.content || '').slice(0, 400), ...patch,
   }, true);
   const tg = $('#tag-' + m.id); if (tg) tg.outerHTML = fbTag(m.id);
+  const r = A['fb-' + m.id];
+  if (`${fbHas(r)}${!!r.ok}` !== was) renderSide();
 }
 function chDetail() {
   const box = $('#chright'); if (!box) return;
