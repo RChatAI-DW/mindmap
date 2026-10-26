@@ -72,7 +72,7 @@ textarea,input{font-family:inherit;font-size:17px;color:inherit}
 .pc.on{background:var(--ink);color:#fff;font-weight:600}
 .pc[data-x]{cursor:grab;touch-action:none;-webkit-touch-callout:none}
 .pc.ph{opacity:0}
-.pc.lift{position:fixed;z-index:60;margin:0;pointer-events:none;cursor:grabbing;transform:scale(1.05);box-shadow:var(--float);transition:transform .12s ease}
+.pc.lift{position:fixed !important;z-index:60;margin:0;pointer-events:none;cursor:grabbing;transform:scale(1.05);box-shadow:var(--float);transition:transform .12s ease}
 body.dragging,body.dragging *{cursor:grabbing !important;user-select:none}
 .pc.add{background:var(--bg);border:1.5px dashed var(--line2);color:var(--sub)}
 .pc[data-x]{position:relative}
@@ -842,6 +842,7 @@ window.addEventListener('pointermove', e => {
     const r = d.el.getBoundingClientRect();
     const g = d.el.cloneNode(true);
     g.classList.add('lift');
+    g.removeAttribute('data-x');   // 칩 규칙(.pc[data-x] 의 position:relative 등)이 복제 칩에 걸리지 않게 — 걸리면 고정 위치가 풀려 칩이 사라진다
     Object.assign(g.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
     document.body.appendChild(g);
     Object.assign(d, { ghost: g, ox: d.x - r.left, oy: d.y - r.top, on: true });
