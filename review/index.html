@@ -119,6 +119,8 @@ body.dragging .pc .x,.pc.lift .x{display:none}
 .stepbox .base{color:var(--faint);font-size:14px}
 .who2{font-size:14px;color:var(--faint)}
 .dk{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.dk2{margin:10px 0 0;font-size:14px;color:var(--sub);background:var(--ok-soft);border-radius:10px;padding:8px 10px;word-break:keep-all}
+.dk2 b{color:var(--ok);margin-right:6px}
 .dk span{font-size:14px;font-weight:600;color:var(--ok);background:var(--ok-soft);border-radius:8px;padding:3px 10px}
 .loop{background:var(--bg);border-radius:var(--r-card);padding:4px 16px}
 .lp{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -696,19 +698,20 @@ function renderGuide() {
   $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 구조</button><span id="sync"></span>`;
   $('#top .home').onclick = () => go(null);
   $('#bar').innerHTML = '';
-  const dk = (...n) => `<div class="dk">${n.map(x => `<span>${x}</span>`).join('')}</div>`;
+  // 이 단계를 바꾸는 곳 — 칩 대신 문장으로(대표 10/26 「칩만 봐서는 이해 어려움」)
+  const dk = t => `<p class="dk2"><b>바꾸는 곳</b> ${t}</p>`;
   const stepBox = (no, who, title, body, base, decks) => `<div class="stepbox"><div class="no">${no}</div><div>
     <div class="who2">${who}</div><b>${title}</b><p>${body}</p>${base ? `<p class="base">${base}</p>` : ''}${decks}</div></div>`;
   const arrow = '<div class="arrow"></div>';
   $('#stage').innerHTML = `<div class="guide-wrap">
     <h2 style="margin-top:8px">손님 말이 답이 되기까지</h2>
-    <p class="lead">네 단계를 거칩니다. 초록 딱지는 그 단계를 바꾸는 카드입니다. ③④와 계산 · 자료 대조는 구현 담당이 맡습니다.</p>
+    <p class="lead">네 단계를 거칩니다.</p>
     <div class="flow">
       <div class="io">손님 말<small>글 · 음성 · 사진</small></div>${arrow}
-      ${stepBox('①', 'AI', '알아듣고 되묻기', '무엇을 찾는지, 조건이 무엇인지 읽고, 빠진 값이 있으면 손님께 되묻습니다.', '기준: 부품마다 묻는 항목 · 회사 규칙', dk('부품 지식', '질문'))}${arrow}
-      ${stepBox('②', '서버', '찾고 계산하기', '조건에 맞는 부품을 판매 많은 순으로 찾습니다. 압축기·팽창변 같은 선정은 계산 엔진이, 창고 부하는 두원표준 엑셀 방식이, 유니트는 표준 구성표가 맡습니다.', '자료: 품목 마스터(사양 · 가격 · 재고)', dk('질문', '부품 지식 · 부속'))}${arrow}
-      ${stepBox('③', 'AI', '답 쓰기', '찾고 계산한 결과만 가지고 손님께 드릴 답을 씁니다.', '', '')}${arrow}
-      ${stepBox('④', '서버', '검사', '답에 적힌 가격이 회사 자료와 같은지, 근거 없는 모델명이 없는지 다시 봅니다.', '', '')}${arrow}
+      ${stepBox('①', 'AI', '알아듣고 되묻기', '무엇을 찾는지, 조건이 무엇인지 읽고, 빠진 값이 있으면 손님께 되묻습니다.', '기준: 부품마다 묻는 항목 · 회사 규칙', dk('홈의 「부품 지식」 카드에서 손님께 묻는 항목을 켜고 끄면, 이 단계에서 되묻는 값이 바뀝니다. 「질문」 카드의 답도 여기에 들어갑니다.'))}${arrow}
+      ${stepBox('②', '서버', '찾고 계산하기', '조건에 맞는 부품을 판매 많은 순으로 찾습니다. 압축기·팽창변 같은 선정은 계산 엔진이, 창고 부하는 두원표준 엑셀 방식이, 유니트는 표준 구성표가 맡습니다.', '자료: 품목 마스터(사양 · 가격 · 재고)', dk('「질문」 카드의 현장 기준(유니트 구성, 세트 짝 등)과 「부품 지식」 카드의 같이 권하는 부속이 여기에 들어갑니다.'))}${arrow}
+      ${stepBox('③', 'AI', '답 쓰기', '찾고 계산한 결과만 가지고 손님께 드릴 답을 씁니다.', '', dk('구현 담당이 고칩니다. 답이 이상하면 「상담 테스트」에서 그 답을 짚어 알려 주세요.'))}${arrow}
+      ${stepBox('④', '서버', '검사', '답에 적힌 가격이 회사 자료와 같은지, 근거 없는 모델명이 없는지 다시 봅니다.', '', dk('구현 담당이 고칩니다.'))}${arrow}
       <div class="io">답</div>
     </div>
 
