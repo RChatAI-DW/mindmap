@@ -387,7 +387,7 @@ function askPw(msg) {
     e.preventDefault();
     PW = $('#pw').value;
     try { localStorage.setItem(LS_PW, PW); } catch {}
-    start();
+    if (CH.afterPw) { CH.afterPw = false; renderChat(); } else start();
   };
   $('#pw').focus();
 }
@@ -833,11 +833,18 @@ async function chToken() {
   if (Date.now() > CH.auth.exp) { try { await chAuth({ refresh_token: CH.auth.rt }, 'refresh_token'); } catch { CH.auth = null; chSave(); throw { login: true }; } }
   return CH.auth.at;
 }
+// 관문 비밀번호로 부른다 — consult-trace 가 서버 안에서 회사 시험 계정으로 로그인해 상담·기록을 다룬다(계정 비밀번호는 브라우저에 없음)
+function chCall(body) {
+  return fetch(`${CFG.url}/functions/v1/consult-trace`, {
+    method: 'POST', headers: { apikey: CFG.anon, Authorization: 'Bearer ' + CFG.anon, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pw: PW, ...body }),
+  });
+}
 async function chTrace() {
   if (!CH.sid) { CH.msgs = []; return; }
-  const r = await fetch(`${CFG.url}/functions/v1/consult-trace`, { method: 'POST', headers: { apikey: CFG.anon, Authorization: 'Bearer ' + await chToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: CH.sid }) });
+  const r = await chCall({ op: 'trace', session_id: CH.sid });
   const j = await r.json().catch(() => ({}));
-  if (r.status === 401) { CH.auth = null; chSave(); throw { login: true }; }
+  if (r.status === 401) throw { login: true };
   if (!r.ok) throw new Error(j.error || ('판단 기록 읽기 실패 ' + r.status));
   CH.msgs = j.messages || [];
 }
@@ -847,11 +854,8 @@ async function chSend(text) {
   CH.msgs.push({ id: 'u' + Date.now(), role: 'user', content: text });
   chRender();
   try {
-    const r = await fetch(`${CFG.url}/functions/v1/chat`, {
-      method: 'POST', headers: { apikey: CFG.anon, Authorization: 'Bearer ' + await chToken(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, device_id: chDevice(), client_msg_uid: 'trace-' + Date.now(), ...(CH.sid ? { session_id: CH.sid } : {}) }),
-    });
-    if (r.status === 401) { CH.auth = null; chSave(); throw { login: true }; }
+    const r = await chCall({ op: 'chat', message: text, device_id: chDevice(), client_msg_uid: 'trace-' + Date.now(), ...(CH.sid ? { session_id: CH.sid } : {}) });
+    if (r.status === 401) throw { login: true };
     if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || ('상담 오류 ' + r.status)); }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
     for (;;) {
@@ -869,7 +873,7 @@ async function chSend(text) {
     const last = [...CH.msgs].reverse().find(m => m.role === 'assistant');
     CH.sel = last ? last.id : null;
   } catch (e) {
-    if (e && e.login) return chLogin('다시 로그인해 주세요.');
+    if (e && e.login) { CH.afterPw = true; return askPw('비밀번호가 맞지 않습니다.'); }
     toast(e.message || '오류');
   } finally { CH.busy = false; CH.live = ''; chRender(); }
 }
@@ -892,16 +896,16 @@ async function renderChat() {
   deck = null; history.replaceState(null, '', '#chat');
   if (!CFG) { $('#stage').innerHTML = '<div class="home-wrap"><h1>상담 테스트</h1><p class="lead">게시본에서만 됩니다.</p></div>'; return; }
   chLoad();
-  if (!CH.auth) return chLogin();
+  if (!PW) { CH.afterPw = true; return askPw(); }   // 관문 비밀번호만 있으면 된다 — 따로 로그인하지 않는다(대표 10/26)
   document.body.classList.add('wide');
-  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트<small>${esc(CH.auth.email || '')}</small></button><button class="chnew">새 상담</button>`;
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트<small>회사 시험 계정 · 라이브 상담</small></button><button class="chnew">새 상담</button>`;
   $('#top .home').onclick = () => { document.body.classList.remove('wide'); if (D) go(null); else { history.replaceState(null, '', '#'); if (CFG && !PW) askPw(); else start(); } };
   $('#top .chnew').onclick = () => { CH.sid = null; CH.msgs = []; CH.sel = null; chSave(); chRender(); };
   $('#bar').innerHTML = '';
   $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2" placeholder="손님처럼 물어보세요 (Enter 보내기 · Shift+Enter 줄바꿈)"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
   $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; $('#chin').value = ''; chSend(t); };
   $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
-  try { await chTrace(); } catch (e) { if (e && e.login) return chLogin('다시 로그인해 주세요.'); toast(e.message); }
+  try { await chTrace(); } catch (e) { if (e && e.login) { CH.afterPw = true; return askPw('비밀번호가 맞지 않습니다.'); } toast(e.message); }
   if (!CH.sel) { const last = [...CH.msgs].reverse().find(m => m.role === 'assistant'); CH.sel = last ? last.id : null; }
   chRender();
 }
