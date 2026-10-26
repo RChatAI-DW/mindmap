@@ -180,6 +180,36 @@ details summary{cursor:pointer;font-size:14px;color:var(--sub);margin:6px 0}
 .dl p{margin:0 !important;color:var(--ink) !important;font-size:15px;word-break:keep-all}
 .addin{min-height:44px;width:150px;padding:8px 14px;border-radius:999px;border:1.5px solid var(--ink);outline:0}
 
+/* 상담 테스트 — 질문 목록 · 답마다 의견 */
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.cat{min-height:40px;padding:7px 14px;border-radius:999px;background:var(--bg);color:var(--sub);font-size:15px;box-shadow:0 1px 3px rgba(0,23,51,.06)}
+.cat.on{background:var(--ink);color:#fff;font-weight:600}
+.cat small{font-size:14px;opacity:.7;margin-left:6px;font-variant-numeric:tabular-nums}
+.qlist{background:var(--bg);border-radius:var(--r-card);overflow:hidden}
+.qrow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:12px 16px;border-bottom:1px solid var(--line);text-align:left;word-break:keep-all}
+.qrow:last-child{border-bottom:0}
+@media (hover:hover){ .qrow:hover{background:var(--soft)} }
+.qrow .n{flex:none;width:22px;color:var(--faint);font-size:14px;font-variant-numeric:tabular-nums}
+.qrow .qt2{flex:1;min-width:0;font-size:16px}
+.qs,.fbtag{flex:none;font-size:14px;font-weight:600;border-radius:8px;padding:3px 10px}
+.qs.fb,.fbtag.fb{color:var(--warn);background:var(--warn-soft)}
+.qs.ok,.fbtag.ok{color:var(--ok);background:var(--ok-soft)}
+.qs.run{color:var(--sub);background:var(--soft)}
+.free .chf{background:var(--bg);border-radius:var(--r-card);border-top:0}
+.chq{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.chq-t{flex:1;min-width:0;font-weight:700;font-size:16px;word-break:keep-all}
+.runsel{flex:none;font-family:inherit;font-size:14px;color:var(--sub);background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:6px 8px}
+.chnew.ink{background:var(--ink);color:#fff;font-weight:600}
+.cm.a{flex-direction:column;align-items:flex-start}
+.fbtag{margin:4px 0 0 2px;padding:2px 8px}
+.okbtn{min-height:40px;padding:6px 16px;border-radius:999px;border:1.5px solid var(--line2);color:var(--sub);font-size:15px;font-weight:600}
+.okbtn.on{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.fbl{display:block;font-size:15px;font-weight:700;margin:14px 0 6px}
+.fbt{display:block;width:100%;padding:10px 12px;border:1px solid var(--line2);border-radius:var(--r-ctl);resize:vertical;line-height:1.5;font-size:16px;background:var(--bg)}
+.fbt:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:transparent}
+.dl.w span{width:96px}
+.sumcat{font-size:16px;color:var(--sub);margin:18px 0 8px}
+
 /* 밀 때 보이는 글 */
 .drag{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:5;font-size:15px;font-weight:700;padding:5px 14px;border-radius:999px;background:var(--ink);color:#fff;opacity:0;pointer-events:none;transition:opacity .1s}
 
@@ -363,9 +393,20 @@ async function webLoad() {
   lastLoad = Date.now();
   return { deck: JSON.parse(text), epoch: ep, answers: a };
 }
+// 노드 한 개는 4,000자까지(마인드맵 함수) — 넘치면 의견의 답 앞부분 · 손님 말부터 줄인다
+function nodeX(rec) {
+  let r = { ...rec, ep: EP }, x = JSON.stringify(r);
+  if (x.length > 3900 && (r.a || r.u)) { r = { ...r, a: String(r.a || '').slice(0, 80), u: String(r.u || '').slice(0, 80) }; x = JSON.stringify(r); }
+  while (x.length > 3900 && ((r.ask || '').length || (r.fix || '').length)) {   // 줄바꿈·따옴표가 아주 많은 의견뿐 — 긴 쪽 끝을 자른다
+    const k = (r.fix || '').length >= (r.ask || '').length ? 'fix' : 'ask';
+    r = { ...r, [k]: r[k].slice(0, Math.max(0, r[k].length - Math.ceil((x.length - 3900) / 2) - 10)) };
+    x = JSON.stringify(r);
+  }
+  return x;
+}
 async function webSave(send, keepalive) {
   const nodes = {};
-  for (const [id, rec] of Object.entries(send)) nodes[id] = { p: '', t: 'a', x: JSON.stringify({ ...rec, ep: EP }), u: rec.t || Date.now(), o: 0 };
+  for (const [id, rec] of Object.entries(send)) nodes[id] = { p: '', t: 'a', x: nodeX(rec), u: rec.t || Date.now(), o: 0 };
   lastSave = Date.now();
   const doc = (await mm({ op: 'save', cate: CFG.ansCate, doc: { cate: CFG.ansCate, name: '재현 지식 검수 답', nodes } }, keepalive)).doc;
   const { ep, a } = readAnswers(doc.nodes);
@@ -391,7 +432,7 @@ function askPw(msg) {
     e.preventDefault();
     PW = $('#pw').value;
     try { localStorage.setItem(LS_PW, PW); } catch {}
-    if (CH.afterPw) { CH.afterPw = false; renderChat(); } else start();
+    start();   // 주소(#chat/…)대로 그 화면으로 돌아간다
   };
   $('#pw').focus();
 }
@@ -443,35 +484,27 @@ function go(k, i) {
   if (k == null) { location.hash = ''; return renderHome(); }
   if (k === 'guide') { deck = null; history.replaceState(null, '', '#guide'); return renderGuide(); }
   if (k === 'sum') return renderSummary();
-  if (k === 'chat') return renderChat();
+  if (k === 'chat') return renderTest();
   if (i == null) { i = firstOpen(); if (i < 0) i = list().length; }
   idx = i;
   history.replaceState(null, '', `#${k}/${idx}`);
   render();
 }
 
+// 처음 화면 — 카드(부품 지식 · 질문)는 10/26 저녁 「카테고리별 질문으로 상담해 보고 의견」으로 바꿔 내렸다.
+//   카드에 남긴 답은 서버에 그대로 있고 「답 모아 보기」에서 본다. 카드 화면은 주소(#p/0 · #q/0)로만 열린다.
 function renderHome() {
-  $('#top').innerHTML = `<div style="flex:1"></div><span id="sync"></span>${undoHtml()}`;
-  bindUndo();
+  wide(false);
+  $('#top').innerHTML = `<div style="flex:1"></div><span id="sync"></span>`;
   $('#bar').innerHTML = '';
+  const tc = testCount();
   $('#stage').innerHTML = `<div class="home-wrap">
     <h1>지식 검수</h1>
-    <p class="lead">카드를 한 장씩 보고 판단하시면 됩니다.</p>
-    <button class="tile guide" data-k="guide"><b>상담 구조</b><span>상담이 어떻게 돌아가고, 카드 답이 어디에 들어가는지</span></button>
-    ${ORDER.map(k => { const c = countDeck(k); return `
-      <button class="tile" data-k="${k}">
-        <b>${DECKS[k].name}</b><span>${DECKS[k].desc}</span><em class="step">바뀌는 곳 · ${DECKS[k].step}</em>
-        <div class="bar"><i style="width:${(100 * c.done / c.n).toFixed(1)}%"></i></div>
-        <div class="nums">${c.done} / ${c.n}${c.later ? ` · 나중에 ${c.later}` : ''}</div>
-      </button>`; }).join('')}
-    <button class="tile" data-k="chat"><b>상담 테스트</b><span>앱처럼 상담하고, 답마다 AI가 왜 그렇게 답했는지 봅니다</span><em class="step">1~6 단계를 답마다 봅니다</em></button>
-    <div class="how">
-      <b>다음 ›</b> 오른쪽으로 밀기 · 저장하고 넘김<br>
-      <b>‹ 이전</b> 왼쪽으로 밀기 · 앞 카드로<br>
-      <b>↑ 나중에</b> 위로 밀기 · 모르거나 나중에 볼 것<br>
-      카드는 칩이 아닌 곳(제목·빈 곳)을 밀어 넘깁니다 · 칩을 끌면 순서 바꾸기<br>
-      키보드: ← → ↑ · 숫자 1~4 로 선택지 고르기
-    </div>
+    <p class="lead">질문으로 상담해 보고, 답마다 고칠 점을 남겨 주세요.</p>
+    <button class="tile guide" data-k="guide"><b>상담 구조</b><span>상담이 어떻게 돌아가고, 남긴 의견이 어디에 들어가는지</span></button>
+    <button class="tile" data-k="chat"><b>상담 테스트</b><span>카테고리별 질문으로 상담해 보고, 답마다 되물어야 할 것 · 바꿔야 할 내용을 남깁니다</span>
+      <div class="bar"><i style="width:${tc.n ? (100 * tc.run / tc.n).toFixed(1) : 0}%"></i></div>
+      <div class="nums">해 본 질문 ${tc.run} / ${tc.n}${tc.fb ? ` · 의견 ${tc.fb}` : ''}</div></button>
     <button class="sumlink" data-k="sum">답 모아 보기 (구현 담당용)</button></div>`;
   $('#stage').querySelectorAll('.tile,.sumlink').forEach(b => b.onclick = () => go(b.dataset.k));
   sync(online ? '' : '서버 끊김 · 이 브라우저에 보관');
@@ -695,6 +728,7 @@ const KIND = { q: [qCard, bindQ], p: [pCard, bindP], a: [aCard, bindA] };
 
 // 상담 구조 — 상담이 어떻게 돌고, 덱마다 어느 단계가 바뀌는지
 function renderGuide() {
+  wide(false);
   $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 구조</button><span id="sync"></span>`;
   $('#top .home').onclick = () => go(null);
   $('#bar').innerHTML = '';
@@ -713,28 +747,27 @@ function renderGuide() {
       ${stepBox('3', '서버', '카테고리 분류', '찾는 물건을 품목 마스터의 부품 종류(전자변 · 압축기 · 유니트 등)로 나눕니다.', '', '')}${arrow}
       ${stepBox('4', '서버', '카테고리별 작업', '종류마다 정해진 일을 합니다. 부품 찾기(사양으로 거르고 판매 많은 순) · 압축기 · 팽창변 선정 계산 · 창고 부하계산(두원표준 엑셀) · 유니트 견적(표준 구성표) · 빠진 값 되묻기', '', '')}${arrow}
       ${stepBox('5', 'AI', '답 생성', '서버가 찾고 계산한 결과만 가지고 손님께 드릴 답을 씁니다.', '', '')}${arrow}
-      ${stepBox('6', '서버', '검증', '답에 적힌 가격 · 모델명 · 숫자가 서버 자료와 같은지 다시 보고, 틀리면 고치거나 막습니다.', '', '')}${arrow}
+      ${stepBox('6', '서버', '검증', '답에 적힌 가격이 서버 자료와 다르면 서버 가격으로 고치거나 막고, 표 · 표기를 다듬습니다. 모델명 · 숫자는 서버 자료와 대조해 기록합니다.', '', '')}${arrow}
       <div class="io">답 나감</div>
     </div>
 
-    <h2>카드 답이 상담에 들어가기까지</h2>
+    <h2>남긴 의견이 상담에 들어가기까지</h2>
     <div class="loop">
-      <div class="lp"><span class="who3">지식 담당</span><p>카드에 답합니다. 궁금한 것은 Claude Code 로 상담 기록·코드를 직접 찾아보고, 고칠 점은 GitHub 「상담 대기」 이슈로 남깁니다.</p></div>
-      <div class="lp"><span class="who3">구현 담당</span><p>사장님 말씀 · 회사 자료와 대조해 확인합니다.</p></div>
+      <div class="lp"><span class="who3">지식 담당</span><p>카테고리별 질문으로 상담해 보고, 답마다 「되물어야 할 것」 · 「바꿔야 할 내용」을 남깁니다.</p></div>
+      <div class="lp"><span class="who3">구현 담당</span><p>남긴 의견을 사장님 말씀 · 회사 자료와 대조해 확인합니다.</p></div>
       <div class="lp"><span class="who3">구현 담당</span><p>상담 기준 · 자료 · 코드에 반영하고 라이브에 올립니다.</p></div>
-      <div class="lp"><span class="who3">지식 담당</span><p>앱에서 직접 상담해 보고, 현장 기준과 다른 답이 나오면 Claude Code 로 까닭을 찾아 이슈로 남깁니다.</p></div>
+      <div class="lp"><span class="who3">지식 담당</span><p>같은 질문을 「다시 묻기」로 물어 고쳐졌는지 봅니다.</p></div>
     </div>
 
-    <h2>카드마다 바뀌는 곳</h2>
-    <div class="mrow"><b>부품 지식 · 묻는 항목</b><div class="to">4 카테고리별 작업 — 되묻기</div><p>예: 전자변 5/8 이하를 찾으면 관사이즈 · 접속을 먼저 묻습니다.</p></div>
-    <div class="mrow"><b>부품 지식 · 같이 권하는 부속</b><div class="to">4 카테고리별 작업 — 같이 권하기</div><p>예: 전자변을 찾으면 「코일은 필요 없으세요?」</p><p class="warn">아직 상담에 연결 전입니다. 답은 모아 두고 구현 담당이 연결합니다.</p></div>
-    <div class="mrow"><b>질문</b><div class="to">4 카테고리별 작업 — 기준 · 자료</div><p>예: 동결실 입고율 → 부하계산 값이 바뀝니다. 사양 확인 → 부품 찾기 결과가 바뀝니다.</p></div>
+    <h2>의견마다 바뀌는 곳</h2>
+    <div class="mrow"><b>되물어야 할 것</b><div class="to">4 카테고리별 작업 — 되묻기</div><p>예: 팽창밸브를 찾을 때 냉매를 묻지 않았다 → 팽창밸브를 찾을 때 묻는 항목에 냉매를 넣습니다.</p></div>
+    <div class="mrow"><b>바꿔야 할 내용</b><div class="to">4 카테고리별 작업 — 자료 · 고르는 기준 / 5 답 생성 — 설명</div><p>예: 엉뚱한 물건이 먼저 나왔다 → 고르는 기준을 고칩니다. 설명이 현장과 다르다 → 답 쓰는 기준을 고칩니다.</p></div>
 
     <h2>사람이 정하지 않는 것</h2>
     <div class="mrow"><p>압축기 · 팽창변 등 계산 값 → 제조사 계산기(쿨셀렉터 · 비쳐 · 보크)가 기준</p><p>가격 · 재고 → 회사 ERP 자료</p><p>금액 약속 · 면책 문구 → 사장님 결정</p></div>
-    <button class="wide ink" style="margin-top:20px" id="gStart">카드 시작하기</button>
+    <button class="wide ink" style="margin-top:20px" id="gStart">상담 테스트 시작하기</button>
   </div>`;
-  $('#gStart').onclick = () => go(null);
+  $('#gStart').onclick = () => go('chat');
 }
 
 // 답 모아 보기 — 구현 담당이 재현이형 답에서 무엇이 바뀌었는지 본다(바뀐 것만 / 전부 · CSV 받기)
@@ -762,13 +795,31 @@ function qAnswer(c) {
   const picks = (r.choice || []).map(i => optLabel(c.opts[i] || ''));
   return { picks, text: (r.text || '').trim() };
 }
+function csvDownload(rows, name) {
+  const csv = '﻿' + rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const el = Object.assign(document.createElement('a'), { href: url, download: `${name}_${new Date().toISOString().slice(0, 10)}.csv` });
+  document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 function renderSummary() {
-  deck = null;
+  deck = null; wide(false);
   history.replaceState(null, '', '#sum');
-  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">답 모아 보기</button><span id="sync"></span>${undoHtml()}`;
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">답 모아 보기</button><span id="sync"></span>`;
   $('#top .home').onclick = () => go(null);
-  bindUndo();
   $('#bar').innerHTML = '';
+  // 상담 의견 — 카테고리 · 질문 순서대로, 같은 질문 안은 남긴 순서
+  const tc = testCount(), qTxt = {}, qPos = {}, catPos = {};
+  TCATS().forEach((c, ci) => { catPos[c.key] = ci; c.qs.forEach((q, qi) => { qTxt[q.id] = q.q; qPos[q.id] = qi; }); });
+  const fbs = fbList().sort((a, b) => (catPos[a.cat] ?? 99) - (catPos[b.cat] ?? 99) || (qPos[a.q] ?? 999) - (qPos[b.q] ?? 999) || (a.t || 0) - (b.t || 0));
+  const line2 = (k, v) => v ? `<div class="dl w"><span>${k}</span><p>${esc(v)}</p></div>` : '';
+  const short = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n) + '…' : s; };
+  const fbRow = r => {
+    const qt = r.q ? qTxt[r.q] || r.q : r.qt || '';
+    return `<div class="mrow"><b>${esc(qt)}</b><div class="to">${r.q ? esc(r.q) : '직접 물어봄'} · 상담 ${esc(r.sid)} · ${fmtAt(r.t)}</div>
+      ${r.u && r.u !== qt ? line2('손님 말', short(r.u, 120)) : ''}${line2('답', short(r.a, 160))}
+      ${r.ok && !fbHas(r) ? line2('판단', '괜찮음') : ''}${line2('되물어야 할 것', (r.ask || '').trim())}${line2('바꿔야 할 내용', (r.fix || '').trim())}</div>`;
+  };
+  const fbHtml = TCATS().map(c => { const L = fbs.filter(r => r.cat === c.key); return L.length ? `<h3 class="sumcat">${esc(c.name)}</h3>${L.map(fbRow).join('')}` : ''; }).join('');
   const P = D.decks.p, Q = D.decks.q;
   const pd = P.map(c => ({ c, d: partDiff(c), s: st(c.id) }));
   const qd = Q.map(c => ({ c, a: qAnswer(c), s: st(c.id) }));
@@ -779,12 +830,21 @@ function renderSummary() {
   const qShow = qd.filter(x => sumAll ? x.s : x.a.picks.length || x.a.text);
   $('#stage').innerHTML = `<div class="guide-wrap">
     <div class="sumstat">
+      <div><b>${tc.run}</b><span>해 본 질문 / ${tc.n}</span></div>
+      <div><b>${tc.fb}</b><span>의견 남긴 답</span></div>
+      <div><b>${tc.ok}</b><span>괜찮음</span></div>
+    </div>
+    <button class="wide" id="csvT">상담 의견 엑셀로 받기 (CSV)</button>
+    <h2>상담 의견</h2>
+    ${fbHtml || '<p class="lead">아직 없습니다.</p>'}
+    ${pSeen || pChanged || qSeen ? `<h2>카드에 남긴 답 (10/26)</h2>
+    <div class="sumstat">
       <div><b>${pSeen}</b><span>부품 카드 본 것 / ${P.length}</span></div>
       <div><b>${pChanged}</b><span>바꾼 카드</span></div>
       <div><b>${qSeen}</b><span>질문 답 / ${Q.length}</span></div>
     </div>
     <div class="seg"><button class="${sumAll ? '' : 'on'}" data-all="0">바뀐 것만</button><button class="${sumAll ? 'on' : ''}" data-all="1">본 것 전부</button></div>
-    <button class="wide" id="csv">엑셀로 받기 (CSV)</button>
+    <button class="wide" id="csv">카드 답 엑셀로 받기 (CSV)</button>
     <h2>부품 지식</h2>
     ${pShow.length ? pShow.map(({ c, d, s }) => `<div class="mrow">
       <b>${esc(c.name)}${c.galae ? ' · ' + esc(c.galae) : ''}</b><div class="to">${c.kind === 'ask' ? '묻는 항목' : '같이 권하는 부속'} · ${stLabel(s)}${c.also && c.also.length ? ' · 같이 적용 ' + c.also.join(',') : ''}</div>
@@ -794,51 +854,55 @@ function renderSummary() {
     ${qShow.length ? qShow.map(({ c, a, s }) => `<div class="mrow">
       <b>${esc(c.q)}</b><div class="to">${esc(c.topic)} · ${stLabel(s)}</div>
       ${line('답', a.picks)}${line('적은 말', a.text)}${line('틀린 곳', (A[c.id] || {}).where || [])}
-    </div>`).join('') : '<p class="lead">아직 없습니다.</p>'}
+    </div>`).join('') : '<p class="lead">아직 없습니다.</p>'}` : ''}
   </div>`;
   $('#stage').querySelectorAll('[data-all]').forEach(b => b.onclick = () => { sumAll = b.dataset.all === '1'; renderSummary(); });
-  $('#csv').onclick = () => {
+  $('#csvT').onclick = () => {
+    const name = Object.fromEntries(TCATS().map(c => [c.key, c.name]));
+    const rows = [['카테고리', '질문 번호', '질문', '손님 말', '답 앞부분', '괜찮음', '되물어야 할 것', '바꿔야 할 내용', '상담 번호', '답 번호', '남긴 때']];
+    for (const r of fbs) rows.push([name[r.cat] || r.cat, r.q || '직접', r.q ? qTxt[r.q] || '' : r.qt || '', r.u, r.a, r.ok ? '괜찮음' : '', (r.ask || '').trim(), (r.fix || '').trim(), r.sid, r.mid, fmtAt(r.t)]);
+    csvDownload(rows, '상담테스트_의견');
+  };
+  const cb = $('#csv'); if (cb) cb.onclick = () => {
     const rows = [['구분', '부품·주제', '갈래', '칸', '상태', '켬', '끔', '새 칩', '이름 바꿈', '뺀 칩', '순서', '메모·답', '적은 말', '같이 적용', '카드 번호']];
     for (const { c, d, s } of pd) if (s || d.changed)
       rows.push(['부품 지식', c.name, c.galae, c.kind === 'ask' ? '묻는 항목' : '같이 권하는 부속', stLabel(s), d.on.join(' · '), d.off.join(' · '), d.add.join(' · '), d.ren.join(' · '), d.del.join(' · '), d.order, d.memo, '', (c.also || []).join(','), c.id]);
     for (const { c, a, s } of qd) if (s)
       rows.push(['질문', c.topic, '', c.q, stLabel(s), '', '', '', '', '', '', a.picks.join(' · '), a.text, '', c.id]);
-    const csv = '﻿' + rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const el = Object.assign(document.createElement('a'), { href: url, download: `지식검수_답_${new Date().toISOString().slice(0, 10)}.csv` });
-    document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    csvDownload(rows, '지식검수_카드답');
   };
 }
 
-// ── 상담 테스트 — 왼쪽은 상담, 오른쪽은 고른 답의 판단 기록(알아들은 것·서버에 물은 것·서버 실제 값·검사)
-//   로그인(회사 내부 계정) → 라이브 상담 함수 chat 에 그대로 묻고, 답이 끝나면 consult-trace 로 그 상담의 판단 기록을 읽는다.
-const LS_AUTH = 'jh-chat-auth', LS_DEV = 'jh-chat-device', LS_SID = 'jh-chat-sid';
-let CH = { auth: null, sid: null, msgs: [], sel: null, busy: false, live: '' };
-const TOOL_KO = { search_parts: '부품 찾기', select_part: '부품 선정 계산', unit_quote: '유니트 견적', load_calc: '부하계산', price_calc: '가격 계산',
-  brand_catalog: '메이커 취급 목록', my_orders: '주문 조회', leave_inquiry: '문의 남기기', request_change: '변경 요청', web_search: '웹 검색' };
-const GUARD_KO = { table_mark: '표 표시 정리', table_rows_picked: '표 줄 고름', brand_en: '메이커 영문 표기', hp_label: '마력 → HP 표기',
-  price_blocked: '가격 막음', price_swapped: '가격 바꿔 넣음', vat: '부가세 문장 정리' };
-function chLoad() {
-  try { CH.auth = JSON.parse(localStorage.getItem(LS_AUTH) || 'null'); } catch {}
-  try { CH.sid = +localStorage.getItem(LS_SID) || null; } catch {}
+// ── 상담 테스트 — 카테고리별 질문으로 라이브 상담에 묻고, 답마다 「되물어야 할 것 · 바꿔야 할 내용」을 남긴다(대표 10/26 저녁, 카드 대신)
+//   관문 비밀번호 → consult-trace 가 서버 안에서 회사 시험 계정으로 라이브 상담 함수(chat)를 부르고, 답이 끝나면 그 상담의 판단 기록을 읽는다.
+//   답 칸에 남는 것 — tq-<질문 번호> {runs:[{sid, at}]} 그 질문으로 연 상담 · tq-free-<카테고리> {runs:[{sid, at, q}]} 직접 물어본 상담
+//                    fb-<답 번호> {cat, q, qt, sid, u 손님 말, a 답 앞부분, ok 괜찮음, ask 되물어야 할 것, fix 바꿔야 할 내용}
+const LS_DEV = 'jh-chat-device', LS_CAT = 'jh-test-cat';
+let CH = { cat: null, q: null, qtext: '', sid: null, msgs: [], sel: null, busy: false, live: '' };
+const TCATS = () => (D && D.decks.t) || [];
+const catOf = k => TCATS().find(c => c.key === k) || TCATS()[0];
+const runsKey = (cat, q) => q ? 'tq-' + q : 'tq-free-' + cat;
+const runsOf = (cat, q) => (A[runsKey(cat, q)] || {}).runs || [];
+const fbHas = r => !!r && !!((r.ask || '').trim() || (r.fix || '').trim());
+const fbList = () => Object.entries(A).filter(([k, r]) => k.startsWith('fb-') && (r.ok || fbHas(r))).map(([k, r]) => ({ ...r, mid: +k.slice(3) }));
+const fmtAt = ms => { if (!ms) return ''; const d = new Date(ms), p = n => String(n).padStart(2, '0'); return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+function wide(on) { document.body.classList.toggle('wide', !!on); }
+function testCount() {
+  const qs = TCATS().flatMap(c => c.qs.map(q => [c.key, q.id]));
+  const fbs = fbList();
+  return { n: qs.length, run: qs.filter(([c, q]) => runsOf(c, q).length).length, fb: fbs.filter(fbHas).length, ok: fbs.filter(r => r.ok && !fbHas(r)).length };
 }
-function chSave() { try { localStorage.setItem(LS_AUTH, JSON.stringify(CH.auth)); localStorage.setItem(LS_SID, CH.sid || ''); } catch {} }
+// 줄 오른쪽 표시 — 의견 수 > 괜찮음 > 해 봄
+function pill(fbs, ran) {
+  const n = fbs.filter(fbHas).length;
+  if (n) return `<span class="qs fb">의견 ${n}</span>`;
+  if (fbs.some(r => r.ok)) return '<span class="qs ok">괜찮음</span>';
+  return ran ? '<span class="qs run">해 봄</span>' : '';
+}
 function chDevice() {
   let d = null; try { d = localStorage.getItem(LS_DEV); } catch {}
   if (!d) { d = 'web-dev-trace-' + Math.random().toString(36).slice(2, 10); try { localStorage.setItem(LS_DEV, d); } catch {} }
   return d;
-}
-async function chAuth(body, grant) {
-  const r = await fetch(`${CFG.url}/auth/v1/token?grant_type=${grant}`, { method: 'POST', headers: { apikey: CFG.anon, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.access_token) throw new Error(j.error_description || j.msg || '로그인 실패');
-  CH.auth = { at: j.access_token, rt: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000, email: j.user && j.user.email };
-  chSave();
-}
-async function chToken() {
-  if (!CH.auth) throw { login: true };
-  if (Date.now() > CH.auth.exp) { try { await chAuth({ refresh_token: CH.auth.rt }, 'refresh_token'); } catch { CH.auth = null; chSave(); throw { login: true }; } }
-  return CH.auth.at;
 }
 // 관문 비밀번호로 부른다 — consult-trace 가 서버 안에서 회사 시험 계정으로 로그인해 상담·기록을 다룬다(계정 비밀번호는 브라우저에 없음)
 function chCall(body) {
@@ -847,23 +911,126 @@ function chCall(body) {
     body: JSON.stringify({ pw: PW, ...body }),
   });
 }
-async function chTrace() {
-  if (!CH.sid) { CH.msgs = []; return; }
-  const r = await chCall({ op: 'trace', session_id: CH.sid });
+async function chTrace(sid) {
+  const r = await chCall({ op: 'trace', session_id: sid });
   const j = await r.json().catch(() => ({}));
   if (r.status === 401) throw { login: true };
   if (!r.ok) throw new Error(j.error || ('판단 기록 읽기 실패 ' + r.status));
-  CH.msgs = j.messages || [];
+  return j.messages || [];
+}
+
+// 질문 목록 — 카테고리 칩 · 질문 줄(누르면 새 상담으로 바로 물음) · 직접 물어본 것 · 직접 물어보기
+function renderTest(k) {
+  deck = null; wide(false);
+  if (!k) try { k = localStorage.getItem(LS_CAT); } catch {}
+  const c = catOf(k);
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트</button><span id="sync"></span>`;
+  $('#top .home').onclick = () => go(null);
+  $('#bar').innerHTML = '';
+  if (!c) { $('#stage').innerHTML = '<div class="home-wrap"><p class="lead">질문 자료가 없습니다.</p></div>'; return; }
+  try { localStorage.setItem(LS_CAT, c.key); } catch {}
+  history.replaceState(null, '', '#chat/' + c.key);
+  const fbs = fbList(), free = runsOf(c.key, null).slice().reverse();
+  $('#stage').innerHTML = `<div class="guide-wrap">
+    <div class="cats">${TCATS().map(x => `<button class="cat ${x.key === c.key ? 'on' : ''}" data-c="${x.key}">${esc(x.name)}<small>${x.qs.filter(q => runsOf(x.key, q.id).length).length}/${x.qs.length}</small></button>`).join('')}</div>
+    <div class="qlist">${c.qs.map((q, i) => `<button class="qrow" data-q="${q.id}"><span class="n">${i + 1}</span><span class="qt2">${esc(q.q)}</span>${pill(fbs.filter(r => r.q === q.id), runsOf(c.key, q.id).length)}</button>`).join('')}</div>
+    ${free.length ? `<h2>직접 물어본 것</h2><div class="qlist">${free.map(r => `<button class="qrow" data-s="${r.sid}"><span class="qt2">${esc(r.q)}</span>${pill(fbs.filter(x => x.sid === r.sid), true)}</button>`).join('')}</div>` : ''}
+    <form id="frf" class="free"><h2>직접 물어보기</h2><div class="chf"><textarea id="frin" rows="2" aria-label="직접 물어볼 말"></textarea><button class="chsend">보내기</button></div></form>
+  </div>`;
+  $('#stage').querySelectorAll('.cat').forEach(b => b.onclick = () => renderTest(b.dataset.c));
+  $('#stage').querySelectorAll('.qrow[data-q]').forEach(b => b.onclick = () => openConv(c.key, b.dataset.q, runsOf(c.key, b.dataset.q).length ? null : 'ask'));
+  $('#stage').querySelectorAll('.qrow[data-s]').forEach(b => b.onclick = () => openConv(c.key, 's' + b.dataset.s));
+  $('#frf').onsubmit = e => { e.preventDefault(); const t = $('#frin').value.trim(); if (t) openFree(c.key, t); };
+  $('#frin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#frf').requestSubmit(); } };
+  sync(online ? (Object.keys(pending).length ? '저장 중' : '') : '서버 끊김 · 이 브라우저에 보관');
+}
+
+// 상담 화면 — key = 질문 번호 또는 s<상담 번호>(직접 물어본 것). mode 'ask' = 새 상담으로 지금 묻기, 없으면 마지막에 물은 상담을 보여 준다
+async function openConv(k, key, mode) {
+  const c = catOf(k), free = /^s\d+$/.test(key || '');
+  const q = free ? null : c && c.qs.find(x => x.id === key);
+  if (!c || (!free && !q)) return renderTest(c && c.key);
+  const runs = runsOf(c.key, q ? q.id : null);
+  const ch = CH = { cat: c.key, q: q ? q.id : null, qtext: q ? q.q : '', sid: null, msgs: [], sel: null, busy: false, live: '' };
+  if (free) { ch.sid = +key.slice(1); ch.qtext = (runs.find(r => r.sid === ch.sid) || {}).q || ''; }
+  else if (mode !== 'ask' && runs.length) ch.sid = runs[runs.length - 1].sid;
+  history.replaceState(null, '', `#chat/${c.key}/${key}`);
+  renderConv();
+  if (mode === 'ask') return chSend(ch.qtext);
+  if (ch.sid) await chShow(ch, ch.sid);
+}
+function openFree(k, text) {
+  CH = { cat: k, q: null, qtext: text, sid: null, msgs: [], sel: null, busy: false, live: '' };
+  history.replaceState(null, '', `#chat/${k}/new`);
+  renderConv();
+  chSend(text);
+}
+// 상담 기록을 읽어 보여 준다 — 읽는 사이 다른 질문으로 옮겼으면 버린다
+async function chShow(ch, sid) {
+  if (!CFG) return;
+  let msgs;
+  try { msgs = await chTrace(sid); }
+  catch (e) { if (e && e.login) return askPw('비밀번호가 맞지 않습니다.'); if (CH === ch) toast(e.message || '기록을 못 읽었습니다'); return; }
+  if (CH !== ch || ch.sid !== sid) return;
+  ch.msgs = msgs;
+  const last = [...msgs].reverse().find(m => m.role === 'assistant');
+  ch.sel = last ? last.id : null;
+  chRender();
+}
+function renderConv() {
+  deck = null; wide(true);
+  const c = catOf(CH.cat), i = CH.q ? c.qs.findIndex(x => x.id === CH.q) : -1;
+  $('#top').innerHTML = `<button class="home" aria-label="질문 목록">${CHEV}</button><button class="title">${esc(c.name)}<small>${i >= 0 ? `${i + 1} / ${c.qs.length}` : '직접 물어봄'}</small></button><span id="sync"></span>
+    <button class="chnew" id="again">다시 묻기</button>${i >= 0 && i < c.qs.length - 1 ? '<button class="chnew ink" id="nextq">다음 질문 ›</button>' : ''}`;
+  $('#top .home').onclick = () => renderTest(c.key);
+  $('#top .title').onclick = () => renderTest(c.key);
+  $('#again').onclick = () => {
+    if (CH.busy) return toast('답을 쓰는 중입니다');
+    if (CH.q) openConv(c.key, CH.q, 'ask'); else if (CH.qtext) openFree(c.key, CH.qtext);
+  };
+  const nx = $('#nextq');
+  if (nx) nx.onclick = () => { if (CH.busy) return toast('답을 쓰는 중입니다'); const q = c.qs[i + 1]; openConv(c.key, q.id, runsOf(c.key, q.id).length ? null : 'ask'); };
+  $('#bar').innerHTML = '';
+  $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chq" class="chq"></div><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2" aria-label="이어서 물을 말"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
+  $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; if (CH.busy) return toast('답을 쓰는 중입니다'); $('#chin').value = ''; if (!CH.qtext) CH.qtext = t.trim(); chSend(t); };
+  $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
+  sync(online ? (Object.keys(pending).length ? '저장 중' : '') : '서버 끊김 · 이 브라우저에 보관');
+  chRender();
+}
+// 위 띠 — 지금 질문 · 여러 번 물었으면 몇 번째 상담을 볼지 · 아직 안 물었으면 「물어보기」
+function chHead() {
+  const el = $('#chq'); if (!el) return;
+  const runs = CH.q ? runsOf(CH.cat, CH.q) : [];
+  const sel = runs.length > 1 ? `<select id="runsel" class="runsel" aria-label="물은 때">${runs.map((r, j) => `<option value="${r.sid}" ${r.sid === CH.sid ? 'selected' : ''}>${j + 1}번째 · ${fmtAt(r.at)}</option>`).join('')}</select>` : '';
+  const ask = !CH.sid && !CH.busy && !CH.msgs.length && CH.qtext ? '<button class="chnew ink" id="askq">물어보기</button>' : '';
+  el.innerHTML = `<span class="chq-t">${esc(CH.qtext)}</span>${sel}${ask}`;
+  el.style.display = CH.qtext ? '' : 'none';
+  const s = $('#runsel');
+  if (s) s.onchange = () => {
+    if (CH.busy) { s.value = CH.sid; return toast('답을 쓰는 중입니다'); }
+    CH.sid = +s.value; CH.msgs = []; CH.sel = null; chRender(); chShow(CH, CH.sid);
+  };
+  const a = $('#askq'); if (a) a.onclick = () => chSend(CH.qtext);
+}
+// 물은 상담 기록 — 새 상담이 열리는 순간(session 이벤트) 남긴다(답이 끝나기 전에 창을 닫아도 남게)
+function addRun(ch) {
+  const runs = runsOf(ch.cat, ch.q).filter(r => r.sid !== ch.sid);
+  runs.push({ sid: ch.sid, at: Date.now(), ...(ch.q ? {} : { q: ch.qtext.slice(0, 140) }) });
+  put(runsKey(ch.cat, ch.q), { runs: runs.slice(ch.q ? -50 : -15) }, true);
 }
 async function chSend(text) {
-  if (CH.busy || !text.trim()) return;
-  CH.busy = true; CH.live = '';
-  CH.msgs.push({ id: 'u' + Date.now(), role: 'user', content: text });
+  const ch = CH;
+  if (!CFG) return toast('상담은 게시본에서만 됩니다');
+  if (ch.busy) return toast('답을 쓰는 중입니다');
+  if (!text || !text.trim()) return;
+  ch.busy = true; ch.live = '';
+  ch.msgs.push({ id: 'u' + Date.now(), role: 'user', content: text });
   chRender();
+  let err = '';
   try {
-    const r = await chCall({ op: 'chat', message: text, device_id: chDevice(), client_msg_uid: 'trace-' + Date.now(), ...(CH.sid ? { session_id: CH.sid } : {}) });
+    const r = await chCall({ op: 'chat', message: text, device_id: chDevice(), client_msg_uid: 'trace-' + Date.now(), ...(ch.sid ? { session_id: ch.sid } : {}) });
     if (r.status === 401) throw { login: true };
-    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || ('상담 오류 ' + r.status)); }
+    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || j.message || ('상담 오류 ' + r.status)); }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
     for (;;) {
       const { value, done } = await rd.read(); if (done) break;
@@ -872,58 +1039,41 @@ async function chSend(text) {
       for (const part of parts) for (const line of part.split('\n')) {
         if (!line.startsWith('data:')) continue;
         let ev; try { ev = JSON.parse(line.slice(5)); } catch { continue; }
-        if (ev.type === 'session' && ev.session_id) { CH.sid = ev.session_id; chSave(); }
-        else if (ev.type === 'delta' && ev.text) { CH.live += ev.text; chLive(); }
+        if (ev.type === 'session' && ev.session_id && ev.session_id !== ch.sid) {
+          ch.sid = ev.session_id; addRun(ch);
+          if (CH === ch && !ch.q) history.replaceState(null, '', `#chat/${ch.cat}/s${ch.sid}`);
+        }
+        else if (ev.type === 'delta' && ev.text) { ch.live += ev.text; if (CH === ch) chLive(); }
+        else if (ev.type === 'progress' && ev.text && !ch.live && CH === ch) { const b = $('#chlive'); if (b) b.innerHTML = `<span class="lead">${esc(ev.text)}</span>`; }
+        else if (ev.type === 'error') err = ev.message || '답을 받지 못했습니다';
       }
     }
-    await chTrace();
-    const last = [...CH.msgs].reverse().find(m => m.role === 'assistant');
-    CH.sel = last ? last.id : null;
+    if (ch.sid) {
+      const msgs = await chTrace(ch.sid);
+      ch.msgs = msgs;
+      const last = [...msgs].reverse().find(m => m.role === 'assistant');
+      ch.sel = last ? last.id : null;
+    }
+    if (err && CH === ch) toast(err);
   } catch (e) {
-    if (e && e.login) { CH.afterPw = true; return askPw('비밀번호가 맞지 않습니다.'); }
-    toast(e.message || '오류');
-  } finally { CH.busy = false; CH.live = ''; chRender(); }
+    if (e && e.login) { ch.busy = false; return askPw('비밀번호가 맞지 않습니다.'); }
+    if (CH === ch) toast(e.message || '오류');
+  } finally { ch.busy = false; ch.live = ''; if (CH === ch) chRender(); }
 }
 function chLive() { const b = $('#chlive'); if (b) { b.innerHTML = mdLite(CH.live); const l = $('#chlog'); l.scrollTop = l.scrollHeight; } }
-function chLogin(msg) {
-  document.body.classList.remove('wide');
-  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트</button>`;
-  $('#top .home').onclick = () => go(null);
-  $('#bar').innerHTML = '';
-  $('#stage').innerHTML = `<div class="home-wrap"><h1>상담 테스트</h1><p class="lead">${esc(msg || '회사 내부 계정으로 로그인해 주세요. 앱 상담과 똑같이 답하고, 답마다 판단 기록을 보여 줍니다.')}</p>
-    <form id="lgf"><input id="lge" class="pwin" type="email" placeholder="이메일" autocomplete="username"><input id="lgp" class="pwin" style="margin-top:10px" type="password" placeholder="비밀번호" autocomplete="current-password">
-    <button class="wide ink" style="margin-top:12px">로그인</button></form></div>`;
-  $('#lgf').onsubmit = async e => {
-    e.preventDefault();
-    try { await chAuth({ email: $('#lge').value.trim(), password: $('#lgp').value }, 'password'); renderChat(); }
-    catch (er) { toast(er.message); }
-  };
-}
-async function renderChat() {
-  deck = null; history.replaceState(null, '', '#chat');
-  if (!CFG) { $('#stage').innerHTML = '<div class="home-wrap"><h1>상담 테스트</h1><p class="lead">게시본에서만 됩니다.</p></div>'; return; }
-  chLoad();
-  if (!PW) { CH.afterPw = true; return askPw(); }   // 관문 비밀번호만 있으면 된다 — 따로 로그인하지 않는다(대표 10/26)
-  document.body.classList.add('wide');
-  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트<small>회사 시험 계정 · 라이브 상담</small></button><button class="chnew">새 상담</button>`;
-  $('#top .home').onclick = () => { document.body.classList.remove('wide'); if (D) go(null); else { history.replaceState(null, '', '#'); if (CFG && !PW) askPw(); else start(); } };
-  $('#top .chnew').onclick = () => { CH.sid = null; CH.msgs = []; CH.sel = null; chSave(); chRender(); };
-  $('#bar').innerHTML = '';
-  $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
-  $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; $('#chin').value = ''; chSend(t); };
-  $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
-  try { await chTrace(); } catch (e) { if (e && e.login) { CH.afterPw = true; return askPw('비밀번호가 맞지 않습니다.'); } toast(e.message); }
-  if (!CH.sel) { const last = [...CH.msgs].reverse().find(m => m.role === 'assistant'); CH.sel = last ? last.id : null; }
-  chRender();
-}
+const fbTag = mid => { const r = A['fb-' + mid]; return fbHas(r) ? `<span class="fbtag fb" id="tag-${mid}">의견</span>` : r && r.ok ? `<span class="fbtag ok" id="tag-${mid}">괜찮음</span>` : `<span id="tag-${mid}"></span>`; };
 function chRender() {
   const log = $('#chlog'); if (!log) return;
+  chHead();
   log.innerHTML =
     CH.msgs.map(m => m.role === 'user'
       ? `<div class="cm u"><div class="bub u">${esc(m.content || '').replace(/\n/g, '<br>')}</div></div>`
-      : `<div class="cm a ${m.id === CH.sel ? 'sel' : ''}" data-id="${m.id}"><div class="bub a">${mdLite(m.content || '')}</div></div>`).join('') +
+      : `<div class="cm a ${m.id === CH.sel ? 'sel' : ''}" data-id="${m.id}"><div class="bub a">${mdLite(m.content || '')}</div>${fbTag(m.id)}</div>`).join('') +
     (CH.busy ? `<div class="cm a"><div class="bub a" id="chlive">${CH.live ? mdLite(CH.live) : '<span class="lead">답 쓰는 중…</span>'}</div></div>` : '');
-  log.querySelectorAll('.cm.a[data-id]').forEach(el => el.onclick = () => { CH.sel = +el.dataset.id; chRender(); });
+  log.querySelectorAll('.cm.a[data-id]').forEach(el => el.onclick = () => {
+    CH.sel = +el.dataset.id; chRender();
+    if (window.matchMedia('(max-width:820px)').matches) { const r = $('#chright'); if (r) r.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
   log.scrollTop = log.scrollHeight;
   chDetail();
 }
@@ -950,10 +1100,33 @@ const VAL_KO = { 'rc_일체형': 'R/C 일체형', rc: 'R/C 일체형', true: '�
 const plainVal = v => typeof v === 'string' ? (VAL_KO[v] || v.replace(/_/g, ' ')) : Array.isArray(v) ? v.map(plainVal).join(', ') : (v && typeof v === 'object') ? Object.entries(v).map(([k, x]) => `${KO[k] || k} ${plainVal(x)}`).join(', ') : String(v);
 const filled = v => v !== null && v !== undefined && v !== '' && v !== false && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
 const refShort = r => { const a = String(r || '').split('/').filter(Boolean); return a.length > 3 ? a.slice(0, 3).join('/') + ` 외 ${a.length - 3}` : a.join('/'); };
+// 오른쪽 — 고른 답에 대한 의견(괜찮음 · 되물어야 할 것 · 바꿔야 할 내용, 적는 대로 저장) + 그 답의 판단 기록
+const prevUser = m => { const i = CH.msgs.indexOf(m); for (let j = i - 1; j >= 0; j--) if (CH.msgs[j].role === 'user') return String(CH.msgs[j].content || ''); return ''; };
+function fbPut(m, patch) {
+  put('fb-' + m.id, {
+    cat: CH.cat, q: CH.q, ...(CH.q ? {} : { qt: CH.qtext.slice(0, 140) }), sid: CH.sid,
+    u: prevUser(m).slice(0, 200), a: String(m.content || '').slice(0, 400), ...patch,
+  }, true);
+  const tg = $('#tag-' + m.id); if (tg) tg.outerHTML = fbTag(m.id);
+}
 function chDetail() {
   const box = $('#chright'); if (!box) return;
   const m = CH.msgs.find(x => x.id === CH.sel);
   if (!m) { box.innerHTML = ''; return; }
+  const r = A['fb-' + m.id] || {}, u = prevUser(m);
+  box.innerHTML = `<div class="dsec">
+    <h3>이 답에 대한 의견</h3>
+    ${u && u !== CH.qtext ? `<p class="dsrc">손님 말 「${esc(u.length > 60 ? u.slice(0, 60) + '…' : u)}」</p>` : ''}
+    <button class="okbtn ${r.ok ? 'on' : ''}" id="fbok">괜찮음</button>
+    <label class="fbl" for="fbask">되물어야 할 것</label><textarea id="fbask" class="fbt" rows="3" maxlength="1000">${esc(r.ask || '')}</textarea>
+    <label class="fbl" for="fbfix">바꿔야 할 내용</label><textarea id="fbfix" class="fbt" rows="4" maxlength="1000">${esc(r.fix || '')}</textarea>
+  </div>` + traceHtml(m);
+  $('#fbok').onclick = () => { const on = !(A['fb-' + m.id] || {}).ok; fbPut(m, { ok: on }); $('#fbok').classList.toggle('on', on); };
+  $('#fbask').oninput = e => fbPut(m, { ask: e.target.value });
+  $('#fbfix').oninput = e => fbPut(m, { fix: e.target.value });
+}
+// 판단 기록 — 1·2 알아들은 것 · 3·4 찾고 계산한 것 · 서버 실제 값 · 계산 결과 · 6 답하기 전에 확인한 것
+function traceHtml(m) {
   const t = m.trace || {};
   const sec = (title, body) => body ? `<div class="dsec"><h3>${title}</h3>${body}</div>` : '';
   const kv = rows => rows.length ? `<table class="dkv">${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`).join('')}</table>` : '';
@@ -1007,7 +1180,7 @@ function chDetail() {
   const fixes = [...new Set([...(t.guard || []), ...(t.guard_flags || [])])].map(g => GUARD_PLAIN[g]).filter(Boolean);
   const checkHtml = (checks.length ? `<ul class="dul">${checks.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : '') +
     (fixes.length ? `<p class="dsrc">손님께 보내기 전에 다듬은 것: ${esc(fixes.join(' · '))}</p>` : '');
-  box.innerHTML = `
+  return `
     ${sec('1·2 판단과 검증 — 이렇게 알아들었습니다', heard || `<p class="dsrc">${tools.length ? '이 턴의 조건 기록이 남아 있지 않습니다.' : '서버에 묻지 않고 말로 답한 턴입니다.'}</p>`)}
     ${sec('3·4 분류와 작업 — 이렇게 찾고 계산했습니다', did || '<p class="dsrc">서버에 묻지 않고 답했습니다.</p>')}
     ${sec('서버에 있던 실제 값', vHtml)}
@@ -1231,7 +1404,7 @@ let toastT = 0;
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1800); }
 
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z') && D && !e.target.closest('textarea,input')) {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z') && D && deck && !e.target.closest('textarea,input')) {
     e.preventDefault(); return undo();
   }
   if (!deck || e.target.closest('textarea,input') || $('#sheet').classList.contains('open')) {
@@ -1270,10 +1443,12 @@ async function start() {
   writeLocal();
   if (Object.keys(pending).length) schedule(CFG ? 4000 : 0);
   const m = location.hash.match(/^#([pq])\/(\d+)$/);
-  if (m) go(m[1], Math.min(+m[2], D.decks[m[1]].length)); else if (location.hash === '#guide') go('guide'); else if (location.hash === '#sum') go('sum'); else if (location.hash === '#chat') go('chat'); else renderHome();
+  const t = location.hash.match(/^#chat(?:\/([\w-]+)(?:\/([\w-]+))?)?$/);
+  if (t) return t[2] ? openConv(t[1], t[2]) : renderTest(t[1]);   // 주소로 열면 묻지 않고 보여만 준다(새로 고침에 또 묻지 않게)
+  if (m) go(m[1], Math.min(+m[2], D.decks[m[1]].length)); else if (location.hash === '#guide') go('guide'); else if (location.hash === '#sum') go('sum'); else renderHome();
 }
 try { PW = localStorage.getItem(LS_PW) || ''; } catch {}
-if (location.hash === '#chat') renderChat(); else if (CFG && !PW) askPw(); else start();   // 상담 테스트는 카드 자료 없이 열린다
+if (CFG && !PW) askPw(); else start();
 </script>
 </body>
 </html>
