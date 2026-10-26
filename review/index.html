@@ -134,6 +134,35 @@ body.dragging .pc .x,.pc.lift .x{display:none}
 .undo:disabled{opacity:.3;cursor:default}
 .pwin{display:block;width:100%;height:54px;padding:0 16px;border:1px solid var(--line2);border-radius:var(--r-ctl);font-size:17px;background:var(--bg)}
 .pwin:focus{outline:2px solid var(--ink);outline-offset:-1px}
+body.wide #app{max-width:1240px}
+.chnew{font-size:15px;color:var(--sub);background:var(--bg);border-radius:10px;padding:8px 12px;flex:none}
+.chwrap{display:flex;gap:14px;height:100%;padding:0 16px 14px}
+.chleft{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);border-radius:var(--r-card)}
+.chlog{flex:1;overflow-y:auto;padding:12px 14px}
+.cm{display:flex;margin:8px 0}
+.cm.u{justify-content:flex-end}
+.cm .bub{max-width:88%}
+.cm.a .bub{cursor:pointer}
+.cm.a.sel .bub{border:2px solid var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.chf{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.chf textarea{flex:1;resize:none;border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-size:16px}
+.chsend{background:var(--ink);color:#fff;border-radius:12px;padding:0 18px;font-weight:600}
+.chright{flex:1.1;overflow-y:auto;min-width:0}
+.dsec{background:var(--bg);border-radius:var(--r-card);padding:14px 16px;margin-bottom:10px}
+.dsec h3{font-size:16px;margin:0 0 8px}
+.dsub{font-size:15px;font-weight:700;margin:10px 0 4px}
+.dsrc{font-size:14px;color:var(--faint);margin:4px 0}
+.dkv{border-collapse:collapse;width:100%;font-size:14px}
+.dkv th{text-align:left;color:var(--sub);font-weight:500;padding:4px 8px 4px 0;white-space:nowrap;vertical-align:top;width:1%}
+.dkv td{padding:4px 0;word-break:break-all}
+.dtool{border-top:1px solid var(--line);padding-top:6px;margin-top:6px}
+.dtool:first-of-type{border-top:0}
+.dtbl{border-collapse:collapse;font-size:14px;min-width:100%}
+.dtbl th,.dtbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;white-space:nowrap}
+.dpre{white-space:pre-wrap;word-break:break-all;font-size:13px;background:var(--soft);padding:10px;border-radius:10px;max-height:320px;overflow:auto}
+.dul{margin:0;padding-left:18px;font-size:14px}
+details summary{cursor:pointer;font-size:14px;color:var(--sub);margin:6px 0}
+@media (max-width:820px){ .chwrap{flex-direction:column;overflow-y:auto} .chleft{min-height:60vh} .chright{flex:none} }
 .sumlink{display:block;margin:28px auto 0;font-size:15px;color:var(--sub);text-decoration:underline;padding:8px}
 .sumstat{display:flex;gap:10px;margin:8px 0 14px}
 .sumstat div{flex:1;background:var(--bg);border-radius:12px;padding:12px 14px}
@@ -196,7 +225,7 @@ body.dragging .pc .x,.pc.lift .x{display:none}
 </div>
 <div id="sheet"><div class="in"></div></div>
 <div id="toast"></div>
-<script>window.CFG = {"fn": "https://wjlzfknaezwwyusdrdtt.supabase.co/functions/v1/mindmap", "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHpma25hZXp3d3l1c2RyZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MjAwODEsImV4cCI6MjEwMTM5NjA4MX0.q8g2wFBP_ideMcGgtgKeFwwxBdIG7ajpcv6RJxJbO9s", "dataCate": 900021, "ansCate": 900022};</script>
+<script>window.CFG = {"fn": "https://wjlzfknaezwwyusdrdtt.supabase.co/functions/v1/mindmap", "url": "https://wjlzfknaezwwyusdrdtt.supabase.co", "anon": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHpma25hZXp3d3l1c2RyZHR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MjAwODEsImV4cCI6MjEwMTM5NjA4MX0.q8g2wFBP_ideMcGgtgKeFwwxBdIG7ajpcv6RJxJbO9s", "dataCate": 900021, "ansCate": 900022};</script>
 <script>
 'use strict';
 // step = 이 덱을 하면 상담의 어느 단계가 바뀌나 (상담 구조 화면의 ①~④)
@@ -410,6 +439,7 @@ function go(k, i) {
   if (k == null) { location.hash = ''; return renderHome(); }
   if (k === 'guide') { deck = null; history.replaceState(null, '', '#guide'); return renderGuide(); }
   if (k === 'sum') return renderSummary();
+  if (k === 'chat') return renderChat();
   if (i == null) { i = firstOpen(); if (i < 0) i = list().length; }
   idx = i;
   history.replaceState(null, '', `#${k}/${idx}`);
@@ -430,6 +460,7 @@ function renderHome() {
         <div class="bar"><i style="width:${(100 * c.done / c.n).toFixed(1)}%"></i></div>
         <div class="nums">${c.done} / ${c.n}${c.later ? ` · 나중에 ${c.later}` : ''}</div>
       </button>`; }).join('')}
+    <button class="tile" data-k="chat"><b>상담 테스트</b><span>앱처럼 상담하고, 답마다 AI가 왜 그렇게 답했는지 봅니다</span><em class="step">바뀌는 곳을 찾는 곳 · ①②③④ 전체</em></button>
     <div class="how">
       <b>다음 ›</b> 오른쪽으로 밀기 · 저장하고 넘김<br>
       <b>‹ 이전</b> 왼쪽으로 밀기 · 앞 카드로<br>
@@ -772,6 +803,159 @@ function renderSummary() {
   };
 }
 
+// ── 상담 테스트 — 왼쪽은 상담, 오른쪽은 고른 답의 판단 기록(알아들은 것·서버에 물은 것·서버 실제 값·검사)
+//   로그인(회사 내부 계정) → 라이브 상담 함수 chat 에 그대로 묻고, 답이 끝나면 consult-trace 로 그 상담의 판단 기록을 읽는다.
+const LS_AUTH = 'jh-chat-auth', LS_DEV = 'jh-chat-device', LS_SID = 'jh-chat-sid';
+let CH = { auth: null, sid: null, msgs: [], sel: null, busy: false, live: '' };
+const TOOL_KO = { search_parts: '부품 찾기', select_part: '부품 선정 계산', unit_quote: '유니트 견적', load_calc: '부하계산', price_calc: '가격 계산',
+  brand_catalog: '메이커 취급 목록', my_orders: '주문 조회', leave_inquiry: '문의 남기기', request_change: '변경 요청', web_search: '웹 검색' };
+const GUARD_KO = { table_mark: '표 표시 정리', table_rows_picked: '표 줄 고름', brand_en: '메이커 영문 표기', hp_label: '마력 → HP 표기',
+  price_blocked: '가격 막음', price_swapped: '가격 바꿔 넣음', vat: '부가세 문장 정리' };
+function chLoad() {
+  try { CH.auth = JSON.parse(localStorage.getItem(LS_AUTH) || 'null'); } catch {}
+  try { CH.sid = +localStorage.getItem(LS_SID) || null; } catch {}
+}
+function chSave() { try { localStorage.setItem(LS_AUTH, JSON.stringify(CH.auth)); localStorage.setItem(LS_SID, CH.sid || ''); } catch {} }
+function chDevice() {
+  let d = null; try { d = localStorage.getItem(LS_DEV); } catch {}
+  if (!d) { d = 'web-dev-trace-' + Math.random().toString(36).slice(2, 10); try { localStorage.setItem(LS_DEV, d); } catch {} }
+  return d;
+}
+async function chAuth(body, grant) {
+  const r = await fetch(`${CFG.url}/auth/v1/token?grant_type=${grant}`, { method: 'POST', headers: { apikey: CFG.anon, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error(j.error_description || j.msg || '로그인 실패');
+  CH.auth = { at: j.access_token, rt: j.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000 - 60000, email: j.user && j.user.email };
+  chSave();
+}
+async function chToken() {
+  if (!CH.auth) throw { login: true };
+  if (Date.now() > CH.auth.exp) { try { await chAuth({ refresh_token: CH.auth.rt }, 'refresh_token'); } catch { CH.auth = null; chSave(); throw { login: true }; } }
+  return CH.auth.at;
+}
+async function chTrace() {
+  if (!CH.sid) { CH.msgs = []; return; }
+  const r = await fetch(`${CFG.url}/functions/v1/consult-trace`, { method: 'POST', headers: { apikey: CFG.anon, Authorization: 'Bearer ' + await chToken(), 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: CH.sid }) });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) { CH.auth = null; chSave(); throw { login: true }; }
+  if (!r.ok) throw new Error(j.error || ('판단 기록 읽기 실패 ' + r.status));
+  CH.msgs = j.messages || [];
+}
+async function chSend(text) {
+  if (CH.busy || !text.trim()) return;
+  CH.busy = true; CH.live = '';
+  CH.msgs.push({ id: 'u' + Date.now(), role: 'user', content: text });
+  chRender();
+  try {
+    const r = await fetch(`${CFG.url}/functions/v1/chat`, {
+      method: 'POST', headers: { apikey: CFG.anon, Authorization: 'Bearer ' + await chToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, device_id: chDevice(), client_msg_uid: 'trace-' + Date.now(), ...(CH.sid ? { session_id: CH.sid } : {}) }),
+    });
+    if (r.status === 401) { CH.auth = null; chSave(); throw { login: true }; }
+    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || ('상담 오류 ' + r.status)); }
+    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
+    for (;;) {
+      const { value, done } = await rd.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const parts = buf.split('\n\n'); buf = parts.pop();
+      for (const part of parts) for (const line of part.split('\n')) {
+        if (!line.startsWith('data:')) continue;
+        let ev; try { ev = JSON.parse(line.slice(5)); } catch { continue; }
+        if (ev.type === 'session' && ev.session_id) { CH.sid = ev.session_id; chSave(); }
+        else if (ev.type === 'delta' && ev.text) { CH.live += ev.text; chLive(); }
+      }
+    }
+    await chTrace();
+    const last = [...CH.msgs].reverse().find(m => m.role === 'assistant');
+    CH.sel = last ? last.id : null;
+  } catch (e) {
+    if (e && e.login) return chLogin('다시 로그인해 주세요.');
+    toast(e.message || '오류');
+  } finally { CH.busy = false; CH.live = ''; chRender(); }
+}
+function chLive() { const b = $('#chlive'); if (b) { b.innerHTML = mdLite(CH.live); const l = $('#chlog'); l.scrollTop = l.scrollHeight; } }
+function chLogin(msg) {
+  document.body.classList.remove('wide');
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트</button>`;
+  $('#top .home').onclick = () => go(null);
+  $('#bar').innerHTML = '';
+  $('#stage').innerHTML = `<div class="home-wrap"><h1>상담 테스트</h1><p class="lead">${esc(msg || '회사 내부 계정으로 로그인해 주세요. 앱 상담과 똑같이 답하고, 답마다 판단 기록을 보여 줍니다.')}</p>
+    <form id="lgf"><input id="lge" class="pwin" type="email" placeholder="이메일" autocomplete="username"><input id="lgp" class="pwin" style="margin-top:10px" type="password" placeholder="비밀번호" autocomplete="current-password">
+    <button class="wide ink" style="margin-top:12px">로그인</button></form></div>`;
+  $('#lgf').onsubmit = async e => {
+    e.preventDefault();
+    try { await chAuth({ email: $('#lge').value.trim(), password: $('#lgp').value }, 'password'); renderChat(); }
+    catch (er) { toast(er.message); }
+  };
+}
+async function renderChat() {
+  deck = null; history.replaceState(null, '', '#chat');
+  if (!CFG) { $('#stage').innerHTML = '<div class="home-wrap"><h1>상담 테스트</h1><p class="lead">게시본에서만 됩니다.</p></div>'; return; }
+  chLoad();
+  if (!CH.auth) return chLogin();
+  document.body.classList.add('wide');
+  $('#top').innerHTML = `<button class="home" aria-label="처음 화면">${CHEV}</button><button class="title">상담 테스트<small>${esc(CH.auth.email || '')}</small></button><button class="chnew">새 상담</button>`;
+  $('#top .home').onclick = () => { document.body.classList.remove('wide'); if (D) go(null); else { history.replaceState(null, '', '#'); if (CFG && !PW) askPw(); else start(); } };
+  $('#top .chnew').onclick = () => { CH.sid = null; CH.msgs = []; CH.sel = null; chSave(); chRender(); };
+  $('#bar').innerHTML = '';
+  $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2" placeholder="손님처럼 물어보세요 (Enter 보내기 · Shift+Enter 줄바꿈)"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
+  $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; $('#chin').value = ''; chSend(t); };
+  $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
+  try { await chTrace(); } catch (e) { if (e && e.login) return chLogin('다시 로그인해 주세요.'); toast(e.message); }
+  if (!CH.sel) { const last = [...CH.msgs].reverse().find(m => m.role === 'assistant'); CH.sel = last ? last.id : null; }
+  chRender();
+}
+function chRender() {
+  const log = $('#chlog'); if (!log) return;
+  log.innerHTML = (CH.msgs.length ? '' : '<p class="lead" style="padding:16px">손님처럼 물어보세요. 답을 누르면 오른쪽에 판단 기록이 나옵니다.</p>') +
+    CH.msgs.map(m => m.role === 'user'
+      ? `<div class="cm u"><div class="bub u">${esc(m.content || '').replace(/\n/g, '<br>')}</div></div>`
+      : `<div class="cm a ${m.id === CH.sel ? 'sel' : ''}" data-id="${m.id}"><div class="bub a">${mdLite(m.content || '')}</div></div>`).join('') +
+    (CH.busy ? `<div class="cm a"><div class="bub a" id="chlive">${CH.live ? mdLite(CH.live) : '<span class="lead">답 쓰는 중…</span>'}</div></div>` : '');
+  log.querySelectorAll('.cm.a[data-id]').forEach(el => el.onclick = () => { CH.sel = +el.dataset.id; chRender(); });
+  log.scrollTop = log.scrollHeight;
+  chDetail();
+}
+function chDetail() {
+  const box = $('#chright'); if (!box) return;
+  const m = CH.msgs.find(x => x.id === CH.sel);
+  if (!m) { box.innerHTML = '<p class="lead" style="padding:16px">왼쪽에서 답을 고르면 판단 기록이 여기에 나옵니다.</p>'; return; }
+  const t = m.trace || {}, idx = CH.msgs.indexOf(m), q = [...CH.msgs.slice(0, idx)].reverse().find(x => x.role === 'user');
+  const sec = (title, body) => body ? `<div class="dsec"><h3>${title}</h3>${body}</div>` : '';
+  const kv = rows => rows.length ? `<table class="dkv">${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`).join('')}</table>` : '';
+  // ① 알아들은 것
+  const lists = ((t.cond_state || {}).lists || []);
+  const condHtml = lists.map(l => `<div class="dsub">${esc(l.label || '')}${l.key === (t.cond_state || {}).active ? ' <span class="tag">지금 찾는 것</span>' : ''}</div>` +
+    kv((l.conds || []).map(c => [c.item, `<b>${esc(c.value)}</b> <span class="dsrc">${c.said ? `손님 말 「${esc(c.said)}」` : (c.by === 'ai' ? 'AI 판단' : esc(c.by || ''))}</span>`]))).join('');
+  const AS = t.agent_state || {};
+  const asRows = Object.entries(AS).filter(([, v]) => v !== null && v !== '' && typeof v !== 'object').map(([k, v]) => [k, esc(String(v))]);
+  // ② 서버에 물은 것
+  const tools = (t.tools || []).map(tl => {
+    const args = tl.args || {};
+    const said = (args.said || []).map(s => `${esc(s.field)} ← 「${esc(s.quote)}」`).join(' · ');
+    const argRows = Object.entries(args).filter(([k, v]) => k !== 'said' && v !== null && v !== '' && !(Array.isArray(v) && !v.length)).map(([k, v]) => [k, esc(typeof v === 'object' ? JSON.stringify(v) : String(v))]);
+    return `<div class="dtool"><div class="dsub">${esc(TOOL_KO[tl.name] || tl.name || '도구')} <span class="dsrc">${tl.ms != null ? tl.ms + 'ms' : ''}</span></div>
+      ${said ? `<p class="dsrc">손님 말 근거: ${said}</p>` : ''}${kv(argRows)}
+      ${tl.out ? `<details><summary>서버가 돌려준 글 (앞부분만 저장됨)</summary><pre class="dpre">${esc(tl.out)}</pre></details>` : ''}</div>`;
+  }).join('');
+  // ② 서버 실제 데이터
+  const vs = m.variants || [];
+  const vHtml = vs.length ? `<div class="tblwrap"><table class="dtbl"><tr><th>모델명</th><th>메이커</th><th>마력</th><th>냉매</th><th>접속</th><th>가격</th><th>상태</th></tr>${vs.map(v => `<tr><td>${esc(v.model_no || v.model_name || '')}</td><td>${esc(v.brand || '')}</td><td>${esc(v.hp ?? '')}</td><td>${esc(v.refrigerant || '')}</td><td>${esc(v.connection_size || '')}</td><td>${v.price_krw != null ? Number(v.price_krw).toLocaleString() + '원' : '문의'}</td><td>${v.discontinued ? '단종' + (v.successor_variant_id ? ' → 대체 있음' : '') : (v.is_active === false ? '내림' : '판매')}</td></tr>`).join('')}</table></div><p class="dsrc">지금 서버 값입니다(답할 때 값과 다를 수 있음).</p>` : '';
+  const calcs = ((t.ledger || {}).calcs || []).map(c => `<li>${esc(c)}</li>`).join('');
+  // ④ 검사
+  const guard = [...(t.guard || []), ...(t.guard_flags || [])].map(g => `<span class="tag">${esc(GUARD_KO[g] || g)}</span>`).join(' ');
+  const pc = t.price_check ? `가격 대조: 말한 가격 ${t.price_check.said ?? 0}개${(t.price_check.unknown || []).length ? ` · 근거 못 찾은 가격 ${t.price_check.unknown.length}개` : ' · 모두 근거 있음'}` : '';
+  const gr = t.ground ? `값 대조: ${t.ground.checked ?? 0}개 확인${(t.ground.missed || []).length ? ` · 근거 없는 값 ${t.ground.missed.join(', ')}` : ''}` : '';
+  box.innerHTML = `
+    ${sec('고른 답', `${q ? `<p class="dsrc">손님: ${esc(q.content || '')}</p>` : ''}<div class="bub a">${mdLite(m.content || '')}</div>`)}
+    ${sec('① 알아들은 것', (condHtml || '') + (asRows.length ? `<details ${condHtml ? '' : 'open'}><summary>AI가 정리한 상담 상태</summary>${kv(asRows)}</details>` : '') || '<p class="dsrc">조건 기록 없음(되묻기·설명 턴)</p>')}
+    ${sec('② 서버에 물은 것', tools || '<p class="dsrc">도구를 부르지 않고 답함</p>')}
+    ${sec('② 서버 실제 데이터', vHtml || (calcs ? '' : '<p class="dsrc">표에 실린 품목 없음</p>'))}
+    ${calcs ? sec('계산 근거', `<ul class="dul">${calcs}</ul>`) : ''}
+    ${sec('④ 검사', [guard, pc && `<p class="dsrc">${esc(pc)}</p>`, gr && `<p class="dsrc">${esc(gr)}</p>`].filter(Boolean).join('') || '<p class="dsrc">고친 것 없음</p>')}
+    ${sec('기타', `<p class="dsrc">${esc([t.model, t.lane && ('레인 ' + t.lane), t.ms && ('걸린 시간 ' + (t.ms / 1000).toFixed(1) + '초')].filter(Boolean).join(' · '))}</p><details><summary>원본 기록 보기</summary><pre class="dpre">${esc(JSON.stringify(t, null, 1))}</pre></details>`)}`;
+}
+
 function rerender(focusText) {
   const card = $('#stage .card'), top = card ? card.scrollTop : 0;
   const c = list()[idx];
@@ -1026,10 +1210,10 @@ async function start() {
   writeLocal();
   if (Object.keys(pending).length) schedule(CFG ? 4000 : 0);
   const m = location.hash.match(/^#([pq])\/(\d+)$/);
-  if (m) go(m[1], Math.min(+m[2], D.decks[m[1]].length)); else if (location.hash === '#guide') go('guide'); else if (location.hash === '#sum') go('sum'); else renderHome();
+  if (m) go(m[1], Math.min(+m[2], D.decks[m[1]].length)); else if (location.hash === '#guide') go('guide'); else if (location.hash === '#sum') go('sum'); else if (location.hash === '#chat') go('chat'); else renderHome();
 }
 try { PW = localStorage.getItem(LS_PW) || ''; } catch {}
-if (CFG && !PW) askPw(); else start();
+if (location.hash === '#chat') renderChat(); else if (CFG && !PW) askPw(); else start();   // 상담 테스트는 카드 자료 없이 열린다
 </script>
 </body>
 </html>
