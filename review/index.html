@@ -902,7 +902,7 @@ async function renderChat() {
   $('#top .home').onclick = () => { document.body.classList.remove('wide'); if (D) go(null); else { history.replaceState(null, '', '#'); if (CFG && !PW) askPw(); else start(); } };
   $('#top .chnew').onclick = () => { CH.sid = null; CH.msgs = []; CH.sel = null; chSave(); chRender(); };
   $('#bar').innerHTML = '';
-  $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2" placeholder="손님처럼 물어보세요 (Enter 보내기 · Shift+Enter 줄바꿈)"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
+  $('#stage').innerHTML = '<div class="chwrap"><div class="chleft"><div id="chlog" class="chlog"></div><form id="chf" class="chf"><textarea id="chin" rows="2"></textarea><button class="chsend">보내기</button></form></div><div id="chright" class="chright"></div></div>';
   $('#chf').onsubmit = e => { e.preventDefault(); const t = $('#chin').value; $('#chin').value = ''; chSend(t); };
   $('#chin').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#chf').requestSubmit(); } };
   try { await chTrace(); } catch (e) { if (e && e.login) { CH.afterPw = true; return askPw('비밀번호가 맞지 않습니다.'); } toast(e.message); }
@@ -911,7 +911,7 @@ async function renderChat() {
 }
 function chRender() {
   const log = $('#chlog'); if (!log) return;
-  log.innerHTML = (CH.msgs.length ? '' : '<p class="lead" style="padding:16px">손님처럼 물어보세요. 답을 누르면 오른쪽에 판단 기록이 나옵니다.</p>') +
+  log.innerHTML =
     CH.msgs.map(m => m.role === 'user'
       ? `<div class="cm u"><div class="bub u">${esc(m.content || '').replace(/\n/g, '<br>')}</div></div>`
       : `<div class="cm a ${m.id === CH.sel ? 'sel' : ''}" data-id="${m.id}"><div class="bub a">${mdLite(m.content || '')}</div></div>`).join('') +
@@ -923,7 +923,7 @@ function chRender() {
 function chDetail() {
   const box = $('#chright'); if (!box) return;
   const m = CH.msgs.find(x => x.id === CH.sel);
-  if (!m) { box.innerHTML = '<p class="lead" style="padding:16px">왼쪽에서 답을 고르면 판단 기록이 여기에 나옵니다.</p>'; return; }
+  if (!m) { box.innerHTML = ''; return; }
   const t = m.trace || {}, idx = CH.msgs.indexOf(m), q = [...CH.msgs.slice(0, idx)].reverse().find(x => x.role === 'user');
   const sec = (title, body) => body ? `<div class="dsec"><h3>${title}</h3>${body}</div>` : '';
   const kv = rows => rows.length ? `<table class="dkv">${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`).join('')}</table>` : '';
