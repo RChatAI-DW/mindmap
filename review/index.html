@@ -234,8 +234,8 @@ details summary{cursor:pointer;font-size:14px;color:var(--sub);margin:6px 0}
 'use strict';
 // step = 이 덱을 하면 상담의 어느 단계가 바뀌나 (상담 구조 화면의 ①~④)
 const DECKS = {
-  p: { name: '부품 지식', desc: '부품마다 손님께 묻는 항목 · 같이 권하는 부속', step: '① 되묻기 · ② 같이 권하기' },
-  q: { name: '질문', desc: '현장 기준을 확인하는 질문', step: '①② 상담 기준 · 자료' },
+  p: { name: '부품 지식', desc: '부품마다 손님께 묻는 항목 · 같이 권하는 부속', step: '4 카테고리별 작업 — 되묻기 · 같이 권하기' },
+  q: { name: '질문', desc: '현장 기준을 확인하는 질문', step: '4 카테고리별 작업 — 기준 · 자료' },
   a: { name: '상담 답 검수', desc: '실제 상담 답이 맞는지', step: '결과 확인 → 틀린 단계를 고침' },
 };
 const ORDER = ['p', 'q'];
@@ -464,7 +464,7 @@ function renderHome() {
         <div class="bar"><i style="width:${(100 * c.done / c.n).toFixed(1)}%"></i></div>
         <div class="nums">${c.done} / ${c.n}${c.later ? ` · 나중에 ${c.later}` : ''}</div>
       </button>`; }).join('')}
-    <button class="tile" data-k="chat"><b>상담 테스트</b><span>앱처럼 상담하고, 답마다 AI가 왜 그렇게 답했는지 봅니다</span><em class="step">바뀌는 곳을 찾는 곳 · ①②③④ 전체</em></button>
+    <button class="tile" data-k="chat"><b>상담 테스트</b><span>앱처럼 상담하고, 답마다 AI가 왜 그렇게 답했는지 봅니다</span><em class="step">1~6 단계를 답마다 봅니다</em></button>
     <div class="how">
       <b>다음 ›</b> 오른쪽으로 밀기 · 저장하고 넘김<br>
       <b>‹ 이전</b> 왼쪽으로 밀기 · 앞 카드로<br>
@@ -705,14 +705,16 @@ function renderGuide() {
   const arrow = '<div class="arrow"></div>';
   $('#stage').innerHTML = `<div class="guide-wrap">
     <h2 style="margin-top:8px">손님 말이 답이 되기까지</h2>
-    <p class="lead">네 단계를 거칩니다.</p>
+    <p class="lead">AI가 판단하고 서버가 확인하는 일을 번갈아 합니다.</p>
     <div class="flow">
       <div class="io">손님 말<small>글 · 음성 · 사진</small></div>${arrow}
-      ${stepBox('①', 'AI', '알아듣고 되묻기', '무엇을 찾는지, 조건이 무엇인지 읽고, 빠진 값이 있으면 손님께 되묻습니다.', '기준: 부품마다 묻는 항목 · 회사 규칙', dk('홈의 「부품 지식」 카드에서 손님께 묻는 항목을 켜고 끄면, 이 단계에서 되묻는 값이 바뀝니다. 「질문」 카드의 답도 여기에 들어갑니다.'))}${arrow}
-      ${stepBox('②', '서버', '찾고 계산하기', '조건에 맞는 부품을 판매 많은 순으로 찾습니다. 압축기·팽창변 같은 선정은 계산 엔진이, 창고 부하는 두원표준 엑셀 방식이, 유니트는 표준 구성표가 맡습니다.', '자료: 품목 마스터(사양 · 가격 · 재고)', dk('「질문」 카드의 현장 기준(유니트 구성, 세트 짝 등)과 「부품 지식」 카드의 같이 권하는 부속이 여기에 들어갑니다.'))}${arrow}
-      ${stepBox('③', 'AI', '답 쓰기', '찾고 계산한 결과만 가지고 손님께 드릴 답을 씁니다.', '', dk('구현 담당이 고칩니다. 답이 이상하면 「상담 테스트」에서 그 답을 짚어 알려 주세요.'))}${arrow}
-      ${stepBox('④', '서버', '검사', '답에 적힌 가격이 회사 자료와 같은지, 근거 없는 모델명이 없는지 다시 봅니다.', '', dk('구현 담당이 고칩니다.'))}${arrow}
-      <div class="io">답</div>
+      ${stepBox('1', 'AI', '판단', '손님이 무엇을 원하는지(가격 · 재고 · 부품 고르기 · 견적 · 부하계산 등), 무엇을 찾는지, 마력 · 냉매 · 관사이즈 같은 값을 읽습니다.', '', '')}${arrow}
+      ${stepBox('2', '서버', '검증', 'AI가 읽은 값이 손님 말에 실제로 있는지 대조합니다. 손님이 말하지 않은 값은 짐작으로 표시합니다.', '', '')}${arrow}
+      ${stepBox('3', '서버', '카테고리 분류', '찾는 물건을 품목 마스터의 부품 종류(전자변 · 압축기 · 유니트 등)로 나눕니다.', '', '')}${arrow}
+      ${stepBox('4', '서버', '카테고리별 작업', '종류마다 정해진 일을 합니다. 부품 찾기(사양으로 거르고 판매 많은 순) · 압축기 · 팽창변 선정 계산 · 창고 부하계산(두원표준 엑셀) · 유니트 견적(표준 구성표) · 빠진 값 되묻기', '', '')}${arrow}
+      ${stepBox('5', 'AI', '답 생성', '서버가 찾고 계산한 결과만 가지고 손님께 드릴 답을 씁니다.', '', '')}${arrow}
+      ${stepBox('6', '서버', '검증', '답에 적힌 가격 · 모델명 · 숫자가 서버 자료와 같은지 다시 보고, 틀리면 고치거나 막습니다.', '', '')}${arrow}
+      <div class="io">답 나감</div>
     </div>
 
     <h2>카드 답이 상담에 들어가기까지</h2>
@@ -724,9 +726,9 @@ function renderGuide() {
     </div>
 
     <h2>카드마다 바뀌는 곳</h2>
-    <div class="mrow"><b>부품 지식 · 묻는 항목</b><div class="to">① 되묻기</div><p>예: 전자변 5/8 이하를 찾으면 관사이즈 · 접속을 먼저 묻습니다.</p></div>
-    <div class="mrow"><b>부품 지식 · 같이 권하는 부속</b><div class="to">② 같이 권하기</div><p>예: 전자변을 찾으면 「코일은 필요 없으세요?」</p><p class="warn">아직 상담에 연결 전입니다. 답은 모아 두고 구현 담당이 연결합니다.</p></div>
-    <div class="mrow"><b>질문</b><div class="to">①② 상담 기준 · 자료</div><p>예: 동결실 입고율 → 부하계산 값이 바뀝니다. 사양 확인 → 부품 찾기 결과가 바뀝니다.</p></div>
+    <div class="mrow"><b>부품 지식 · 묻는 항목</b><div class="to">4 카테고리별 작업 — 되묻기</div><p>예: 전자변 5/8 이하를 찾으면 관사이즈 · 접속을 먼저 묻습니다.</p></div>
+    <div class="mrow"><b>부품 지식 · 같이 권하는 부속</b><div class="to">4 카테고리별 작업 — 같이 권하기</div><p>예: 전자변을 찾으면 「코일은 필요 없으세요?」</p><p class="warn">아직 상담에 연결 전입니다. 답은 모아 두고 구현 담당이 연결합니다.</p></div>
+    <div class="mrow"><b>질문</b><div class="to">4 카테고리별 작업 — 기준 · 자료</div><p>예: 동결실 입고율 → 부하계산 값이 바뀝니다. 사양 확인 → 부품 찾기 결과가 바뀝니다.</p></div>
 
     <h2>사람이 정하지 않는 것</h2>
     <div class="mrow"><p>압축기 · 팽창변 등 계산 값 → 제조사 계산기(쿨셀렉터 · 비쳐 · 보크)가 기준</p><p>가격 · 재고 → 회사 ERP 자료</p><p>금액 약속 · 면책 문구 → 사장님 결정</p></div>
@@ -1006,11 +1008,11 @@ function chDetail() {
   const checkHtml = (checks.length ? `<ul class="dul">${checks.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : '') +
     (fixes.length ? `<p class="dsrc">손님께 보내기 전에 다듬은 것: ${esc(fixes.join(' · '))}</p>` : '');
   box.innerHTML = `
-    ${sec('① 이렇게 알아들었습니다', heard || `<p class="dsrc">${tools.length ? '이 턴의 조건 기록이 남아 있지 않습니다.' : '서버에 묻지 않고 말로 답한 턴입니다.'}</p>`)}
-    ${sec('② 이렇게 찾고 계산했습니다', did || '<p class="dsrc">서버에 묻지 않고 답했습니다.</p>')}
+    ${sec('1·2 판단과 검증 — 이렇게 알아들었습니다', heard || `<p class="dsrc">${tools.length ? '이 턴의 조건 기록이 남아 있지 않습니다.' : '서버에 묻지 않고 말로 답한 턴입니다.'}</p>`)}
+    ${sec('3·4 분류와 작업 — 이렇게 찾고 계산했습니다', did || '<p class="dsrc">서버에 묻지 않고 답했습니다.</p>')}
     ${sec('서버에 있던 실제 값', vHtml)}
     ${calcs ? sec('계산 결과', `<ul class="dul">${calcs}</ul>`) : ''}
-    ${sec('④ 답하기 전에 확인한 것', checkHtml || '<p class="dsrc">따로 고친 것 없음</p>')}
+    ${sec('6 검증 — 답하기 전에 확인한 것', checkHtml || '<p class="dsrc">따로 고친 것 없음</p>')}
     <details class="draw"><summary>원본 기록(구현 담당용)${t.ms ? ` · ${(t.ms / 1000).toFixed(1)}초` : ''}</summary><pre class="dpre">${esc(JSON.stringify(t, null, 1))}</pre></details>`;
 }
 
